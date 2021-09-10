@@ -18,7 +18,7 @@ library(survey)
 library(WeMix)
 library(Statamarkdown)
 
-load("C:/Users/dalla/Google Drive/project_files/icvs_inequality/data/iv_2005.RData")
+load("C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005.RData")
 
 source("C:/Users/dalla/Google Drive/project_files/icvs_inequality/scripts/icvs_scripts.r", local = knitr::knit_global())
 
@@ -331,11 +331,11 @@ iv_2005 <- dplyr::rename(iv_2005, iw_mcity = individual_weight_for_main_cities,
          iw_nat = individual_weight_for_national_surveys, 
        lik_elected = likely_elected_minicipal_councilors)
 
-haven::write_dta(iv_2005,"C:/Users/dalla/Google Drive/project_files/icvs_inequality/data/joined_sample.dta")
+haven::write_dta(iv_2005,"C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta")
 ```
 
 ```{stata empty model, collectcode = TRUE}
-use "C:\Users\dalla\Google Drive\project_files\icvs_inequality\data\joined_sample.dta", clear
+use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta", clear
 
 mixed num_victim_5yr  || country:
 
@@ -343,7 +343,7 @@ estat icc   *intraclass correlation
 ```
 
 ```{stata first model}
-use "C:\Users\dalla\Google Drive\project_files\icvs_inequality\data\joined_sample.dta"
+use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta"
 
 *First model
 
@@ -360,7 +360,7 @@ estat ic       *BIC and AIC
 Similar to the level-2 Cook's D's values on the lm model, argentian, peru, and the united states were all flagged as influential observations.
 
 ```{stata plots, echo = 1}
-*use "C:\Users\dalla\Google Drive\project_files\icvs_inequality\data\joined_sample.dta", clear
+*use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta", clear
 
 *scatter num_victim_5yr total_security, jitter(5)
 
@@ -371,7 +371,7 @@ Similar to the level-2 Cook's D's values on the lm model, argentian, peru, and t
 <!-- ![Mileage \~ Weight](scatter.svg) -->
 
 ```{stata winzorized model, collectcode = TRUE}
-use "C:\Users\dalla\Google Drive\project_files\icvs_inequality\data\joined_sample.dta"
+use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta"
 
 *Winzorized model
 xtmixed num_victim_5yr_winz gini_wc gdppc_2004_6_ws age_cent employed male [pw=individual_weight] || country:, pwscale(size)
@@ -387,7 +387,7 @@ mltcooksd, fixed random graph
 ```
 
 ```{stata excluded model}
-use "C:\Users\dalla\Google Drive\project_files\icvs_inequality\data\joined_sample.dta"
+use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta"
 
 set more off
 
@@ -408,13 +408,13 @@ iv_2005$extreme <- ifelse(iv_2005$country == "Peru" | iv_2005$country == "Argent
 
 iv_2005$extreme1 <- ifelse(iv_2005$country == "Peru" | iv_2005$country == "Argentina" | iv_2005$country == "United States"| iv_2005$country == "South Africa", 1,0)
 
-haven::write_dta(iv_2005,"C:/Users/dalla/Google Drive/project_files/icvs_inequality/data/joined_sample.dta")
+haven::write_dta(iv_2005,"C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta")
 ```
 
 
 ```{stata flag extreme lv2 model}
 
-use "C:\Users\dalla\Google Drive\project_files\icvs_inequality\data\joined_sample.dta"
+use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta"
 
 set more off
 
@@ -525,7 +525,7 @@ DFFit: difference between adjusted predicted value and original value
 
 ```{stata heteroscedasticity plot}
 
-*use "C:\Users\dalla\Google Drive\project_files\icvs_inequality\data\joined_sample.dta"
+*use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta"
 
 
 *Winzorized model

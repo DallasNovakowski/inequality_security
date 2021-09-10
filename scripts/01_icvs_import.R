@@ -8,7 +8,7 @@ library(dplyr) # for glimpse and filter functions
 library(data.table)
 library(knitr)
 
-rawest_data <- read_sav("C:/Users/dalla/Google Drive/R Coding/icvs_inequality/data/ICVS2005_3.sav")  # Reading data
+rawest_data <- read_sav("C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/ICVS2005_3.sav")  # Reading data
 
 
 raw_classes <- lapply(as.data.frame(lapply(rawest_data, class)),tail,1)
