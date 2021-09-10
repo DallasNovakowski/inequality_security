@@ -26,7 +26,7 @@ library(moments) # skewness and kurtosis
 #surveytoolbox::extract_vallab()
 #raw_classes <- as.character(lapply(lapply(icvs_data, class),tail,1))
 
-icvs_data <- read_sav("C:/Users/dalla/Google Drive/project_files/icvs_inequality/data/ICVS2005_3.sav")  # Reading data
+icvs_data <- read_sav("C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/ICVS2005_3.sav")  # Reading data
 
 setnames(icvs_data, old=c("I002A","I002B"), new=c("sweep_year", "sweep_num"), skip_absent=TRUE)
 
@@ -171,7 +171,7 @@ The codebook proves to be a useful, but incomplete, resource here. We can see wh
 <br>
 
 
-![](C:/Users/dalla/Google Drive/R Coding/ICVS_codebook_screenshot.png)
+![](C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/supporting_docs/ICVS_codebook_screenshot.png)
 
 
 # Choosing year(s) and questionnaire(s) for our analysis
@@ -811,7 +811,7 @@ For inequality data, I used the Standardized World Income Inequality Database 9.
 
 ```{r swidd summary, results='hide'}
 library(purrr)
-load("C:/Users/dalla/Google Drive/R Coding/swiid9_0/swiid9_0.rda")
+load("C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/swiid9_0.rda")
 
 unique(swiid[[1]]$country)
 
@@ -882,7 +882,7 @@ For a nation-level index of living standards, We'll use the Penn World Tables 10
 We can see a breakdown of GDP per capita here:
   
 ```{r pwt summary,warning=F, message=FALSE, echo=FALSE, results='hide'}
-pwt <- read_excel("C:/Users/dalla/Google Drive/R Coding/pwt100.xlsx", sheet = "Data")
+pwt <- readxl::read_excel("C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/pwt100.xlsx", sheet = "Data")
 
 # changed from rgdpe
 pwt100_gdppc <- pwt %>% 
@@ -1044,7 +1044,7 @@ iv_2005_lib1 <- data_list_lib1 %>%
 
 
 ```{r merging}
-save(iv_2005, iv_2005_lib, iv_2005_mod, sweep5_nrow, sweep5_countries, file = "C:/Users/dalla/Google Drive/project_files/icvs_inequality/data/iv_2005.RData")
+save(iv_2005, iv_2005_lib, iv_2005_mod, sweep5_nrow, sweep5_countries, file = "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005.RData")
 
 rm(icvs_data, pwt, swiid, swiid_responders,swiid_spread, data_2005, victim_2005, vic_var_drop, iv_2005_lib, iv_2005_lib1, iv_2005_mod, responders_2005)
 
