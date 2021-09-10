@@ -1,0 +1,662 @@
+---
+title: "icvs_first_analyses"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr) # pipe
+library(purrr) # map function
+library(car) #qqPlot
+load("C:/Users/dalla/Google Drive/project_files/icvs_inequality/data/joined_sample.RData")
+
+
+# 
+# icvs_joined <-  icvs_joined %>%
+#   map(. %>% filter(., !is.na(num_victim_5yr)))
+
+```
+
+
+
+
+## Procedure
+
+The relationship between country-level inequality and the consumption of security products will be tested using a multilevel linear regression. This analysis will be accomplished using a combination of three archival datasets. 
+
+Firstly, indicators of security consumption have been accessed from the International Crime Victimization survey (ICVS; REF), which  is an accumulation of standardized sample surveys to look at householders’ experiences with crime, policing, crime prevention and feelings of unsafety. Although it does not consist of longitudinal observations, the ICVS has been distributed across five phases over fifteen years (1989, 1992, 1996, 2000, 2005), totaling 300,000 people and 78 different countries (Data Archiving and Networked Services, n.d.). For the purposes of this study, it is most notable that this survey contains items such as respondents’ adopted measures to protect themselves against burglary.
+
+Secondly, nation-level inequality in disposable income was accessed through the Standardized World Income Inequality Database (SWIID; REF). The SWIID has been designed to maximize the comparability of income inequality data while maintaining the widest possible coverage across countries and over time. As a result, the gini coefficients are accompanied by standard errors to reflect uncertainty in the estimates.
+
+Lastly, countries' expenditure-side real GDP was retrieved from the Penn World Table, version 10.0 (PWT; REF). The selected GDP values are adjusted for Purchasing Power Parity, "to compare relative living standards across countries at a single point in time" (https://www.rug.nl/ggdc/productivity/pwt/?lang=en). Nations' GDP values were divided by their population sizes to yield a per-capita GDP value, which will be used for these analysis.
+
+Although the above datasets extend across multiple years, the current analysis will be limited to observations across 2004-2006. Imposing this restriction allows for a sufficient number of countries, combined with relative recency of data. After a conservative exclusion process for missing data, survey sweeps conducted across 2004-6 yielded 31 countries with 85,085 participants, with a minimum of 790 participants per country. An exclusion strategy maximizing the number of variables yields 27 countries, and 48,671 participants.
+
+
+# Analysis procedure
+
+If the assumptions underlying a multilevel regression hold in this dataset, the analysis will be conducted using maximum likelihood estimates (MLE) in r package lme4 (REF). Despite the possibility of nonnormal data, the large sample size in this study will yield similar variance estimates to REML estimation.
+
+
+Given that the SWIID is presented in a list of 100 different dataframes, the analysis will firstly be conducted on each dataframe, with the results stored separately.
+
+
+```{r other text, warning=F, message=FALSE, echo=FALSE}
+# expected value of the ML variance estimator is not equal to the true variance σ², although it approaches the true variance at large sample sizes
+# https://bookdown.org/roback/bookdown-BeyondMLR/ch-multilevelintro.html#twolevelmodeling
+# 
+# The most common methods for estimating model parameters—both fixed effects and variance components—are maximum likelihood (ML) and restricted maximum likelihood (REML)
+# 
+# REML is conditional on the fixed effects, so that the part of the data used for estimating variance components is separated from that used for estimating fixed effects. Thus REML, by accounting for the loss in degrees of freedom from estimating the fixed effects, provides an unbiased estimate of variance components, while ML estimators for variance components are biased under assumptions of normality, since they use estimated fixed effects rather than the true values. REML is preferable when the number of parameters is large or the primary interest is obtaining estimates of model parameters, either fixed effects or variance components associated with random effects. ML should be used if nested fixed effects models are being compared using a likelihood ratio test, although REML is fine for nested models of random effects (with the same fixed effects model).
+# 
+# assume that random effects follow a normal distribution with mean 0 and a variance parameter which must be estimated from the data.
+# 
+# the error terms at Level Two can be assumed to follow a multivariate normal distribution
+# 
+# Certain software packages will report p-values corresponding to hypothesis tests for parameters of fixed effects; these packages are typically using conservative assumptions, large-sample results, or approximate degrees of freedom for a t-distribution. 
+
+# 
+# 
+# ML and REML assume errors a normally distributed
+# - differences between the two estimation methods occur in variance estimation: at large n-to IV ratios, immaterial difference
+# 
+# REML preferable as its variance parameters are unbiasesd
+# 
+# however, ML better for carrying out deviance tests
+```
+
+```{r estimation preview1, warning=F, message=FALSE}
+# Estimate model
+# m1 <- icvs_joined %>% 
+#   map(~ lme4::lmer(num_victim_5yr ~ gini_2004_6_cent + gdppc_2004_6_cent + 
+#                      age_cent + employed + male + (1 | country),data = .x, REML=FALSE))
+
+
+m1_sample <- lme4::lmer(num_victim_5yr ~ gini_2004_6_cent + gdppc_2004_6_cent +
+                     age_cent + employed + male + (1 | country),data = join_sample, REML=FALSE)
+
+
+# Both packages use Lattice as the backend, but nlme has some nice features like groupedData() and lmList() that are lacking in lme4 (IMO). From a practical perspective, the two most important criteria seem, however, that
+
+# https://lme4.r-forge.r-project.org/book/
+
+#    lme4 extends nlme with other link functions: in nlme, you cannot fit outcomes whose distribution is not gaussian, lme4 can be used to fit mixed-effects logistic regression, for example.
+#    in nlme, it is possible to specify the variance-covariance matrix for the random effects (e.g. an AR(1)); it is not possible in lme4.
+
+#Now, lme4 can easily handle very huge number of random effects (hence, number of individuals in a given study) thanks to its C part and the use of sparse matrices. The nlme package has somewhat been superseded by lme4 so I won't expect people spending much time developing add-ons on top of nlme. Personally, when I have a continuous response in my model, I tend to use both packages, but I'm now versed to the lme4 way for fitting GLMM.
+
+# nlme let's you specify variance-covariance structures for the residuals (i.e. spatial or temporal autocorrelation or heteroskedasticity), lme4 doesn't
+
+# https://stats.stackexchange.com/questions/5344/how-to-choose-nlme-or-lme4-r-library-for-mixed-effects-models
+# lmeg or nlme?
+#nlme is the very large tool box, including a TIG welder to make any tools you need.
+
+# brms: Bayesian Regression Models using 'Stan'
+# https://cran.r-project.org/web/packages/brms/index.html
+```
+
+Each of these 100 dataframes will then be subjected to 100 simulations, yielding vectors of 10,000 estimates. The means and distributions of these vectors will yield the coefficient and standard error values, respectively.
+
+"We could now use Rubin’s (1987) rules to calculate the mean and standard error for each fixed effect estimate across these 100 sets of results (these rules are implemented in the package mitools (Lumley 2014) and others), but instead we will use simulation. Using sim from the arm package (Gelman and Su 2015), we generate the distribution of fixed-effects estimates in the results both for each dataframe and across the 100 dataframes."
+
+
+```{r simulation preview1, warning=F, message=FALSE, echo=FALSE}
+#Simulate distribution of estimates
+
+# m1_sims <- m1 %>%
+#   map(. %>% 
+#         arm::sim(n.sims = 100)) %>%
+#   map_df(. %>%
+#            slot("fixef") %>% 
+#            as_tibble())
+
+
+
+```
+
+Then we will use these distributions to calculate estimates and standard errors for each fixed effect, putting them in a tidy data frame like that achieved by using broom::tidy() (Robinson 2016).
+
+```{r tidying, warning=F, message=FALSE}
+# Generate a tidy dataframe of results (cf. broom::tidy())
+
+# m1_tidy <- tibble(term = names(m1_sims),
+# estimate = summarise_all(m1_sims, list(mean)) %>%
+# t() %>%
+# as.vector(),
+# std.error = m1_sims %>%
+# summarise_all(list(sd)) %>%
+# t() %>%
+# as.vector())
+
+
+
+
+# transmute(country = countrycode(S003,
+# origin = "iso3n",
+# destination = "country.name"),
+# year = as.numeric(S020),
+# religiosity = ifelse(F063>0, F063, NA),
+# 
+# male = ifelse(X001>0, as.numeric(X001 == 1), NA),
+# educ = ifelse(X025>0, X025, NA),
+# age = ifelse(X003>0, X003, NA)) %>%
+# filter(complete.cases(.)) %>%
+# left_join(pwt91_gdppc, by = c("country", "year"))
+# 
+# m1_tidy
+
+summary(m1_sample)
+```
+
+
+Here we use the dotwhisker package (Solt and Hu 2015) to present a dot-and-whisker plot of the results. The dots represent the estimated change on the ten-point religiosity scale for a change of two standard deviations in each independent variable; the whiskers represent the 95% confidence intervals of
+these estimates.
+
+
+```{r plot sample, warning=F, message=FALSE, echo=FALSE}
+
+library(dotwhisker)
+
+# Plot the results
+# m1_tidy %>%
+#     by_2sd(icvs_joined[[1]]) %>%
+#     relabel_predictors(c(gini_2004_6 = "Income Inequality",
+#     gdppc_2004_6 = "GDP/capita",
+#     age_cent = "Age",
+#     city_size_k = "City Size",
+#     male = "Male")) %>%
+#       dwplot() +
+#       theme_bw() +
+#       geom_vline(xintercept = 0,
+#       colour = "grey60",
+#       linetype = "dashed") +
+#       theme(legend.position="none") +
+#       labs(title = "Predicting victimizations",
+#       x = "Coefficient Estimate")
+
+
+
+# 
+# # Plot the results
+# m1_tidy %>%
+#     by_2sd(join_sample) %>%
+#     relabel_predictors(c(gini_2004_6 = "Income Inequality",
+#     gdppc_2004_6 = "GDP/capita",
+#     age_cent = "Age",
+#     city_size_k = "City Size",
+#     male = "Male")) %>%
+#       dwplot() +
+#       theme_bw() +
+#       geom_vline(xintercept = 0,
+#       colour = "grey60",
+#       linetype = "dashed") +
+#       theme(legend.position="none") +
+#       labs(title = "Predicting victimizations",
+#       x = "Coefficient Estimate")
+```
+
+
+# reporting effects and models
+
+
+
+What can an empty model tell us?
+-	Intraclass correlation
+
+
+
+Not looking for significance in the intercept, but rather significance in the variance of the intercept
+-	BUT: variance can’t be negative, so standard significance tests aren’t of any help
+
+
+September 19, 2018
+
+Log Likelihood
+-	Cluster level variance is due to level 2 factors
+o	What if you’re not interested in the direct effects of level 2 factors?
+	You don’t need direct significance to preclude the use of a moderator
+
+
+Tesging a coefficient
+-	T or z = b/Sb
+o	Sb = standard error of coefficient
+
+
+
+when adding predictors, we can evaluate change in log likelihood to assess whether the fit is better
+	chi-squarediff = -2(LLsimple – LLL)
+-	why do we multiply by 2?
+-	Degrees of freedom = difference in # of estimated parameters
+-	You basically want to run a one-tailed test due to the inability to have a negative variance
+o	Because we are testing the variance of the intercept
+
+
+
+Chibar2(01)
+-	Does the adjustment for the 1-tail test
+
+
+Empirical bayes estimate
+-	we bias group means towards population mean through “shrinkage”
+-	subtracting some proportion of the observed group mean and substituting with an inverse proportion of the population mean
+o	more within-group variance, and smaller sample size leads to greater shrinkage
+BLUP – Best Linear Unbiased Prediction
+-	This is the EB estimate
+
+
+Predict groupeffect, reffects
+-	Estimate error for each level-2 uit
+-	This is the Blup/EB
+-	Then, add grand mean with group error
+
+
+So what do we report?
+-	Bayesian Information Criterion (BIC) is quite conservative compared to significance tests	
+o	BIC can be useful for comparing models
+o	A non-parametric, relative measure of model fit
+	Relative to another model (with a certain # of parameters and a certain amount of model fit), how does this fit?
+	Is your fit worth the # of predictors you had to add to achieve it?
+o	If BIC only goes down a little bit after introducing predictors, it might be better to use a more parsimonious model
+o	Sine you’re just comp
+o	Aring model fits/complexities, you don’t have to worry about inflating Type I Error
+-	AIC Akaike Information Criterion
+
+
+
+Generally, don’t use standardized slopes, instead use random slopes in MLM
+-	When is standardization not useful?
+o	Interpreting the effect as a substanstive issue
+-	Random slope allows slope to vary across level 2
+o	Level 2 moderates the coefficient
+o	i.e., interaction
+o	you can’t just use a difference in p-values to claim an interaction
+	need to test these slopes (which are means)
+
+
+
+
+
+
+there is
+much to be gained when researchers follow a standardized
+way of reporting effect sizes (Lumley et al., 2002).
+
+# Assumption checks and and contingencies
+
+<ul>**1. Linearity**</ul>
+  * **Check:** Scatterplots
+  * **Fix:** add polynomials until adequate fit to linear function is obtained
+
+
+    
+    
+Nonlinearity does not seem to be a major issue in the data. Especially with a small sample, adding polynomials seems more likely to risk overfitting the data. If anything, these charts suggest that these trends might be largely driven by a few influential observations.
+
+```{r cooksd, warning=F, message=FALSE, echo=FALSE}
+# influential cases (Cook's Distance. Any values over 1 are likely to be significant outliers)
+cooksD <- cooks.distance(m1_sample)
+summary(cooksD)
+
+gd <- join_sample %>% 
+        filter(!is.na(num_victim_5yr)) %>%
+        group_by(country) %>% 
+        summarise(gdppc_2004_6 = mean(gdppc_2004_6),
+                  num_victim_5yr  = mean(num_victim_5yr),
+                  gini_2004_6  = mean(gini_2004_6))
+
+
+# look for influential observations in nation-level
+nation_cook <- cooks.distance(lm(gini_2004_6 ~ gdppc_2004_6, gd))
+summary(nation_cook)
+plot(nation_cook)
+abline(h = 4/nrow(gd), lty = 2, col = "steelblue") # add cutoff line
+
+
+# influential observations for gini
+victim_gini_cook <- cooks.distance(lm(num_victim_5yr ~ gini_2004_6, gd))
+summary(victim_gini_cook)
+plot(victim_gini_cook)
+abline(h = 4/nrow(gd), lty = 2, col = "steelblue") # add cutoff line
+
+# plot with outliers
+victim_gini_outlier <- ggplot(gd, aes(x = gini_2004_6, y = num_victim_5yr)) +
+    geom_point() + geom_smooth(alpha = .25, color = "red", span = 1.25) + geom_smooth(method = "lm", alpha = .25) + 
+    theme_minimal() + ggtitle("Victimization & Gini - Outliers") + scale_y_continuous(limits = c(0, 1.25))
+
+# plot without outliers
+victim_gini_no_outlier <- ggplot(filter(gd, gini_2004_6 < 50), aes(x = gini_2004_6, y = num_victim_5yr)) +
+    geom_point() + geom_smooth(alpha = .25, color = "red", span = 1.25) + geom_smooth(method = "lm", alpha = .25) + 
+    theme_minimal() + ggtitle("Victimization & Gini - No Outliers")  + scale_y_continuous(limits = c(0, 1.25))
+
+#plot the two scatterplots side by side
+gridExtra::grid.arrange(victim_gini_outlier,victim_gini_no_outlier, ncol=2)
+
+
+# cooks distance for gdp
+victim_gdp_cook <- cooks.distance(lm(num_victim_5yr ~ gdppc_2004_6, gd))
+summary(victim_gdp_cook)
+plot(victim_gdp_cook)
+abline(h = 4/nrow(gd), lty = 2, col = "steelblue") # add cutoff line
+
+# plot with outliers
+victim_gdp_outlier <- ggplot(gd, aes(x = gdppc_2004_6, y = num_victim_5yr)) +
+    geom_point() + geom_smooth(alpha = .25, color = "red", span = 1.25) + geom_smooth(method = "lm", alpha = .25) + 
+    theme_minimal() + ggtitle("Victimization & GDP - Outliers")  + scale_x_continuous(limits = c(1500, 85000)) + scale_y_continuous(limits = c(.25, 1.25))
+# + geom_smooth(method = "lm", formula = y~log(x), alpha = .25, color = "green")
+
+# plot without outliers
+victim_gdp_no_outlier <- ggplot(filter(gd, gdppc_2004_6 < 60000), aes(x = gdppc_2004_6, y = num_victim_5yr)) +
+    geom_point() + geom_smooth(alpha = .25, color = "red", span = 1.25) + geom_smooth(method = "lm", alpha = .25) + 
+    theme_minimal() + ggtitle("Victimization & GDP - No Outliers")  + scale_x_continuous(limits = c(1500, 85000)) + scale_y_continuous(limits = c(.25, 1.25))
+
+#plot the two scatterplots side by side
+gridExtra::grid.arrange(victim_gdp_outlier, victim_gdp_no_outlier, ncol=2)
+
+```
+
+
+However, the cooks distance values are all well under 1. Importantly, this is the same for the nation-level variables; they have a smaller sample size - and are thus the more susceptible to influential observations.
+
+
+
+```{r linearity1, warning=F, message=FALSE, echo=FALSE}
+# ggplot(join_sample, aes(x = age_cent, y = num_victim_5yr)) +
+#     geom_point(alpha = .02, position = "jitter", color = "#40B0A6") + geom_smooth(alpha = .25, color = "red", span = 1.25) + geom_smooth(method = "lm", alpha = .25) + 
+#     theme_minimal()
+```
+
+
+
+```{r gdpgini scatter, warning=F, message=FALSE, echo=FALSE}
+
+#create scatterplot for data frame with no outliers
+no_outliers_plot <- ggplot(filter(gd,gini_2004_6 < 50), aes(x = gini_2004_6, y = gdppc_2004_6)) +
+    geom_point(position = "jitter") + geom_smooth(alpha = .25, color = "red", span = 1.25) + geom_smooth(method = "lm", alpha = .25) + ggtitle("No Outliers")  + scale_y_continuous(limits = c(-1000, 85000))
+
+#create scatterplot for data frame with outliers
+outliers_plot <- ggplot(gd, aes(x = gini_2004_6, y = gdppc_2004_6)) +
+    geom_point(position = "jitter") + geom_smooth(alpha = .25, color = "red", span = 1.25) + geom_smooth(method = "lm", alpha = .25) + ggtitle("With Outliers")  + scale_y_continuous(limits = c(-1000, 85000))
+
+#plot the two scatterplots side by side
+gridExtra::grid.arrange(no_outliers_plot, outliers_plot, ncol=2)
+
+
+ggplot(gd, aes(x = gini_2004_6, y = gdppc_2004_6)) +
+    geom_point(position = "jitter") + geom_smooth(alpha = .25, color = "red", span = 1.25) + geom_smooth(method = "lm", alpha = .25)
+
+# there is so much skew in this data that it does not do much to inform linearity judgments
+plot(resid(m1_sample),join_sample$num_victim_5yr[1:length(resid(m1_sample))])
+```
+
+    
+<ul>**2. Normality in residuals**</ul>
+  * **Check**: QQplots (The Normal Probability Plot method.)
+    * Levene’s test - this is more robust to departures from normality than Bartlett’s test. It is in the car package.
+    * Fligner-Killeen test - this is a non-parametric test which is very robust against departures from normality.
+  * **NO treatment:** Lumley, Diehr, Emerson, & Chen (2002) provided simulation evidence that linear regressions conducted on large samples are robust to departures from normality. With at least 500 observations, they found that linear regression can be conducted with negligible impact on Type I errors. Likewise, Knief & Forstmeier (2021) found  that for anything other than very small sample sizes, "p-values from Gaussian models are highly robust to even extreme violation of the normality assumption and can be trusted, except when involving X and Y distributions with extreme outliers (p. ??). Likewise, "for N = 1000, power was essentially unaffected by the distribution of Y and X."
+
+Finally, the authors found a Gaussian error distribution to be far more robust to violations of its assumptions than Poisson and Binomial distributions. Initially, a binomial or poisson process seems to better describe the distribution of this study's dependent variable (both for the proposed and presented analyses). However, these variables likely violate the assumption of event independence, where one event does not affect the likelihood of a subsequent event. For instance, in the case of security consumption, the psychological and material impacts of buying a security product (e.g., feelings of safety, reduced budget), can plausibly impact a consumers' decision to purchase further security goods. Given the potential for heavy bias in poisson and negative binomial models, a gaussian error structure's comparative robustness appears to make a (violated) assumption of normality be the most appropriate choice.
+
+
+> Moreover, we worry that sophisticated methods
+may allow presenting nearly anything as statistically significant
+(Simmons et al., 2011) because complex methods will
+only rarely be questioned by reviewers.
+
+
+```{r Normality, warning=F, message=FALSE}
+qqnorm(resid(m1_sample))
+qqline(resid(m1_sample), col = "darkgreen")
+
+plot(density(resid(m1_sample)))
+
+
+moments::skewness(resid(m1_sample))
+moments::kurtosis(resid(m1_sample))
+
+
+```
+
+
+Indeed, this is dependent variable is definitely not normal, with a skewness of `r round(moments::skewness(resid(m1_sample)),2)`, and a kurtosis of *`r round(moments::kurtosis(resid(m1_sample)),2)`*
+
+With high sample sizes, their analyses found that even dramatic violations of normality assumptions (gaussian and binomial distributions) had no impact on Type I errors
+
+```{r other distributions, warning=F, message=FALSE, echo=FALSE, results='hide'}
+# https://www.juliapilowsky.com/2018/10/19/a-practical-guide-to-mixed-models-in-r/
+
+# # unexpected missingness exclusion
+# summary(!is.na(join_sample[["num_victim_5yr"]]))
+# which(is.na(join_sample[["num_victim_5yr"]]))
+join_sample <- join_sample[-c(29052),] 
+
+
+join_sample$num_victim_5yr_1 <- join_sample$num_victim_5yr + 1
+
+norm <- MASS::fitdistr(join_sample$num_victim_5yr_1, "normal")
+
+# qqp(join_sample$num_victim_5yr, "norm", main = "Normal distribution")
+
+qqp(join_sample$sqrt_victimization, "norm", main = "Normal distribution, square root")
+
+qqp(join_sample$cubrt_victimization, "norm", main = "Normal distribution, cube root")
+
+qqp(join_sample$num_victim_5yr_1, "lnorm", main = "Logged normal distribution")
+
+
+# negative binomial - fails to optimize with +1 transformation
+# nbinom <- MASS::fitdistr(join_sample$num_victim_5yr_1, "Negative Binomial")
+# qqp(join_sample$num_victim_5yr_1, "nbinom", main = "Negative binomial distribution", size = nbinom$estimate[[1]], mu = nbinom$estimate[[2]])
+
+
+#poisson distribution
+poisson <- MASS::fitdistr(join_sample$num_victim_5yr_1, "Poisson")
+qqp(join_sample$num_victim_5yr_1, "pois", main = "Poisson distribution", lambda = poisson$estimate)
+
+
+gamma <- MASS::fitdistr(join_sample$num_victim_5yr_1, "gamma")
+qqp(join_sample$num_victim_5yr_1, "gamma", main = "Gamma distribution", shape = gamma$estimate[[1]], rate = gamma$estimate[[2]])
+
+# lattice::qqmath(m1_sample, id=0.05)
+```
+
+
+
+
+<ul>**3. Multicolinnearity**</ul>
+  * **Check**: VIF/tolerances
+  * **Fix** remove values >= 5 
+     
+```{r VIF1, warning=F, message=FALSE}
+car::vif(m1_sample) # display VIF values
+```
+        
+4. HETEROSCEDASTICITY
+     
+  * **Check**: Plot residuals vs predicted values, and residuals versus independent variables
+    * Others: Breush-Pagan test and the NCV test, levene's test
+  * **Fix** with Box-Cox transformation of DV; caret::BoxCoxTrans(yvar), log transformation of DV
+  * boxcoxmix packag
+  
+>  There is a two-parameter version of the Box-Cox transformation that allows a shift before transformation:\The usual Box-Cox transformation sets λ2=0. One common choice with the two-parameter version is λ1=0 and λ2=1 which has the neat property of mapping zero to zero. There is even an R function for this: log1p().  More generally, both parameters can be estimated. In R, the boxcox.fit() function in package geoR will fit the parameters.
+  
+ > * Inverse hyperbolic sine (IHS) transformation, mixture models (https://robjhyndman.com/hyndsight/transformations/)
+Other options: 
+  *  we want to obtain heteroskedasticity robust standard errors and their corresponding t values. In R the function coeftest from the lmtest package can be used in combination with the function vcovHC from the sandwich package to do this. 
+  
+  https://stackoverflow.com/questions/48479984/r-mixed-model-with-heteroscedastic-data-only-lm-function-works
+  
+>  The sandwich package is not limited to lm/glm only but it is in principle object-oriented, see vignette("sandwich-OOP", package = "sandwich") (also published as doi:10.18637/jss.v016.i09.
+>
+> There are suitable methods for a wide variety of packages/models but not for nlme or lme4. The reason is that it's not so obvious for which mixed-effects models the usual sandwich trick actually works. (Disclaimer: But I'm no expert in mixed-effects modeling.)
+> 
+>  However, for lme4 there is a relatively new package called merDeriv (https://CRAN.R-project.org/package=merDeriv) that supplies estfun and bread methods so that sandwich covariances can be computed for lmer output etc. There is also a working paper associated with that package: https://arxiv.org/abs/1612.04911
+  
+  * https://www.r-econometrics.com/methods/hcrobusterrors/
+
+> For a heteroskedasticity robust F test we perform a Wald test using the waldtest function, which is also contained in the lmtest package. It can be used in a similar way as the anova function, i.e., it uses the output of the restricted and unrestricted model and the robust variance-covariance matrix as argument vcov. Based on the variance-covariance matrix of the unrestriced model we, again, calculate White standard errors.
+
+knief and Forstmeier, 2021
+> Most elegantly,heteroscedasticity can be modeled directly, for instance by
+using the “weights” argument in lme (see Pinheiro & Bates,
+2000, p. 214), which also enables us to test directly whether
+allowing for heteroscedasticity increases the fit of the model
+significantly. Similarly, heteroscedasticity-consistent standard
+errors could be estimated (Hayes & Cai, 2007). For more
+advice on handling heteroscedasticity, see McGuinness
+(2002).
+     
+> we did not cover collinearity between predictors or the distribution of random effects, but others have dealt with these
+aspects before (Freckleton, 2011; Schielzeth et al., 2020).
+
+```{r heteroscedasticity1, warning=F, message=FALSE}
+levene_data<- join_sample[1:length(resid(m1_sample)),]
+
+levene_data$model_res<- residuals(m1_sample)
+levene_data$model_res_abs <-abs(levene_data$model_res) #creates a new column with the absolute value of the residuals
+levene_data$model_res_abs2 <- levene_data$model_res_abs^2 #squares the absolute values of the residuals to provide the more robust estimate
+levene_m1 <- lm(model_res_abs2 ~ country, data=levene_data) #ANOVA of the squared residuals
+anova(levene_m1) #displays the results
+
+# par(mfrow=c(2,2))
+
+# plot(m1_sample, which = 1)
+
+plot(m1_sample, resid(., type = "pearson") ~ fitted(.), abline = 0)
+
+plot(density(resid(m1_sample)))
+
+
+# https://www.r-econometrics.com/methods/hcrobusterrors/
+# obtain heteroskedasticity robust standard errors and their corresponding t values. - no applicable method for 'estfun' applied to an object of class "c('lmerMod', 'merMod')"
+# lmtest::coeftest(m1_sample, vcov = sandwich::vcovHC(m1_sample, type = "HC0"))
+
+# Breush Pagan Test - doesn't seem to work for lmer models    https://www.r-bloggers.com/2016/01/how-to-detect-heteroscedasticity-and-rectify-it/
+# lmtest::bptest(m1_sample)
+
+# NCV test - definitely doesn't work for lmer
+# car::ncvTest(m1_sample) 
+
+#varPower() might have something to do with improving homoscedasticity
+
+# So I like to use heteroscedastic-consistent covariance matrices. This paper explains it well. The sandwich and lmtest packages are great. Here is a good explanation how to do it for a indpendent design in R with lm(y ~ x). 
+# https://stackoverflow.com/questions/48479984/r-mixed-model-with-heteroscedastic-data-only-lm-function-works
+```
+
+
+```{r regression assumptions}
+
+# 1. linearity :DV/IV
+
+
+# 2. HOMOSCEDASTICITY: the variance of errors is the same across all levels of the IV
+
+
+#     Bartlett’s test - If the data is normally distributed, this is the best test to use. It is sensitive to data which is not non-normally distribution; it is more likely to return a “false positive” when the data is non-normal.
+
+# 
+# 
+# 3. normality 
+#QQ plots # S3 method for lm
+# qqPlot(m1_sample, xlab=paste(distribution, "Quantiles"),
+#     ylab=paste("Studentized Residuals(",
+#                 deparse(substitute(m1_sample)), ")", sep=""),
+#     main=NULL, distribution=c("t", "norm"),
+#     line=c("robust", "quartiles", "none"), las=par("las"),
+#     simulate=TRUE, envelope=TRUE,  reps=100,
+#     col=carPalette()[1], col.lines=carPalette()[2], lwd=2, pch=1, cex=par("cex"),
+#     id=TRUE, grid=TRUE, ...)
+# 
+# qqPlot(m1_sample)
+
+#  independent residuals
+
+# ggplot(m1_sample, aes(sample=.resid)) +
+#     stat_qq()
+
+# random coefficients are normally distributed in overall model
+
+# reliability (of measurement)
+
+# residuals are independent (Durbin-Watson)
+
+# Multivariate Normality values of the residuals are normally distributed. (P-P plot)
+
+# multicollinearity
+
+
+```
+
+
+# Model comparison and selection - Field 868 - subtract log likelihood of new model from the value for the old
+
+**Only works for ML estimateion (not REML)**
+**Only works if new model contains "all of the effects of the older model"**
+> "Importantly, the robustness of regression methods to deviations
+from normality of the regression errors e does not only
+depend on sample size, but also on the distribution of the
+predictor X (Box & Watson, 1962; Mardia, 1971).
+Specifically, when the predictor variable X contains a single
+outlier, then it is possible that the case coincides with an outlier
+in Y, creating an extreme observation with high leverage
+on the regression line.
+This is the only case where statistical
+significance gets seriously misestimated based on the assumption
+of Gaussian errors in Y which is violated by the outlier in
+Y. This problem has been widely recognized (Ali & Sharma,
+1996; Box&Watson, 1962; Miller, 1986; Osborne &Waters,
+2002; Ramsey & Schafer, 2013; Zuur et al., 2010) leading to
+the conclusion that Gaussian models are robust as long as
+there are no outliers that occur in X and Y simultaneously."
+
+Knief & Forstmeier, 2021
+
+> Poisson distribution
+- lambdas specify variance and mean of the distribution (doesn't have to be an integer)
+
+> We have shown that Poisson models yielded heavily biased type I error rates (at α = 0.05) in either direction ranging from 0 to as high as 0.55 when their distribution assumption is violated (Fig. 3 right column, Fig. S7).
+
+> Moreover, we worry that sophisticated methods
+may allow presenting nearly anything as statistically significant
+(Simmons et al., 2011) because complex methods will
+only rarely be questioned by reviewers.
+
+
+
+poisson assumptions
+* rate at which events occur is constant
+* occurence of one event does not affect occurence of a subsequent event
+
+Probability Mass Function (PMF)
+- how likely a given value is
+
+cumulative distribution function
+- all of the likelihoods of values up to and including the designated value
+
+ GEE:  GENERALIZED LINEAR MODELS FOR DEPENDENT DATA (https://cehs-research.github.io/eBook_multilevel/gee-count-outcome-epilepsy.html)
+Match Poisson Regresssion (GLM)
+
+restricted maximum likelihood (REML)
+
+ Thus REML, by accounting for the loss in degrees of freedom from estimating the fixed effects, provides an unbiased estimate of variance components, while ML estimators for variance components are biased under assumptions of normality, since they use estimated fixed effects rather than the true values. 
+
+lmeresampler provides an easy way to bootstrap nested linear-mixed effects models using either the parametric, residual, cases, CGR (semi-parametric), or random effects block (REB) bootstrap fit using either lme4 or nlme. The output from lmeresampler is an lmeresamp http://aloy.github.io/lmeresampler/
+
+bootMer 
+
+
+https://www.juliapilowsky.com/2018/10/19/a-practical-guide-to-mixed-models-in-r/
+Semi-parametric multilevel modeling (Tihomir Asparouhov)
+
+ Probably the advice on this site will be to start with what kind of data your dependent variable is, and then choose an appropriate glm or regression approach. That is, if your dv is count, perhaps Poisson or negative binomial regression. If your dv is concentration, perhaps gamma regression. –
+ 
+
+Note that the negative binomial and gamma distributions can only handle positive numbers, and the Poisson distribution can only handle positive whole numbers
+
+# Limitations 
+
+The most notable weakness is that this is data from WEIRD countries. Other, less WEIRD countries (e.g., phillipines, nigeria, india) are better represented throughout sweeps 2 to 4
+
+
+Limited

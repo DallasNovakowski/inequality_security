@@ -1,0 +1,1071 @@
+---
+title: "icvs_prep_report"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r source script 1 & data, warning=F, message=FALSE, echo=FALSE}
+
+library(haven) # haven for reading .sav file
+library(janitor)
+library(stats)
+library(tidyverse)
+library(dplyr) # for glimpse and filter functions
+library(data.table)
+library(knitr)
+library(readxl) # read xls file
+library(DescTools) # winzorize
+library(moments) # skewness and kurtosis
+
+#sjPlot::view_df(icvs_data)
+#names_and_labels <- icvs_data %>%
+#  surveytoolbox::varl_tb()
+
+#names_and_labels <- icvs_data %>%
+#surveytoolbox::extract_vallab()
+#raw_classes <- as.character(lapply(lapply(icvs_data, class),tail,1))
+
+icvs_data <- read_sav("C:/Users/dalla/Google Drive/project_files/icvs_inequality/data/ICVS2005_3.sav")  # Reading data
+
+setnames(icvs_data, old=c("I002A","I002B"), new=c("sweep_year", "sweep_num"), skip_absent=TRUE)
+
+raw_classes <- sapply(sapply(icvs_data, class),tail,1)
+
+icvs_data <- icvs_data %>% 
+  mutate_all(as_factor) %>%   # convert all variables from chr+lbl to fct type          
+  set_names(icvs_data %>%       # convert variable names to informative labels
+              sjlabelled::get_label() %>% # pull labels from original tibble
+              enframe() %>%               # convert list of column names to a new tibble
+              na_if("") %>%               # if variable label is empty string, convert to NA
+              dplyr::mutate(value = coalesce(value, name)) %>%  # fill in NA with original if missing
+              pull(value)) %>%            # extract new variable name into a character vector
+  janitor::clean_names()      # clean names to be all lowercase, replacing spaces with "_"     
+
+cleaned_classes <- sapply(sapply(icvs_data, class),tail,1)
+
+
+utility_var<-c(names(icvs_data)[1:29])
+                                       
+household_var <-c(names(icvs_data)[30:33], c("bicycle_ownership", "number_of_bicycles", "household_size", "persons_over_16", "males_over_16", "town_size", "type_of_house","home_owner")) 
+                       
+demo_var <- c(c("gender", "age", "immigrant_status"),names(icvs_data)[377:391], names(icvs_data)[398:405])
+           
+prevention_min <- c("prev_burglar_alarm", "prev_special_door_locks", "prev_special_grills", "prev_high_fence", "motion_detector", "prev_caretaker_security", "gun_ownership")
+prevention_mod <- c("prev_burglar_alarm", "prev_special_door_locks", "prev_special_grills", "prev_a_watch_dog", "prev_high_fence", "motion_detector", "prev_caretaker_security", "gun_ownership")
+prevention_max <- c("prev_burglar_alarm", "prev_special_door_locks", "prev_special_grills", "prev_a_watch_dog", "prev_high_fence", "prev_caretaker_security", "prev_watch_scheme","firearm_incl_airrifle","gun_ownership" )
+prevention_min1 <- c("prev_burglar_alarm", "prev_special_door_locks", "prev_special_grills", "prev_high_fence", "prev_caretaker_security","gun_ownership")
+prevention_others <- c("prev_other", "prev_insurance" , "arrangement_with_neighbours", "prev_do_not_know", "prev_keep_lights_on")
+
+prev_var <- c(prevention_max, prevention_others, "prev_refusal")
+                   
+victim_var <- c("cartheft_5_years", "motortheft_5_years", "bicyctheft_5_years", "burglar_5_years", "attempt_5_years" , "robbery_5_years", "pers_theft_5_years" , "sexoff_5_years", "assault_5_years", "assault_5y_domestic", "fraud_last_year" , "corrupt_last_year","hate_crime_5_year", "carjack_5_years")  
+
+corrupt_var <- c(names(icvs_data)[209:232])
+
+police_var <- names(icvs_data)[286:292]
+
+fear_var <- names(icvs_data)[337:362]
+
+potential_ivs <- c(c("gender", "age", "immigrant_status", "household_size", "persons_over_16", "males_over_16", "town_size", "type_of_house","home_owner", "occupation", "part_full_time_job", "level_of_education", "years_of_education", "income", "income1", "income2", "income_percentile_estimate", "area_description", "lived_in_area", "marital_status", names(icvs_data)[398:404], victim_var, corrupt_var, police_var, fear_var))
+
+reduced_var <- c(utility_var,household_var,demo_var,prev_var,victim_var,corrupt_var,police_var,fear_var)
+
+icvs_data <- icvs_data[,reduced_var]
+```
+
+
+The International Crime Victims Survey (ICVS) is a great dataset. Big, easy enough to access, and it's well documented. The identifiers and labels are available in the dataset, as well as  an accompanying codebook updated to the 2005 sweep of the ICVS. There is also a version of the questionnaire that participants see, which has been helpful in interpreting the items in plain language, in addition to clearing up some inconsistencies in the codebook.
+
+
+# **At a Glance**
+
+```{r source scripts, warning=F, message=FALSE, echo=FALSE}
+ source("C:/Users/dalla/Google Drive/project_files/icvs_inequality/scripts/icvs_scripts.r", local = knitr::knit_global())
+```
+
+```{r ncols and nrow, warning=F, message=FALSE, include = TRUE}
+nrow(icvs_data)
+ncol(icvs_data)
+
+summary(icvs_data[,utility_var])
+```
+
+As we can see, very large, 730 variables over 330,000 respondents
+
+<br>
+
+
+
+```{r country info}
+unique(icvs_data$country)
+length(summary(icvs_data$country))
+```
+
+<br>
+
+We see above, that there are 79 countries in total across the entire ICVS. 
+
+The ICVS provides more specific regional data compared to the LIS or World Bank, distinguishing data collection across England and Wales, Ireland, Northern Ireland, and Scotland (in addition to the United Kingdom).
+
+```{r adjusted countries}
+summary(icvs_data$country)[c("United Kingdom","England & Wales", "Northern Ireland", "Scotland", "Ireland")]
+```
+
+
+It would be preferable to retain data granularity across the United Kingdom. Firstly, it would keep the number of clusters closer 30 countries, and secondly, the regions likely have important economic and cultural differences. For instance, Northern Ireland has a smaller gini compared to the broader UK (.33 vs. .39 in 2013; https://www.nicva.org/resource/economic-inequality-in-northern-ireland).
+
+Unfortunately, smaller regions seem less likely to systematically collect data. For instance, some critical variables such as income inequality are not available either in the LIS, World Bank, nor government-level data in countries such as Northern Ireland or Scotland. Since this study seeks to integrate individual and nation-level observations, members of the United Kingdom were combined under the single country of the UK.
+
+```{r adjusting countries, echo = FALSE}
+# substituting specific british isles regions with UK
+icvs_data$country[icvs_data$country %in% c("England & Wales", "Scotland", "Northern Ireland")] <- "United Kingdom"
+
+# this throws an error sometimes (resolved with dplyr?)
+icvs_data$country<- dplyr::recode(icvs_data$country, "Hong Kong (SAR China)"= "Hong Kong",
+                           "USA" = "United States")
+```
+
+
+```{r total adjusted countries}
+summary(icvs_data$country)[c("United Kingdom","England & Wales", "Northern Ireland", "Scotland", "Ireland")]
+sum(summary(icvs_data$country)>0)
+```
+
+Notably, Ireland is not part of the UK, so has better data coverage and is left separately for this study
+
+
+# **Data wrangling**
+
+There are many different years and versions of the survey; not every case, sweep, or questionnaire will yield the data we're looking for.
+
+If we're doing international comparisons, the most important first consideration is the distribution of responses by sweep year. We need to have cases be (roughly) comparable based on the year. For example, it would be unfair to compare norway in 2005 to lithuania in 1989.
+
+```{r more country info, warning=F, message=FALSE, echo=FALSE}
+kable_summary(icvs_data$sweep_year)
+```
+
+
+We can see that there are five major sweeps of data collection, each potentially spanning a couple years. There is also a specific EU sweep, overlapping the 5th sweep.
+
+Next, it's worthwhile seeing what kinds of questionnaires people get, in case there are any meaningful differences
+
+
+```{r questionnaires, warning=F, message=FALSE}
+kable_summary(icvs_data$questionnaire_used)
+```
+We can see  that *there are more than a dozen different surveys distributed as part of this project*: computer-assisted telephone interviewing (CATI), face to face, and something "country specific." I know with some questionnaires (possibly later, and outside this dataset) are done solely with computers, but those had very poor response rates. Likewise, we can see that the study has been conducted over 15 years, better seen below.
+
+A potentially important note is that 9833 cases have "0" coded as the questionnaire they received, which doesn't have a code to it. Likewise, 16412 cases are NA. This means  about *25,000 participants were given an unknown questionnaire.* More on this later
+
+
+<br>
+
+
+This is important because the questions they receive, and the time they receive the questions, can change. There are  variables that may help us clear this up, but we need to keep this uncertainty in our consideration, because as explored later on, **this study often uses NA values in the place of 0** 
+
+<br>
+
+The codebook proves to be a useful, but incomplete, resource here. We can see which countries took part in each sweep, and what items were included (it even specifies the order of presentation!).
+
+<br>
+
+
+![](C:/Users/dalla/Google Drive/R Coding/ICVS_codebook_screenshot.png)
+
+
+# Choosing year(s) and questionnaire(s) for our analysis
+
+It's obvious we can't use all sweeps right off the bat.  Although we have the "seal of approval" for comparability, this is for specific questionnaire items - some questions are not displayed to participants in some years/surveys.
+
+This problem best reveals itself when we try to choose nation-level variables to include in the model - if we look at GDP or gini, what year do we extract from?
+
+```{r NA sweeps , warning=F, message=FALSE, echo = FALSE}
+library(reshape) # cast function
+sweep_screen <- icvs_data %>% group_by(sweep_num) %>% 
+  dplyr::count(country)
+
+sweep_screen$sweep_num<- dplyr::recode(sweep_screen$sweep_num, `1`="sweep1_1989",
+                        `2`=	"sweep2_1992_94", `3` =	"sweep3_1995_98",			
+                        `4` =	"sweep4_1999_03",			
+                        `5` = 	"sweep_5_2004_2006",			
+                        `5*` =	"EU_sweep_2005")
+
+# sweep_screen_m <- sweep_screen %>% dplyr::mutate(sweep_num=recode(sweep_num, 
+#                                  "1"="sweep1"))
+
+# view number of responses for each country*sweep
+sweep_screen_c <- cast(sweep_screen,country~sweep_num)
+
+# compute total number of participants
+sweep_screen_c$total <- rowSums(sweep_screen_c[,2:ncol(sweep_screen_c)], na.rm=TRUE)
+
+sweep_screen_c$total[sweep_screen_c$total == 0] <- NA
+
+sweep_screen_c$eu_and_2005 <- rowSums(sweep_screen_c[,c("sweep_5_2004_2006", "EU_sweep_2005")], na.rm=TRUE)
+
+sweep_screen_c$eu_and_2005[sweep_screen_c$eu_and_2005 == 0] <- NA
+
+sweep_screen_c
+```
+
+
+The above shows the number of participants in each country, for each wave, in addition to a total, AS WELL as the total number of participants for each country after combining the overlapping waves 5 and EU ICS (2004-2006 for sweep 5, and 2005 for the EU ICS 5.1)
+
+Although we could compare the sums of eu_and_2005 with its constituents, it's easier to **sum the number of non-NAs** (i.e., countries with at least 1 respondent) to see whether the 2004-2006 and EU ICS sweeps measure the same countries twice (i.e., there's redundancy)
+
+```{r count nonmissing,warning=F, message=FALSE, echo=FALSE}
+# sum non_missing 
+sweep_screen_c %>% 
+  summarise_all(list(~ sum(!is.na(.))))
+```
+So here we can see that the 4th sweep by has the most countries **WITHOUT NAs**, followed by sweeps 3 then 2
+
+Likewise, we can see that 18+16=34, which is equal to "eu_and_2005," so there is zero redundancy between the 2004-2006 surveys and the 2005 EU ICS. Given that there's no overlap, sweep 5 and the EU sweep seem to be perfectly complementary.
+
+For now, let's assume that we'll be using the countries combined for sweeps 5 and 5.1.
+
+```{r 2005 nrow}
+data_2005 <- icvs_data %>%
+  filter(sweep_num == 5 |sweep_num == "5*")
+
+# data_2005 = filter(icvs_data,sweep_num == 5 |sweep_num == "5*") 
+
+sweep5_nrow <- nrow(data_2005)
+sweep5_countries <- sum(summary(data_2005$country)>0)
+sweep5_nrow
+sweep5_countries
+```
+**94,749 people** and surveyed between 2004 and 2006! Certainly encouraging for our sample size. Like mentioned earlier, there may be variability in the surveys people got in these two 2005 sweeps, so let's see.
+
+**The argument for using sweep 5 and the EU ICS for our analyses**
+
+Putting my bias out there: I'm inclined to use the combined eu_and_2005 data for our analyses. 
+
+A little under half of all ICVS countries are were surveyed between 2004 and 2006. This gives a reasonable balance of:
+
+1) relatively  recent data, 
+
+2) small time window encompassing  each observation, and 
+
+3) a decent number of level 2 clustering variables (which is needed for HLM).
+
+The most notable weakness is that this is data from WEIRD countries. Other, less WEIRD countries (e.g., phillipines, nigeria, india) are better represented throughout sweeps 2 to 4
+
+<br>
+
+I consider this topic in need for further discussion (including recognizing even how the newest data is 15 years old) 
+
+
+## Comparability of sweeps and questionnaires
+
+I reached out to John van Kesteren - one of the chief researchers involved in the ICVS:
+
+> "With regards to the different versions, the used questionnaires are much alike. Each country was allowed to ad a small amount of additional questions to the basic questionnaires. If the differences are too big, I used the 'based on xxx' qualification. In that case it was up to me to decide whether specific items were comparable to the main questionnaire. If not, they were not included in the main database. It sounds a bit arrogant, but if it is in the main database, it has my personal seal of approval and the data are comparable."
+
+
+# **How do we measure security consumption?**
+
+Some people refused to answer on their use of security measures, so obviously can't be used for this study.
+
+```{r responders}
+responders_2005 = filter(data_2005, is.na(prev_refusal))
+nrow(responders_2005)
+sum(summary(responders_2005$country)>0)
+```
+
+Excluding refused participants leaves us with a total of `r length(summary(responders_2005$country)[summary(responders_2005$country)]>1)` countries and 
+`r format(nrow(responders_2005), scientific = FALSE)` respondents.
+
+```{r questionnaires after exclusions}
+kable_summary(responders_2005$questionnaire_used)
+kable_summary(responders_2005$questionnaire_based_on)
+```
+
+six unique values for the questionnaires received
+
+eight unique values for questionnaires_based_on, some ~31,000 responses
+
+No immediately discernible pattern for which cases get a based_on designation - Kerstern says  If the differences are too big, I used the 'based on xxx' qualification."
+
+
+
+First impression, I'd propose we use the following variables as dependent variables:
+
+```{r prev variables, warning=F, message=FALSE, echo=FALSE}
+prevention_min1
+```
+
+As mentioned before, each item is either 1 or NA. This is  problematic when trying to discern true missing responses from participants saying "no" to that item. NAs could mean that the respondent didn't see the question, but if a category doesn't apply to them, they leave it blank.
+
+Tables for each questionnaire can help to determine whether the years have *ANY* "1" responses. This isn't conclusive, there's a small probability that a survey item presented to all participants, but no one answers it. At minimum, a FALSE value is a good signal though - participants can't indicate "yes" to any option if they don't see it.
+
+```{r missing country}
+na_tally(responders_2005,country,prevention_max) %>%
+    dplyr::bind_rows(dplyr::summarise(.,
+                      across(where(is.numeric), sum),
+                      across(where(is.logical), sum),
+                      across(where(is.character), ~"Total")))
+```
+
+Gun ownership is missing for South Africa, Peru, Hong Kong, and Japan
+
+including airrifle is missing for turkey and honkg kong
+
+<br>
+
+
+**Do we use gun ownership as part of a dv?**
+
+Mentioning the propsect of gun ownership as a security measure, John van Kesteren suggested that firearms a as a preventative measure has been debunked. His 2013 article in *BJC* found that 
+
+> "owners of a handgun show increased risk for victimization by violent crime. High ownership levels, however, seem to diminish the victimization level for the less serious violent crimes for the non-owners."
+
+At baseline I'd like to keep  keep gun ownership. Even if guns have a null or inconsistent effect on safety, what matters is that consumers perceive that guns are effective in protection. Just like how real victimization risk  is not as important as perceived risk to result in security behaviours. Although people spend resources to get the guns for protection (as do 25% of the gun owners in the paper), the practice doesn't actually prevent victimization.
+
+What is maybe more pressing is losing South Africa and Peru from our dataset - each of them are valuable in getting us closer to non-WEIRD comparisons, and losing us many participants.
+
+So maybe our best bet is getting rid of guns and minimizing the DV set - Up for discussion though
+
+```{r ultra min prevention variables}
+prevention_min2 <- c("prev_burglar_alarm", "prev_special_door_locks", "prev_special_grills", "prev_high_fence", "prev_caretaker_security")
+
+```
+
+```{r min prev missingness, warning=F, message=FALSE, echo=FALSE}
+# source("C:/Users/dalla/Google Drive/R Coding/icvs_inequality/scripts/03_icvs_explore.r", local = knitr::knit_global())
+
+na_tally(responders_2005,country,prevention_min2) %>%
+    dplyr::bind_rows(dplyr::summarise(.,
+                      across(where(is.numeric), sum),
+                      across(where(is.logical), sum),
+                      across(where(is.character), ~"Total")))
+```
+
+
+Switzerland actually has all NA values for all of these security items, so needs to be gone
+
+```{r rowsums security, warning=FALSE, message = F}
+responders_2005 = filter(data_2005, country != "Switzerland")
+
+responders_2005[ , prevention_min2] <- sapply(responders_2005[ , prevention_min2],
+                                             function(x) as.numeric(as.character(x)))
+
+# create total security variable
+responders_2005$total_security <- rowSums(responders_2005[ , prevention_min2], na.rm = TRUE) * NA ^ (rowSums(!is.na(responders_2005[ , prevention_min2])) == 0)
+
+# any NA values are coded as 0
+responders_2005$total_security[is.na(responders_2005$total_security)] = 0
+
+summary(responders_2005$total_security)
+
+normality_stats(responders_2005$total_security)
+```
+
+This summing procedure gives us a max score of `r max(responders_2005$total_security)` on security consumption, with substantial positive skew
+
+
+```{r total security, warning=F, message=FALSE, echo=FALSE}
+hist_plot(responders_2005, total_security, "Histogram of Total Security")
+
+```
+
+
+At first glance it looks like a poisson process with λ ~ .5, but we have little reason to believe that our outcome variables (e.g., security, number of victimizations) follow a strictly poisson process. Namely, violating the assumption that the occurence of one event does not affect occurence of a subsequent event. I would guess that purchasing security or being victimized by a crime has *some* effect on later occurences in either direction (e.g., having less money from the prior security purchase)
+
+A question though - is the independence supposed to be observed within observations or between observations?
+
+A more kosher alternative is a square root transformation. Looks like it reduces the skew by a  fair amount:
+
+A last alternative is a condensing transformation. Binning participants to either no security consumption, one unit of consumption, and anything higher than one
+
+It gets us the closest to a normal-looking distribution, but leads to loss of information and loss of power. 
+
+All told, let's remember that the assumptions of normality apply to the distribution of residuals, so can only be interpreted in the model. Important to keep skewness of the DV on our radar though.
+
+
+```{r after exclusions}
+summary(responders_2005$country)[0!= summary(responders_2005$country)]
+```
+
+```{r iv na}
+# count nonmissing
+nrow(responders_2005) - colSums(is.na(responders_2005[,potential_ivs]))
+
+# array of variables with more than 40,000 responses
+var_40k <- (nrow(responders_2005) - colSums(is.na(responders_2005[,potential_ivs])))[(nrow(responders_2005) - colSums(is.na(responders_2005[,potential_ivs]))) > 40000]
+ 
+responders_2005[,names(var_40k)] %>%     
+ summary()
+```
+```{r victimization variables, warning=F, message=F}
+# particularly for sexoff and assault, needs to be checked against each candidate country to see if items were administered
+
+
+# create small dataset with victimization items recoded
+victim_2005 <- responders_2005[,names(var_40k)] %>%   
+ dplyr::select(ends_with("_5_years")) %>%
+  mutate_all(funs(dplyr::recode(., "no owner" = 0, "yes" = 1, "no" = 0, "do not know" = NA_real_, `-1`=0, `1`=1, `2` = 0,  .default = NA_real_)))
+
+#change victimization column names
+colnames(victim_2005) <- gsub(x = colnames(victim_2005), pattern = "_5_years", replacement = "_5yrs")  
+
+#replace victimization variables with updated ones
+responders_2005[,colnames(victim_2005)] <- victim_2005
+
+# missingness tally
+na_tally(responders_2005,country,names(victim_2005)) %>%
+      bind_rows(dplyr::summarise(.,
+                      across(where(is.numeric), sum),
+                      across(where(is.logical), sum),
+                      across(where(is.character), ~"Total")))
+
+```
+
+peru is missing assualts
+
+asutralia missing sexual offences
+
+estonia missing motortheft
+
+probably drop assaults and sexual offences
+
+
+
+
+```{r sum victim, message=F}
+vic_var_drop <- select(victim_2005,-c("assault_5yrs","sexoff_5yrs"))
+
+vic_var_assault <- select(victim_2005,-c("sexoff_5yrs"))
+
+# currently keeping
+summary(vic_var_drop)
+
+summary(vic_var_assault)
+
+
+# filtering to remove missing variables for summing
+responders_2005 <- filter(responders_2005, (!is.na(cartheft_5yrs) & !is.na(bicyctheft_5yrs) & !is.na(burglar_5yrs) & !is.na(attempt_5yrs) & !is.na(robbery_5yrs) & !is.na(pers_theft_5yrs) & !is.na(motortheft_5yrs)))
+
+summary(responders_2005[,names(vic_var_drop)])
+nrow(responders_2005)
+
+# need to get rid of estonia for missingness
+responders_2005$num_victim_5yr <- rowSums(responders_2005[,names(vic_var_drop)])
+
+summary(responders_2005$num_victim_5yr)
+
+# combined hist and dens(smoothed)
+ggplot(responders_2005, aes(x = num_victim_5yr))  +  geom_histogram(binwidth= 1, alpha=.7, fill="#40B0A6", colour='grey') + geom_density(adjust=6, aes(y=..count..)) + theme_minimal() + geom_vline(aes(xintercept=mean(num_victim_5yr)),color="#40B0A6", linetype="dashed", size=1 ) + ggtitle("Number of victimizations over 5 years")
+
+skewness(responders_2005$num_victim_5yr)
+
+# create dataframe averaging victimization within each country
+cdata <- plyr::ddply(responders_2005, c("country"), summarise,
+               victim_nation_mean = mean(num_victim_5yr))
+
+cdata$victim_nation_winz <- DescTools::Winsorize(cdata$victim_nation_mean)
+
+# append full dataset with country-level means of victimizatoin
+responders_2005 <- cdata %>%
+  left_join(responders_2005, by = c("country"))
+
+# iv_2005$extreme <- if (iv_2005[,"country"]) 1 else 2
+
+na_tally(responders_2005,country,names(victim_2005)) %>%
+      dplyr::bind_rows(dplyr::summarise(.,
+                      across(where(is.numeric), sum),
+                      across(where(is.logical), sum),
+                      across(where(is.character), ~"Total")))
+
+
+#trying to overlay histogram and density plots
+# https://www.datanovia.com/en/blog/ggplot-histogram-with-density-curve-in-r-using-secondary-y-axis/
+
+```
+
+
+
+We've sorted out some victimization variables, but there are still some basic demographics and crime-related variables that we need to assess missingness and recode
+
+```{r transform more predictor variables}
+names(var_40k[-which(names(var_40k) %in% names(victim_2005))])
+
+#make analysis variables
+responders_2005 <- responders_2005 %>%
+  dplyr::mutate(male = ifelse(gender=="male", 1, 0),
+        age_num = dplyr::recode(as.numeric(age),`1` = 19, `2`=	24, `3` =	29,			
+                        `4` =	34, `5` = 	39,`6` =	44,`7` =	49,`8` =	54,
+                        `9` =	59,`10` =	64, `11` =	69, `12` = 75, `13` = NA_real_), 
+            immigrant = ifelse(immigrant_status=="yes, self", 1, 0),
+            household_size_num = dplyr::recode(as.numeric(household_size), `11` = NA_real_),
+        
+#housing - apartment as reference?
+        house = ifelse(type_of_house =="(semi)detached" | type_of_house =="terrace/row house", 1, ifelse(type_of_house == "flat appartment", 0, ifelse(type_of_house == "institution" | type_of_house == "boat caravan other", 0, ifelse(type_of_house == "shanties", 0, NA)))),         
+        institution = ifelse(type_of_house =="(semi)detached" | type_of_house =="terrace/row house"| type_of_house == "boat caravan other", 0, ifelse(type_of_house == "flat appartment", 1, ifelse(type_of_house == "institution", 0, ifelse(type_of_house == "shanties", 0, NA)))),
+        shanty = ifelse(type_of_house =="(semi)detached" | type_of_house =="terrace/row house"| type_of_house == "boat caravan other", 0, ifelse(type_of_house == "flat appartment", 0, ifelse(type_of_house == "institution", 0, ifelse(type_of_house == "shanties", 1, NA)))),
+        other_house = ifelse(type_of_house =="(semi)detached" | type_of_house =="terrace/row house" | type_of_house == "boat caravan other", 1, ifelse(type_of_house == "flat appartment", 0, ifelse(type_of_house == "institution", 0, ifelse(type_of_house == "shanties", 0, NA)))),
+      
+        employed = ifelse(occupation == "looking for work" | occupation == "keeping home" | occupation == "retired, disabled" | occupation == "still at school" | occupation == "other", 0, ifelse(occupation == "working" | occupation == "army", 1, NA)),
+
+        income_quartile = ifelse(income == "upper 25%", 4, ifelse(income == "50-75%", 3, ifelse(income == "25-50%", 2, ifelse(income == "lower 25%", 1,NA)))),
+
+        years_edu = as.numeric(as.character(years_of_education)),
+
+        city_size_k = as.numeric(ifelse(town_size == "-10,000", 0, ifelse(town_size == "10,000-50,000", 10,ifelse(town_size == "50,000-100,000",50, ifelse(town_size == "100,000-500,000",100,ifelse(town_size == "500,000-1,000,000",500,ifelse(town_size == "1,000,000+",1000,NA))))))),
+
+        partnered = ifelse(marital_status == "married" | marital_status == "living together", 1, ifelse(marital_status == "single" | marital_status == "divorced" | marital_status == "widowed", 0, NA)),
+
+        police_effective = ifelse(police_good_job_4_cat == "a very poor job",1,ifelse(police_good_job_4_cat == "a fairly poor job",2, ifelse(police_good_job_4_cat == "a fairly good job",3, ifelse(police_good_job_4_cat == "a very good job",4, NA)))),
+
+        feel_safe_dark = ifelse(feel_safe_after_dark == "very unsafe",1,ifelse(feel_safe_after_dark == "bit unsafe",2, ifelse(feel_safe_after_dark == "fairly safe",3, ifelse(feel_safe_after_dark == "very safe",4, NA)))),
+
+        break_in_threat = ifelse(break_in_chances == "not very likely",1,ifelse(break_in_chances == "likely",2, ifelse(break_in_chances == "very likely",3, NA))),
+
+        outing_freq = ifelse(going_out == "never",1,ifelse(going_out == "less",2, ifelse(going_out == "once a month",3,ifelse(going_out == "once a week",4, ifelse(going_out == "almost every day",5, NA))))))
+
+```
+  
+
+```{r new independent variables and missingness, message=F}
+new_iv <- names(responders_2005[,ncol(responders_2005):sum(ncol(responders_2005),-16)])
+new_iv
+
+new_iv_missing <- responders_2005 %>% group_by(sweep_num) %>% 
+  dplyr::count(country)
+
+na_tally(responders_2005,country,all_of(new_iv)) %>%
+    bind_rows(dplyr::summarise(.,
+                      across(where(is.numeric), sum),
+                      across(where(is.logical), sum),
+                      across(where(is.character), ~"Total")))
+
+```
+
+
+<b>A fair bit of missingness among these items</b>
+
+<ul>
+<li> housing items are missing for 19 different countries. </li>
+<li> just poland missing for outing_freq </li>
+<li> NZ and IC missing for break_in_threat </li>
+<li> just NZ missing for feeling feel_safe_dark </li>
+<li> japan for income_quartile </li>
+<li> peru, iceland, and japan for police_effective </li>
+<li> NZ, IC, CA, and HK missing for household_size_num </li>
+<li> just hong kong for age </li>
+<li> employed, partnered and male are totally filled </li>
+</ul>
+
+
+### what countries should we include?
+My initial impression would be to drop japan and hong kong for any analysis - not controlling for age and income seems inadvisable
+
+At minimum need to drop hong kong to keep age
+
+
+### what variables should we include?
+<b>For minimum inclusion:</b> <u>age, male, employed, partnered (excludes hong kong)</u>
+
+**for moderate inclusion:** <u> police effective, income_quartile (excludes japan, iceland, peru) </u>
+
+
+**for liberal inclusion:** <u>  feel_safe_dark, break_in_threat (excludes **NZ, CA**, IC, HK) </u>
+
+# **Nation-level variables**
+
+Our final spread of participants after screening for security items refusers and NAs for IVs (maximizing number of participants over # IVs) is as follows:
+
+```{r iv filtering}
+iv_2005 <- filter(responders_2005, !is.na(age_num) & !is.na(male) & !is.na(employed) & !is.na(num_victim_5yr))
+
+nrow(iv_2005)
+summary(iv_2005$country)[summary(iv_2005$country)!= 0]
+length(summary(iv_2005$country)[summary(iv_2005$country)!= 0])
+
+
+iv_2005$male <- factor(iv_2005$male)
+iv_2005$employed <- factor(iv_2005$employed)
+iv_2005$partnered <- factor(iv_2005$partnered)
+
+iv_2005[,c("age_num", "male", "employed", "partnered", "police_effective", "income_quartile")] %>%
+ summary()
+```
+
+
+```{r partnered filtering}
+iv_2005 <- filter(iv_2005, !is.na(partnered))
+
+summary(iv_2005$country)[summary(iv_2005$country)!= 0]
+
+iv_2005[,c("age_num", "male", "employed", "partnered", "police_effective", "income_quartile")] %>%
+ summary()
+
+```
+
+
+```{r post-screen screen}
+na_tally(iv_2005,country,all_of(new_iv)) %>%
+    bind_rows(dplyr::summarise(.,
+                      across(where(is.numeric), sum),
+                      across(where(is.logical), sum),
+                      across(where(is.character), ~"Total")))
+
+```
+
+
+```{r iv plots, message=F, warning=F}
+ggplot(iv_2005, aes(x = age_num, y = num_victim_5yr)) +
+    geom_jitter(color = "#40B0A6", alpha = .08) + geom_smooth(method = "lm")
+
+# ggplot(iv_2005, aes(x = city_size_k, y = num_victim_5yr)) +
+#     geom_point(position = "jitter", color = "#40B0A6", alpha = 0.08) + geom_smooth(method = "lm")
+# 
+# ggplot(iv_2005, aes(x = num_victim_5yr, y = total_security)) +
+#     geom_point(position = "jitter", color = "#40B0A6", alpha = 0.08) + geom_smooth(method = "lm")
+```
+
+## Survey Weights
+
+In large-scale surveys, a sample's representativeness is a critical part of making valid inferences. As such, the ICVS comes with weights to adjust over-and under-represented cases
+
+```{r weights}
+# iv_2005 %>%   
+#  dplyr::select(contains("weight")) %>%
+#   names()
+
+weights <- iv_2005 %>%   
+  dplyr::select(contains("weight")) %>%
+  names()
+
+iv_2005[weights] <- iv_2005 %>%   
+  dplyr::select(weights) %>%
+  mutate_all(funs(as.numeric(.)))
+
+iv_2005[weights]%>%
+  summary()
+```
+
+However, we can see that there is some rampant missingness across these values - perhaps with the exception of "indiv_survey_weight_n_ss" and "individual_weight"
+
+
+```{r missingness in weights}
+
+na_tally(iv_2005,questionnaire_used,weights)
+
+na_tally(iv_2005,questionnaire_used,c("indiv_survey_weight_n_ss", "individual_weight"))
+
+na_tally(iv_2005,questionnaire_based_on,c("indiv_survey_weight_n_ss", "individual_weight"))
+
+na_tally(iv_2005,country,c("indiv_survey_weight_n_ss", "individual_weight"))
+
+
+```
+
+
+Lithuania is the only country in which all weight values are missing, but this is only for "indiv_survey_weight_n_ss," so it seems reasonable to filter any missingness from "individual_weight"
+
+
+
+```{r filtering on weighting and look at # countries}
+iv_2005 <- filter(iv_2005, !is.na(individual_weight))
+
+summary(iv_2005$country)[0!= summary(iv_2005$country)]
+```
+
+
+```{r household}
+na_tally(iv_2005,country,all_of(new_iv)) %>%
+    bind_rows(dplyr::summarise(.,
+                      across(where(is.numeric), sum),
+                      across(where(is.logical), sum),
+                      across(where(is.character), ~"Total")))
+```
+
+
+
+```{r regional info}
+summary(iv_2005[,c("urban_or_rural", "region")])                      
+```
+
+
+One of the major benefits of an international study like this is being able to incorporate other nation-level variables. In this case, I am particularly interested in inequality, but it also allows to incorporate basic pieces like country prosperity
+
+
+
+# Creating four ICVS datasets with different inclusion criteria
+
+First, the one we will use in the manuscript. A moderate inclusion of variables with police effectiveness, income quartile, and assault (with this last one just being used for a new victimization variable)
+
+```{r iv liberal inclusion data sets}
+iv_2005 <- iv_2005 %>% 
+        filter(!is.na(total_security))
+
+# Base, maximizing cluster number
+# iv_2005[,c("age_cent")] <- iv_2005[,c("age_num")] - mean(iv_2005[,c("age_num")]) 
+# iv_2005[,c("age_s")] <- scale(iv_2005[,c("age_num")])
+
+# create dataset with moderate inclusion - police effectiveness and income
+iv_2005_mod <- filter(iv_2005, !is.na(police_effective) & !is.na(income_quartile) & !is.na(assault_5yrs))
+
+# iv_2005_mod[,c("age_cent", "police_eff_cent", "income_cent")] <- center_colmeans(iv_2005_mod[,c("age_num", "police_effective", "income_quartile")])
+
+nrow(iv_2005_mod)
+sum(summary(iv_2005_mod$country)>0)
+# iv_2005_mod[,c("num_victim_5yr", "age_num","police_effective", "income_quartile", "age_cent", "police_eff_cent", "income_cent")] %>%
+#  summary()
+
+```
+
+
+```{r victimization with assault}
+vic_var_assault <- select(victim_2005,-c("sexoff_5yrs"))
+
+na_tally(iv_2005_mod,country,names(vic_var_assault)) %>%
+      dplyr::bind_rows(dplyr::summarise(.,
+                      across(where(is.numeric), sum),
+                      across(where(is.logical), sum),
+                      across(where(is.character), ~"Total")))
+
+# need to get rid of estonia for missingness
+iv_2005_mod$num_victim_5yr_assault <- rowSums(iv_2005_mod[,names(vic_var_assault)])
+
+summary(iv_2005_mod$num_victim_5yr_assault)
+
+# create dataframe averaging victimization within each country
+assault_data <- plyr::ddply(iv_2005_mod, c("country"), summarise,
+               victim_nation_assault = mean(num_victim_5yr_assault))
+
+assault_data$victim_nation_assault_winz <- DescTools::Winsorize(assault_data$victim_nation_assault)
+
+iv_2005_mod <- assault_data %>%
+  left_join(iv_2005_mod, by = c("country"))
+```
+
+Two other datasets, filtered on more tangential variables (feeling safe after dark and perceived break-in threat). iv_2005_lib is created from the iv_2005_mod dataset, so has the fewest variables. iv_2005_lib1 is filtered from iv_2005, so has more clusters than lib, (and even mod)' tradeoff for lib1 is that it is has missing data for income and police effectiveness 
+
+```{r more liberal dataset}
+# create dataset with liberal inclusion - from moderate dataset (fewest possible participants)
+iv_2005_lib <- filter(iv_2005_mod, !is.na(feel_safe_dark) & !is.na(break_in_threat))
+
+# iv_2005_lib[,c("age_cent", "police_eff_cent", "income_cent", "safe_dark_cent", "break_in_threat_cent")] <- center_colmeans(iv_2005_lib[,c("age_num", "police_effective", "income_quartile", "feel_safe_dark", "break_in_threat")])
+
+nrow(iv_2005_lib)
+sum(summary(iv_2005_lib$country)>0)
+# iv_2005_lib[,c("num_victim_5yr", "age_num", "police_effective", "income_quartile", "feel_safe_dark", "break_in_threat", "age_cent", "police_eff_cent", "income_cent", "safe_dark_cent", "break_in_threat_cent")] %>%
+#  summary()
+
+
+# create dataset with liberal-moderate inclusion -from standard dataset (similar to moderate dataset)
+iv_2005_lib1 <- filter(iv_2005, !is.na(feel_safe_dark) & !is.na(break_in_threat))
+
+
+# iv_2005_lib1[,c("age_cent", "safe_dark_cent", "break_in_threat_cent")] <- center_colmeans(iv_2005_lib1[,c("age_num", "feel_safe_dark", "break_in_threat")])
+
+nrow(iv_2005_lib1)
+sum(summary(iv_2005_lib1$country)>0)
+# iv_2005_lib1[,c("num_victim_5yr", "age_num","feel_safe_dark", "break_in_threat", "age_cent", "safe_dark_cent", "break_in_threat_cent")] %>%
+#  summary()
+
+iv_2005[,c("age_num", "male", "employed", "partnered", "police_effective", "income_quartile", "feel_safe_dark", "break_in_threat")] %>%
+ summary()
+
+
+```
+
+
+```{r transform variables in new datasets}
+datasets <- list(iv_2005,iv_2005_mod,iv_2005_lib,iv_2005_lib1)
+
+winz_function <- function(df) {
+  df$age_cent <- df$age_num - mean(df$age_num)
+  df$security_winz <- DescTools::Winsorize(df$total_security)
+  df$num_victim_5yr_winz <- DescTools::Winsorize(df$num_victim_5yr)
+  df$police_eff_cent <- df$police_effective - mean(df$police_effective, na.rm = T)
+  df$income_cent <- df$income_quartile - mean(df$income_quartile, na.rm = T)
+  df$safe_dark_cent <- df$feel_safe_dark - mean(df$feel_safe_dark, na.rm = T)
+  df$break_in_threat_cent <- df$break_in_threat - mean(df$break_in_threat, na.rm = T)
+  df
+}
+
+datasets <- lapply(datasets,winz_function)
+
+iv_2005 <- datasets[[1]]
+iv_2005_mod  <- datasets[[2]]
+iv_2005_lib  <- datasets[[3]]
+iv_2005_lib1  <- datasets[[4]]
+
+
+iv_2005_lib[,c("num_victim_5yr", "num_victim_5yr_winz", "security_winz", "age_num","feel_safe_dark", "safe_dark_cent", "break_in_threat", "age_cent", "break_in_threat_cent", "police_eff_cent", "police_effective")] %>%
+ summary()
+
+
+rm(datasets)
+```
+
+
+## Inequality
+
+For inequality data, I used the Standardized World Income Inequality Database 9.0 (SWIID; Sotler, 2020). It is a great systematic effort at accumulating international comparisons of inequality over time. The Standardized World Income Inequality Database (SWIID) takes a Bayesian approach to standardizing observations collected from the OECD Income Distribution Database, the Socio-Economic Database for Latin America and the Caribbean generated by CEDLAS and the World Bank, Eurostat, the World Bank’s PovcalNet, the UN Economic Commission for Latin America and the Caribbean, national statistical offices around the world, and many other sources. Luxembourg Income Study data serves as the standard.
+
+
+```{r swidd summary, results='hide'}
+library(purrr)
+load("C:/Users/dalla/Google Drive/R Coding/swiid9_0/swiid9_0.rda")
+
+unique(swiid[[1]]$country)
+
+swiid_responders <-  swiid %>%
+  map(. %>% filter(.,country %in% names(summary(responders_2005$country)[0!= summary(responders_2005$country)]) )) %>%
+  map(. %>% filter(.,year == 2003 | year == 2004 | year == 2005 |year == 2006|year == 2007)) %>%
+  map(. %>% select(country,year,gini_disp))
+
+
+#swiid_spread <- swiid_responders %>%
+# map(.%>% spread(., year,gini_disp))
+
+
+swiid_spread <- swiid_responders %>%
+  map(.%>% pivot_wider(names_from = year, names_prefix ="gini_", values_from =gini_disp))
+
+
+swiid_2004_6 <- swiid_spread %>%
+  map(.%>% rowwise() %>%
+        dplyr::mutate(gini_2004_6 = mean(c(gini_2004, gini_2005, gini_2006))))
+
+
+# swiid_2004_6 <- swiid_2004_6 %>%
+#   map(~mutate(., gini_2004_6_cent = gini_2004_6 - mean(gini_2004_6)))
+#   # a = mean(gini_2004_6)d
+# 
+
+
+for (i in 1:length(swiid_2004_6)) {
+    swiid_2004_6[[i]][["gini_2004_6_cent"]] <-  swiid_2004_6[[i]][["gini_2004_6"]] - mean(swiid_2004_6[[i]][["gini_2004_6"]])
+    swiid_2004_6[[i]][["gini_2004_6_winz"]] <-  DescTools::Winsorize(swiid_2004_6[[i]][["gini_2004_6"]])
+    swiid_2004_6[[i]][["gini_2004_6_wc"]] <-  swiid_2004_6[[i]][["gini_2004_6_winz"]] - mean(swiid_2004_6[[i]][["gini_2004_6_winz"]])
+    swiid_2004_6[[i]][["gini_2004_6_ws"]] <- scale(swiid_2004_6[[i]][["gini_2004_6_winz"]])
+}
+
+
+# 
+# df2 <- df %>% mutate_at(c('var1'), ~(scale(.) %>% as.vector))
+# df2
+
+
+
+# swiid_2004_6[[1]][["gini_2004_6_cent"]] <-  swiid_2004_6[[1]][["gini_2004_6"]] - mean(swiid_2004_6[[1]][["gini_2004_6"]])
+
+#plot swiid
+swiid_summary %>%
+  filter(country == names(summary(iv_2005$country)[0!= summary(iv_2005$country)]) ) %>%
+  ggplot(aes(x=year, y=gini_disp, colour = country)) +
+  geom_line() +
+  geom_ribbon(aes(ymin = gini_disp-1.96*gini_disp_se,
+                  ymax = gini_disp+1.96*gini_disp_se,
+                  linetype=NA), alpha = .25) +
+  scale_x_continuous(breaks=seq(1960, 2015, 5)) +
+  theme_bw() +
+  labs(x = "Year",
+       y = "SWIID Gini Index, Disposable Income",
+       title = "Income Inequality over countries")
+```
+
+You can see that for the basic summary, there isn't gini data for all countries in our target study period. Accordingly, the dataset is imputed for some values. The inequality estimates and their associated uncertainty are represented by 100 draws from the posterior distribution: for any given observation, the differences across these imputations capture the uncertainty in the estimate
+
+As described in Solt (2020), the SWIID maximizes the comparability of available income inequality data for the broadest possible sample of countries and years. But incomparability remains, and it is sometimes substantial. This remaining incomparability is reflected in the standard errors of the SWIID estimates, making it often crucial to take this uncertainty into account when making comparisons across countries or over time (Solt 2009, 238; Solt 2016, 14; Solt 2020, 1196).
+
+## Living standards
+
+For a nation-level index of living standards, We'll use the Penn World Tables 10.0 (Feenstra, Inklaar and Timmer 2015). The PWT is devised to provide real GDP comparisons across countries and over time on the expenditure side. The PWT uses  prices collected  by the International Comparisons Program to construct purchasing-power-parity exchange rates. The PWT converts GDP at national prices to a common currency – U.S. dollars – making them comparable across countries
+
+We can see a breakdown of GDP per capita here:
+  
+```{r pwt summary,warning=F, message=FALSE, echo=FALSE, results='hide'}
+pwt <- read_excel("C:/Users/dalla/Google Drive/R Coding/pwt100.xlsx", sheet = "Data")
+
+# changed from rgdpe
+pwt100_gdppc <- pwt %>% 
+  transmute(country = country,
+            year = year,
+            gdppc = cgdpe/pop) %>%
+  filter(!is.na(gdppc))
+
+pwt_responders <-  pwt100_gdppc %>%
+  filter(country%in% names(summary(responders_2005$country)[0!= summary(responders_2005$country)]) ) %>% 
+  filter(year == 2003 | year == 2004 | year == 2005 |year == 2006|year == 2007)
+
+pwt_spread <- spread(pwt_responders, year,gdppc) 
+
+colnames(pwt_spread)[2:6] = c("gdppc_2003", "gdppc_2004", "gdppc_2005", "gdppc_2006", "gdppc_2007") 
+
+pwt_2004_6 <- pwt_spread %>%
+  dplyr::rowwise() %>%
+  dplyr::mutate(gdppc_2004_6 = mean(c(gdppc_2004, gdppc_2005, gdppc_2006)))
+
+# pwt_2004_6 %>%
+#   mutate(gdppc_2004_6_cent = mean(gdppc_2004_6))
+
+
+# ggplot(pwt_2004_6, aes(x = gdppc_2004_6)) + geom_density()
+
+ggplot(pwt_2004_6, aes(x = gdppc_2004_6))  +  geom_histogram(alpha=.7, fill="#40B0A6", colour='grey') + geom_density( aes(y=..count..)) + theme_minimal() + geom_vline(aes(xintercept=mean(gdppc_2004_6)),color="#40B0A6", linetype="dashed", size=1 ) + ggtitle("Histogram of average GDP per Capita over 2004-2006")
+
+
+```
+
+
+
+
+```{r create national dataframe}
+# create joined dataframe from all list of 100 dataframes for independent use
+data_list <- swiid_2004_6 %>% reduce(inner_join, by = "country")
+# create a column with mean of all gini_2004 values
+data_list$av_gini <- data_list %>%   
+  dplyr::select(starts_with("gini_2004_6.")) %>%
+  rowMeans()
+
+data_list <- data_list[,c("country", "av_gini")]
+
+data_list <- data_list %>%
+  filter(country != "Hong Kong") 
+
+data_list <- data_list %>%
+  left_join(pwt_2004_6[,c("country", "gdppc_2004_6")], by = c("country"))
+
+data_list$country <- as.factor(data_list$country)
+
+# standardize and centre GDP
+data_list[,c("gdppc_2004_6_scale")] <- scale(data_list[,c("gdppc_2004_6")])
+
+# mean centering
+  #GDP
+  data_list[["gdppc_2004_6_cent"]] <-  data_list[["gdppc_2004_6"]] - mean(data_list[["gdppc_2004_6"]])
+  # gini
+  data_list[["gini_2004_6_cent"]] <-  data_list[["av_gini"]] - mean(data_list[["av_gini"]])
+
+# Winzorizing
+  #GDP
+    data_list[["gdppc_2004_6_winz"]] <-  DescTools::Winsorize(data_list[["gdppc_2004_6"]])
+    data_list[["gdppc_2004_6_wc"]] <-  DescTools::Winsorize(data_list[["gdppc_2004_6_cent"]])
+    data_list[["gdppc_2004_6_ws"]] <-  DescTools::Winsorize(data_list[["gdppc_2004_6_scale"]])
+  #gini
+    data_list[["gini_2004_6_winz"]] <-  DescTools::Winsorize(data_list[["av_gini"]])
+    data_list[["gini_2004_6_wc"]] <-  DescTools::Winsorize(data_list[["gini_2004_6_cent"]])
+```
+
+
+```{r national transformations}
+
+# creating nation-level data for variable-maximizing countries
+data_list_mod <- data_list %>%
+  filter(country != "Japan" & country != "Peru"  & country != "Iceland") 
+
+# standardize and centre GDP
+data_list_mod[,c("gdppc_2004_6_scale")] <- scale(data_list_mod[,c("gdppc_2004_6")])
+
+# mean centering
+  #GDP
+  data_list_mod[["gdppc_2004_6_cent"]] <-  data_list_mod[["gdppc_2004_6"]] - mean(data_list_mod[["gdppc_2004_6"]])
+  # gini
+  data_list_mod[["gini_2004_6_cent"]] <-  data_list_mod[["av_gini"]] - mean(data_list_mod[["av_gini"]])
+
+# Winzorizing
+  #GDP
+    data_list_mod[["gdppc_2004_6_winz"]] <-  DescTools::Winsorize(data_list_mod[["gdppc_2004_6"]])
+    data_list_mod[["gdppc_2004_6_wc"]] <-  DescTools::Winsorize(data_list_mod[["gdppc_2004_6_cent"]])
+    data_list_mod[["gdppc_2004_6_ws"]] <-  DescTools::Winsorize(data_list_mod[["gdppc_2004_6_scale"]])
+  #gini
+    data_list_mod[["gini_2004_6_winz"]] <-  DescTools::Winsorize(data_list_mod[["av_gini"]])
+    data_list_mod[["gini_2004_6_wc"]] <-  DescTools::Winsorize(data_list_mod[["gini_2004_6_cent"]])
+
+    
+# creating nation-level data for variable-maximizing countries
+data_list_lib <- data_list_mod %>%
+  filter(country != "New Zealand") 
+
+# standardize and centre GDP
+data_list_lib[,c("gdppc_2004_6_scale")] <- scale(data_list_lib[,c("gdppc_2004_6")])
+
+# mean centering
+  #GDP
+  data_list_lib[["gdppc_2004_6_cent"]] <-  data_list_lib[["gdppc_2004_6"]] - mean(data_list_lib[["gdppc_2004_6"]])
+  # gini
+  data_list_lib[["gini_2004_6_cent"]] <-  data_list_lib[["av_gini"]] - mean(data_list_lib[["av_gini"]])
+
+# Winzorizing
+  #GDP
+    data_list_lib[["gdppc_2004_6_winz"]] <-  DescTools::Winsorize(data_list_lib[["gdppc_2004_6"]])
+    data_list_lib[["gdppc_2004_6_wc"]] <-  DescTools::Winsorize(data_list_lib[["gdppc_2004_6_cent"]])
+    data_list_lib[["gdppc_2004_6_ws"]] <-  DescTools::Winsorize(data_list_lib[["gdppc_2004_6_scale"]])
+  #gini
+    data_list_lib[["gini_2004_6_winz"]] <-  DescTools::Winsorize(data_list_lib[["av_gini"]])
+    data_list_lib[["gini_2004_6_wc"]] <-  DescTools::Winsorize(data_list_lib[["gini_2004_6_cent"]])
+    
+
+data_list_lib1 <- data_list %>%
+  filter(country != "Iceland" & country != "New Zealand") 
+
+# standardize and centre GDP
+data_list_lib1[,c("gdppc_2004_6_scale")] <- scale(data_list_lib1[,c("gdppc_2004_6")])
+
+# mean centering
+  #GDP
+  data_list_lib1[["gdppc_2004_6_cent"]] <-  data_list_lib1[["gdppc_2004_6"]] - mean(data_list_lib1[["gdppc_2004_6"]])
+  # gini
+  data_list_lib1[["gini_2004_6_cent"]] <-  data_list_lib1[["av_gini"]] - mean(data_list_lib1[["av_gini"]])
+
+# Winzorizing
+  #GDP
+    data_list_lib1[["gdppc_2004_6_winz"]] <-  DescTools::Winsorize(data_list_lib1[["gdppc_2004_6"]])
+    data_list_lib1[["gdppc_2004_6_wc"]] <-  DescTools::Winsorize(data_list_lib1[["gdppc_2004_6_cent"]])
+    data_list_lib1[["gdppc_2004_6_ws"]] <-  DescTools::Winsorize(data_list_lib1[["gdppc_2004_6_scale"]])
+  #gini
+    data_list_lib1[["gini_2004_6_winz"]] <-  DescTools::Winsorize(data_list_lib1[["av_gini"]])
+    data_list_lib1[["gini_2004_6_wc"]] <-  DescTools::Winsorize(data_list_lib1[["gini_2004_6_cent"]])
+    
+    
+# append nation-level data for cluster-maximizing data
+iv_2005 <- data_list %>%
+  left_join(iv_2005, by = c("country"))
+
+# append nation-level data for variable-maximizing data
+iv_2005_mod <- data_list_mod %>%
+  left_join(iv_2005_mod, by = c("country"))
+
+iv_2005_lib <- data_list_lib %>%
+  left_join(iv_2005_lib, by = c("country"))
+
+iv_2005_lib1 <- data_list_lib1 %>%
+  left_join(iv_2005_lib1, by = c("country"))
+
+
+```
+
+
+```{r merging}
+save(iv_2005, iv_2005_lib, iv_2005_mod, sweep5_nrow, sweep5_countries, file = "C:/Users/dalla/Google Drive/project_files/icvs_inequality/data/iv_2005.RData")
+
+rm(icvs_data, pwt, swiid, swiid_responders,swiid_spread, data_2005, victim_2005, vic_var_drop, iv_2005_lib, iv_2005_lib1, iv_2005_mod, responders_2005)
+
+icvs_joined <- swiid_2004_6 %>%
+  map(. %>% left_join(pwt_2004_6, by = c("country"))) %>%
+  map(. %>% left_join(iv_2005, by = c("country")))
+
+
+# icvs_joined <-  icvs_joined %>%
+#   map(. %>% filter(., !is.na(num_victim_5yr)))
+# rm(icvs_data, pwt, swiid, data_2005)
+
+
+save(icvs_joined, file = "C:/Users/dalla/Google Drive/project_files/icvs_inequality/data/icvs_swiid_pwt_joined.RData")
+
+# join_sample <- icvs_joined[[1]]
+```
+
+
+
+# **Summary**
+Overall, I think this is a very encouraging first pass. The ICVS is retrievable and interpretable, and above all else, it does indeed measure security behaviours. We also appear to have a reasonable number of countries and participants after some pretty conservative exclusions.
+
+We certainly don't have to use the summed/transformed/ordinal aggregate of security consumption (opting for something like multiple logistic regressions instead), but being able to condense our analyses will certainly be more powerful for communicating the results.

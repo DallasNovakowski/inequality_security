@@ -1,0 +1,384 @@
+---
+title: "icvs_first_analyses"
+output: 
+  html_document:
+    number_sections: true
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr) # pipe
+library(purrr) # map function
+library(car) #qqPlot
+load("C:/Users/dalla/Google Drive/project_files/icvs_inequality/data/joined_sample.RData")
+
+
+# 
+# icvs_joined <-  icvs_joined %>%
+#   map(. %>% filter(., !is.na(num_victim_5yr)))
+
+```
+
+regular model
+
+xtmixed total_security num_victim_5yr gini_cent gdppc_2004_6_scale age_cent employed male [pw=individual_weight] || country:, pwscale(size)
+
+Stronger test - including national victimization
+
+xtmixed total_security num_victim_5yr gini_cent gdppc_2004_6_scale victim_nation_mean age_cent employed male [pw=individual_weight] || country:, pwscale(size)
+
+
+winzorized model
+
+xtmixed security_winz num_victim_5yr_winz victim_nation_mean gini_wc gdppc_2004_6_ws age_cent employed male [pw=individual_weight] || country:, pwscale(size)
+
+
+# Analysis procedure
+
+If the assumptions underlying a multilevel regression hold in this dataset, the analysis will be conducted using maximum likelihood estimates (MLE) in r package lme4 (REF). Despite the possibility of nonnormal data, the large sample size in this study will yield similar variance estimates to REML estimation.
+
+
+Given that the SWIID is presented in a list of 100 different dataframes, the analysis will firstly be conducted on each dataframe, with the results stored separately.
+
+
+```{r other text, warning=F, message=FALSE, echo=FALSE}
+# expected value of the ML variance estimator is not equal to the true variance σ², although it approaches the true variance at large sample sizes
+# https://bookdown.org/roback/bookdown-BeyondMLR/ch-multilevelintro.html#twolevelmodeling
+# 
+# The most common methods for estimating model parameters—both fixed effects and variance components—are maximum likelihood (ML) and restricted maximum likelihood (REML)
+# 
+# REML is conditional on the fixed effects, so that the part of the data used for estimating variance components is separated from that used for estimating fixed effects. Thus REML, by accounting for the loss in degrees of freedom from estimating the fixed effects, provides an unbiased estimate of variance components, while ML estimators for variance components are biased under assumptions of normality, since they use estimated fixed effects rather than the true values. REML is preferable when the number of parameters is large or the primary interest is obtaining estimates of model parameters, either fixed effects or variance components associated with random effects. ML should be used if nested fixed effects models are being compared using a likelihood ratio test, although REML is fine for nested models of random effects (with the same fixed effects model).
+# 
+# assume that random effects follow a normal distribution with mean 0 and a variance parameter which must be estimated from the data.
+# 
+# the error terms at Level Two can be assumed to follow a multivariate normal distribution
+# 
+# Certain software packages will report p-values corresponding to hypothesis tests for parameters of fixed effects; these packages are typically using conservative assumptions, large-sample results, or approximate degrees of freedom for a t-distribution. 
+
+# 
+# 
+# ML and REML assume errors a normally distributed
+# - differences between the two estimation methods occur in variance estimation: at large n-to IV ratios, immaterial difference
+# 
+# REML preferable as its variance parameters are unbiasesd
+# 
+# however, ML better for carrying out deviance tests
+```
+
+```{r estimation preview1, warning=F, message=FALSE}
+# Estimate model
+# m1 <- icvs_joined %>% 
+#   map(~ lme4::lmer(num_victim_5yr ~ gini_2004_6_cent + gdppc_2004_6_cent + 
+#                      age_cent + employed + male + (1 | country),data = .x, REML=FALSE))
+
+
+m1_sample <- lme4::lmer(num_victim_5yr ~ gini_2004_6_cent + gdppc_2004_6_cent +
+                     age_cent + employed + male + (1 | country),data = join_sample, REML=FALSE)
+
+
+# Both packages use Lattice as the backend, but nlme has some nice features like groupedData() and lmList() that are lacking in lme4 (IMO). From a practical perspective, the two most important criteria seem, however, that
+
+# https://lme4.r-forge.r-project.org/book/
+
+#    lme4 extends nlme with other link functions: in nlme, you cannot fit outcomes whose distribution is not gaussian, lme4 can be used to fit mixed-effects logistic regression, for example.
+#    in nlme, it is possible to specify the variance-covariance matrix for the random effects (e.g. an AR(1)); it is not possible in lme4.
+
+#Now, lme4 can easily handle very huge number of random effects (hence, number of individuals in a given study) thanks to its C part and the use of sparse matrices. The nlme package has somewhat been superseded by lme4 so I won't expect people spending much time developing add-ons on top of nlme. Personally, when I have a continuous response in my model, I tend to use both packages, but I'm now versed to the lme4 way for fitting GLMM.
+
+# nlme let's you specify variance-covariance structures for the residuals (i.e. spatial or temporal autocorrelation or heteroskedasticity), lme4 doesn't
+
+# https://stats.stackexchange.com/questions/5344/how-to-choose-nlme-or-lme4-r-library-for-mixed-effects-models
+# lmeg or nlme?
+#nlme is the very large tool box, including a TIG welder to make any tools you need.
+
+# brms: Bayesian Regression Models using 'Stan'
+# https://cran.r-project.org/web/packages/brms/index.html
+```
+
+Each of these 100 dataframes will then be subjected to 100 simulations, yielding vectors of 10,000 estimates. The means and distributions of these vectors will yield the coefficient and standard error values, respectively.
+
+"We could now use Rubin’s (1987) rules to calculate the mean and standard error for each fixed effect estimate across these 100 sets of results (these rules are implemented in the package mitools (Lumley 2014) and others), but instead we will use simulation. Using sim from the arm package (Gelman and Su 2015), we generate the distribution of fixed-effects estimates in the results both for each dataframe and across the 100 dataframes."
+
+
+## Main statistics
+
+pseudo-loglikelihoods: can't be compared
+
+**BIC**: Stands for “Bayesian Information Criteria”
+A non-parametric approach to model fit
+Basically produces a fit statistic that looks at model fit relative to the number of predictors
+Penalizes improvement in model fit if it took a large number of predictors
+
+There’s no baseline to the BIC, so you can’t use it as an overall indicator of model fit
+However, you can use it as a relative measure of model
+Which of two models is better
+
+Typically, you want the lowest BIC possible
+
+strength of evidence : 0-2 - weak; 2-6 = positive, 6-10 = strong, > 10 = very strong
+From Long 1997:112
+
+
+```{stata excluded model1}
+use "C:\Users\dalla\Google Drive\project_files\icvs_inequality\data\joined_sample.dta"
+
+set more off
+
+gen dropcook=1 if country == "Peru" | country == "Argentina" | country ==  "United States" | country ==  "South Africa"
+
+*Winzorized model
+xtmixed num_victim_5yr_winz gini_2004_6_wc gdppc_2004_6_ws age_cent employed male [pw=individual_weight] || country: if dropcook !=1, pwscale(size)
+
+estat icc
+estat ic
+
+
+mltcooksd, fixed random graph
+
+```
+
+
+
+# Exploratory
+
+
+```{stata interaction model}
+use "C:\Users\dalla\Google Drive\project_files\icvs_inequality\data\joined_sample.dta"
+
+*Winzorized model
+xtmixed num_victim_5yr_winz c.gini_2004_6_wc##c.gdppc_2004_6_ws age_cent employed male [pw=individual_weight] || country:, pwscale(size)
+
+estat icc
+estat ic
+
+mltcooksd, fixed random graph
+
+```
+
+
+# reporting effects and models
+
+
+
+What can an empty model tell us?
+-	Intraclass correlation
+
+
+
+Not looking for significance in the intercept, but rather significance in the variance of the intercept
+-	BUT: variance can’t be negative, so standard significance tests aren’t of any help
+
+
+September 19, 2018
+
+Log Likelihood
+-	Cluster level variance is due to level 2 factors
+o	What if you’re not interested in the direct effects of level 2 factors?
+	You don’t need direct significance to preclude the use of a moderator
+
+
+Tesging a coefficient
+-	T or z = b/Sb
+o	Sb = standard error of coefficient
+
+
+
+when adding predictors, we can evaluate change in log likelihood to assess whether the fit is better
+	chi-squarediff = -2(LLsimple – LLL)
+-	why do we multiply by 2?
+-	Degrees of freedom = difference in # of estimated parameters
+-	You basically want to run a one-tailed test due to the inability to have a negative variance
+o	Because we are testing the variance of the intercept
+
+
+
+Chibar2(01)
+-	Does the adjustment for the 1-tail test
+
+
+Empirical bayes estimate
+-	we bias group means towards population mean through “shrinkage”
+-	subtracting some proportion of the observed group mean and substituting with an inverse proportion of the population mean
+o	more within-group variance, and smaller sample size leads to greater shrinkage
+BLUP – Best Linear Unbiased Prediction
+-	This is the EB estimate
+
+
+Predict groupeffect, reffects
+-	Estimate error for each level-2 uit
+-	This is the Blup/EB
+-	Then, add grand mean with group error
+
+
+So what do we report?
+-	Bayesian Information Criterion (BIC) is quite conservative compared to significance tests	
+o	BIC can be useful for comparing models
+o	A non-parametric, relative measure of model fit
+	Relative to another model (with a certain # of parameters and a certain amount of model fit), how does this fit?
+	Is your fit worth the # of predictors you had to add to achieve it?
+o	If BIC only goes down a little bit after introducing predictors, it might be better to use a more parsimonious model
+o	Sine you’re just comp
+o	Aring model fits/complexities, you don’t have to worry about inflating Type I Error
+-	AIC Akaike Information Criterion
+
+
+
+Generally, don’t use standardized slopes, instead use random slopes in MLM
+-	When is standardization not useful?
+o	Interpreting the effect as a substanstive issue
+-	Random slope allows slope to vary across level 2
+o	Level 2 moderates the coefficient
+o	i.e., interaction
+o	you can’t just use a difference in p-values to claim an interaction
+	need to test these slopes (which are means)
+
+
+
+
+
+
+there is
+much to be gained when researchers follow a standardized
+way of reporting effect sizes (Lumley et al., 2002).
+
+
+### Survey Weights
+
+The package lme4 fits mixed models when there are no weights or weights only for first-level units (Bates, Maechler, Bolker, & Walker, 2015)
+
+> one does not need to de-emphasize responses from smaller nations because the MLM separates out variance due to responses from individuals in a country from the variance that comes from different nations. With the level-1 weight, the individual responses are representative of a nation, and the MLM then considers the cross-national context separately from this
+
+> a scaled weight indicates that there was first a random sampling of clusters, and then a sampling of individuals in clusters. But, here, we looked at a set of randomly sampled people within specific nations
+
+> Conceptually, we get around this by assuming that the characteristics we are examining are representative of a broader set of nations with similar characteristics But, for the purposes of weighting, there really isn't any probability of selection at level-2 to adjust by
+
+> We essentially treat each nation as a whole equal unit, and then adjust only for sampling characteristics within the nation
+
+Potential Packages: EdSurvey WeMix : appears to require two weights BIFIEsurvey : appears to allow one weight being used - but only level 2
+
+The WeMix package assumes that the weights are unconditional---as is typical for sample weights found on international surveys such as PISA---but can accept conditional weights by setting the cWeights argument to TRUE.
+
+<https://www.r-project.org/nosvn/pandoc/lme4.html>
+
+> Recent/release notes Recent versions of lme4 (e.g. 1.1-6) give false convergence warnings. There is a summary post on r-sig-mixed-models. If you get warnings about max\|grad\| but the model passes this test: dd \<- [fit\@optinfo\$derivs](mailto:fit@optinfo$derivs){.email} with(dd,max(abs(solve(Hessian,gradient)))\<2e-3) then you are seeing a false-positive warning, and the problem will disappear in future versions (1.1-7 and up).
+
+
+<https://m-clark.github.io/mixed-models-with-R/issues.html#convergence> \> Any complicated GLMM or similar model is likely to have problems, so be prepared. If you want to go beyond GLM, you'll have fewer tools and likely more issues. There are packages like ordinal, mgcv, glmmTMB, and others that can potentially handle alternate distributions and other complexities, however I think one might be better off with a Bayesian approach (e.g. brms/rstan). In practice, I've found others to be prohibitively slow, unable to converge, or too limited in post-estimation options.
+
+Dr. B
+
+> One must use weights when the sample design is "informative"(Koziol et al. 2017) The "design features---stratification, clustering, disproportionate-sampling---are associated with the response variable of interest" (Heeringa et al. 2010:59) One can render the design uninformative if controls render selection probabilities unrelated to outcome (Koziol et al. 2017)
+
+> In the weights are uninformative, then one can omit the weights from model estimation (Heeringa et al. 2010:381) The issue here is that weights often account for more that just post-stratification, and these are likely to be associated with your outcome In other words, you will typically need to include weights in your MLM
+
+On putting weights into MLM
+
+> The issue here is that the weight we were using in design-based approaches is based on the individual probability of selection In other words, this weight includes adjustment for selection of clusters, such as PSU's (West et al. 2014) The problem here is that what we want is a weight that adjusts for selection, given the probability that the PSU was selected
+
+> In other words, the sampling weight is the combination of the probability of a cluster being chosen and the individual in that cluster being chosen
+
+> What we want then, is to isolate each weight. The cluster weight is the inverse probability that the weight was chosen
+
+> The appropriate level-1 weight is then one's total inverse probability, scaled to the probability that one's cluster was chosen
+
+> GET THE SCALED WEIGHT: This creates the inverse probability that one was chosen, relative to the inverse probability that their cluster was chosen Essentially scales one's overall probability to the cluster probability
+
+> we can't just drop a weight created from a design-based approach into a model-based approach The bigger issue here is that many surveys do not provide information specifically on cluster-level probabilities of selection that would allow us to easily scale our design-based weights
+
+> SCALING: Two approaches that are common are the PWIGLS method 2 and the MPML method A
+
+> Chen (2018), a researcher with the Add Health study, argues in a presentation that the PWIGLS method is recommended when informative sampling methods are used in sampling both levels. In other words, if one does not have an SRS at both levels
+
+> Stapleton (2013:379) indicates that both methods require sampling weights at each level, which is problematic if we don't have sampling weights for the PSU or cluster level
+
+> If you do not have cluster-level weights, and you have a random sample of clusters, you are on more tenuous ground, but it may be possible to estimate the cluster-level weights
+
+> Carl's (2009) simulation study concluded, "Scaled weighted estimates and standard errors differed slightly from unweighted analyses, agreeing more with each other than with unweighted analyses
+
+> it appears more important to scale than use a very specific form of scaling
+
+weights when there isn't a probability of level-2 selection
+
+> This is therefore a case in which we simply drop in our level-1 weight without re-scaling We essentially treat each nation as a whole equal unit, and then adjust only for sampling characteristics within the nation
+
+ICVS summary \> Results in this report are based on data which have been weighted to make the samples as representative as possible of national populations aged 16 or more in terms of 1. gender, 2. regional population distribution, 3. age, and 4. household composition.
+
+> For this report, individual weights were used rather than household weights and each country carried equal weight in computing averages.
+
+> More detail on the weighing procedure is given in appendix 6 and in the technical report on the Finnish retest with mobile-only users (Hideg, Manchin, 2007).
+
+
+
+# Model comparison and selection - Field 868 - subtract log likelihood of new model from the value for the old
+
+**Only works for ML estimateion (not REML)**
+**Only works if new model contains "all of the effects of the older model"**
+> "Importantly, the robustness of regression methods to deviations
+from normality of the regression errors e does not only
+depend on sample size, but also on the distribution of the
+predictor X (Box & Watson, 1962; Mardia, 1971).
+Specifically, when the predictor variable X contains a single
+outlier, then it is possible that the case coincides with an outlier
+in Y, creating an extreme observation with high leverage
+on the regression line.
+This is the only case where statistical
+significance gets seriously misestimated based on the assumption
+of Gaussian errors in Y which is violated by the outlier in
+Y. This problem has been widely recognized (Ali & Sharma,
+1996; Box&Watson, 1962; Miller, 1986; Osborne &Waters,
+2002; Ramsey & Schafer, 2013; Zuur et al., 2010) leading to
+the conclusion that Gaussian models are robust as long as
+there are no outliers that occur in X and Y simultaneously."
+
+Knief & Forstmeier, 2021
+
+> Poisson distribution
+- lambdas specify variance and mean of the distribution (doesn't have to be an integer)
+
+> We have shown that Poisson models yielded heavily biased type I error rates (at α = 0.05) in either direction ranging from 0 to as high as 0.55 when their distribution assumption is violated (Fig. 3 right column, Fig. S7).
+
+> Moreover, we worry that sophisticated methods
+may allow presenting nearly anything as statistically significant
+(Simmons et al., 2011) because complex methods will
+only rarely be questioned by reviewers.
+
+
+
+poisson assumptions
+* rate at which events occur is constant
+* occurence of one event does not affect occurence of a subsequent event
+
+Probability Mass Function (PMF)
+- how likely a given value is
+
+cumulative distribution function
+- all of the likelihoods of values up to and including the designated value
+
+ GEE:  GENERALIZED LINEAR MODELS FOR DEPENDENT DATA (https://cehs-research.github.io/eBook_multilevel/gee-count-outcome-epilepsy.html)
+Match Poisson Regresssion (GLM)
+
+restricted maximum likelihood (REML)
+
+ Thus REML, by accounting for the loss in degrees of freedom from estimating the fixed effects, provides an unbiased estimate of variance components, while ML estimators for variance components are biased under assumptions of normality, since they use estimated fixed effects rather than the true values. 
+
+lmeresampler provides an easy way to bootstrap nested linear-mixed effects models using either the parametric, residual, cases, CGR (semi-parametric), or random effects block (REB) bootstrap fit using either lme4 or nlme. The output from lmeresampler is an lmeresamp http://aloy.github.io/lmeresampler/
+
+bootMer 
+
+
+https://www.juliapilowsky.com/2018/10/19/a-practical-guide-to-mixed-models-in-r/
+Semi-parametric multilevel modeling (Tihomir Asparouhov)
+
+ Probably the advice on this site will be to start with what kind of data your dependent variable is, and then choose an appropriate glm or regression approach. That is, if your dv is count, perhaps Poisson or negative binomial regression. If your dv is concentration, perhaps gamma regression. –
+ 
+
+Note that the negative binomial and gamma distributions can only handle positive numbers, and the Poisson distribution can only handle positive whole numbers
+
+# Limitations 
+
+The most notable weakness is that this is data from WEIRD countries. Other, less WEIRD countries (e.g., phillipines, nigeria, india) are better represented throughout sweeps 2 to 4
+
+
+Limited
