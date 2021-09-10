@@ -18,7 +18,7 @@ library(survey)
 library(WeMix)
 library(Statamarkdown)
 
-load("C:/Users/dalla/Google Drive/project_files/icvs_inequality/data/iv_2005.RData")
+load("C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005.RData")
 
 source("C:/Users/dalla/Google Drive/project_files/icvs_inequality/scripts/icvs_scripts.r", local = knitr::knit_global())
 
@@ -406,7 +406,7 @@ DFFit: difference between adjusted predicted value and original value
 
 ```{stata heteroscedasticity plot}
 
-*use "C:\Users\dalla\Google Drive\project_files\icvs_inequality\data\joined_sample.dta"
+*use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta"
 
 
 *Winzorized model
