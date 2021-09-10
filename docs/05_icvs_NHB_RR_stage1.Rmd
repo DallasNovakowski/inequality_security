@@ -62,7 +62,7 @@ bibliography: references.bib
 library("papaja")
 r_refs("r-references.bib")
 
-load("C:/Users/dalla/Google Drive/project_files/icvs_inequality/data/iv_2005.RData")
+load("C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005.RData")
 
 ```
 

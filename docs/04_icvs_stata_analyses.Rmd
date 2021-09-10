@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(dplyr) # pipe
 library(purrr) # map function
 library(car) #qqPlot
-load("C:/Users/dalla/Google Drive/project_files/icvs_inequality/data/joined_sample.RData")
+load("C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.RData")
 
 
 # 
@@ -122,7 +122,7 @@ From Long 1997:112
 
 
 ```{stata excluded model1}
-use "C:\Users\dalla\Google Drive\project_files\icvs_inequality\data\joined_sample.dta"
+use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta"
 
 set more off
 
@@ -145,7 +145,7 @@ mltcooksd, fixed random graph
 
 
 ```{stata interaction model}
-use "C:\Users\dalla\Google Drive\project_files\icvs_inequality\data\joined_sample.dta"
+use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta"
 
 *Winzorized model
 xtmixed num_victim_5yr_winz c.gini_2004_6_wc##c.gdppc_2004_6_ws age_cent employed male [pw=individual_weight] || country:, pwscale(size)
