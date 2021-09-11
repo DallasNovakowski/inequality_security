@@ -74,27 +74,69 @@ knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 
 # Introduction
 
-A growing body of evidence suggests that economic inequality leads to increased risk-taking and conflict in humans. In a "winner-takes-all" environment, individuals are more likely to resort to risky and criminal activities out of desperation, to effectively compete for contested positions and resources [@payne2017]. Despite modern societies becoming increasingly unequal [@saez2016], there is little research examining whether inequality causes people to *expect* desperation and risk-taking from others.
+A growing body of evidence suggests that economic inequality leads to increased risk-taking and conflict in humans [@krupp2018]. In unequal environments, individuals are more likely to resort to risky, hostile, and criminal activities in desperate attempts to compete for otherwise inaccessible positions and resources [@mishra2015]. The impact of inequality on individual decision-making likewise manifests through higher nation-level homicide rates [@daly2016], increased gambling [@payne2017], consumer debt [@christen2005], and reduced cooperation [@burton-chellew2013 ; @anderson2008]. Despite within-country inequality increasing [@saez2016], there is little research examining whether inequality causes people to *expect* desperation and risk-taking from others.
+
+<!--# gambling (3), and greater consumer debt (4). Inequality is also associated with social and health problems, including higher rates of violence, drug use, and shorter life expectancies (5–7). destabilize economies(Cynamon & Fazzari, 2016; Jayadev, 2013 Kumhof, Rancière, & Winant, 2015), and undermine democratic institutions (Bartels, 2010; Boix, 2003; Muller, 1995). inequality reduces cooperation (Anderson, Mellor, & Milyo, 2008;Barclay & Benard, 2013; Buckley & Croson, 2006; Burton Chellew, May, & West, 2013; Côté, House, & Willer, 2015), Likewise, inequality measured between groups predicts the onset of civil war (Cederman et al., 2013; Østby, 2008), but inequality measured over the entire population does not (Collier & Hoeffler, 2004; Fearon & Laitin, 2003). --->;
+
+## Why inequality impacts decisions
+
+Given the importance of many resources such as money, status, or food, these resources are naturally contested. Inequality describes whether a resource is distributed unevenly between agents, with some parties getting more than their peers (REF). Inequality gives higher stakes to competitions: beating one's peers can grant access to institutional influence, life-saving medications, or being able to feed one's family. In an unequal environment, falling behind can carry serious consequences, and humans are quick to respond to these conditions
+
+According to risk-sensitivity theory, risk-taking behaviour can be understood as a rational response to desperate circumstances. Namely, risk-sensitivity theory predicts that organisms will be more likely to accept high-variance, risky options, when they are in a state of need, and cannot
+
+are capable of responding to these acute problems, or are prepared to judge themselves by comparing their lot with others.
+
+Risky options are important because they give individuals a chance to meet goals that they could not meet using more predictable choices.
+
+, those that accept higher outcome variance
+
+Inequality makes everything more serious
+
+The presence of inequality
+
+The prospect of being a winner or loser
+
+Two streams of explanation have been proposed for how inequality at the population level influences individual-level risk-taking [@decourson2021]. Firstly, compositional effects reflect how inequality increases risk-taking through *absolute deprivation*; societies with a skewed distribution of wealth tend to have higher poverty rates, and those in poverty are more likely to resort to criminal activities to have a chance at meeting their subsistence needs [@pridemore2008].
+
+Secondly, psychosocial effects describe how risk-taking is facilitated through social comparisons. In the presence of inequality, individuals who are well-off in absolute terms may be dissatisfied with their current endowments compared to others. High comparison standards can lead to more ambitious goals, and experiences of relative deprivation (i.e, envy, inequality aversion). As the psychological distance between one's current state and goal state becomes larger, individuals become more likely to resort to risky behaviours, in an effort to bridge the gap between themselves and their aspiration levels.
+
+the psychology of relative deprivation
+
+should be sensitive to inequality between interaction
+
+partners and the probability that these partners are also
+
+competitors.
+
+Individuals are more likely to report lower life satisfaction if they made less money than their co-workers (Frank, 1999). Half of individuals prefer less purchasing power in order to have more money relative to peers (Solnick & Hemenway, 1998).
+
+Even children resort to spiteful behaviours when they are worse off than their peers (Steinbeis & Singer, 2013).
+
+poorer health, risk-taking, and deviance (Callan et al., 2008; Callan et al., 2015b; Kim et al., 2013; Mishra & Carleton, 2015; Mishra & Novakowski, 2016)
+
+Economic inequality likewise appears to be an important indicator of potentially harmful environments. Inequality has been linked to greater individual risk-taking [@payne2017], , and greater interpersonal conflict and spiteful behaviours [@wobker2015].
+
+Sensitivity to relative disadvantage reflects the positional bias: the tendency to judge success by making comparisons to others (Hill & Buss, 2006).
+
+envy
+
+[@mishra2016]
+
+## Protecting against risky behaviour
+
+## Social Interaction as a Security Problem
 
 Security products and services are one of the few goods that confer little intrinsic value to consumers. Whereas vacations are inherently satisfying, the costs of burglar alarms, sturdy locks, and security cameras are only worthwhile *if consumers expect that other agents will cause them harm*. Despite the decreasing crime rates across the world [@unitednations2017], demand for security is growing (projected to increase 29% by 2025; [@marketsandmarkets2021]. The choice to purchase security goods thus represents a substantial, and poorly understood, allocation of resources.
 
 Criminologists have found that perceived victimization risk leads to greater security behaviours [@kanan2002], while psychologists have documented the effects of inequality on crime and antisociality [@daly2016]. However, there has been little integration of these streams of research. This project offers a contribution by testing a hypothesis that intersects the disciplines of criminology, psychology, and marketing: that consumers' perceived victimization risk, and subsequent consumption of security products, will grow with increasing economic inequality.
 
-## Social Interaction as a Security Problem
-
-At its most comprehensive, security consumption could be considered as any prevention-focused activity, conducted by an agent seeking to minimize the expected costs from harms. Security consumption can be defined as an expenditure of resources in the consumer context that helps the agent to (a) recover from, (b) cope with, (c) avoid, and/or (d) deter hazards. However, this proposal will focus on the threats posed by other people, and consequently, the consumption of deterrence-focused goods. This emphasis on social sources of harm reveals how decision-makers must consider others' intentions when deciding whether to purchase security goods. Specifically, security behaviours are heavily influenced by the hypothetical imperative: *if I expect others to [try to steal]{.ul}, my best response is to [purchase security products]{.ul}*; [@hargreaves-heap2004].
+## At its most comprehensive, security consumption could be considered as any prevention-focused activity, conducted by an agent seeking to minimize the expected costs from harms. Security consumption can be defined as an expenditure of resources in the consumer context that helps the agent to (a) recover from, (b) cope with, (c) avoid, and/or (d) deter hazards. However, this proposal will focus on the threats posed by other people, and consequently, the consumption of deterrence-focused goods. This emphasis on social sources of harm reveals how decision-makers must consider others' intentions when deciding whether to purchase security goods. Specifically, security behaviours are heavily influenced by the hypothetical imperative: *if I expect others to [try to steal]{.ul}, my best response is to [purchase security products]{.ul}*; [@hargreaves-heap2004].
 
 Life-altering hazards can come from a variety of sources (natural disasters, economic instability, pandemics). However, other humans (via murder) are only outranked by mosquitoes as the deadliest animal to modern Homo sapiens [@gates2014]. Likewise, social life carries the risk of property crimes and defection in collective action problems (e.g., commitments to monogamy, business contracts). Humans' sociality carries enormous benefits to individuals, including life-saving aid in times of need, high levels of skill specialization, and access to skills and knowledge gained by others [@henrich2001]. Given the substantial benefits and risks of social interaction, when will a person spend their limited time, money, and opportunities protecting themselves from other people?
 
 When faced with the problem of consuming security goods to protect against social threats, it is critical for decision-makers to understand the beliefs, preferences, and intentions of their social partners. Mistaking a partner's willingness to inflict harms can result in wasted resources in the presence of a benevolent or indifferent partner, or can lead to a vulnerability being exploited by a hostile agent. Similar to organism's abilities to detect and respond to predators and pathogens, humans are responsive to environmental cues when deciding whether a social interaction is likely to be harmful (e.g., reciprocity, reputation, group membership; [@schmid2021; @alves2018]
 
 Purchasing security products against social threat is a potent way of measuring distrust amongst individuals, "incur[ing] costs to mitigate their vulnerability." [@mcevily2012, p. 287]
-
-## Inequality and Risk-Taking
-
-Economic inequality likewise appears to be an important indicator of potentially harmful environments. Inequality has been linked to greater individual risk-taking [@mishra2015; @payne2017], higher nation-level homicide rates [@daly2016], and greater interpersonal conflict and spiteful behaviours [@krupp2018; @wobker2015].
-
-Two main explanations have been proposed for how inequality at the population level influences individual-level risk-taking [@decourson2021]. Firstly, compositional effects reflect how inequality increases risk-taking through absolute deprivation; societies with a skewed distribution of wealth tend to have higher poverty rates, and those in poverty are more likely to resort to criminal activities to have a chance at meeting their subsistence needs [@pridemore2008]. Secondly, psychosocial effects describe how risk-taking is facilitated through social comparisons. In the presence of inequality, individuals who are well-off in absolute terms may be dissatisfied with their current endowments compared to others. High comparison standards can lead to more ambitious goals, and experiences of relative deprivation (i.e, envy, inequality aversion). As the psychological distance between one's current state and goal state becomes larger, individuals become more likely to resort to risky behaviours, in an effort to bridge the gap between themselves and their aspiration levels.
 
 ## The anticipation of conflict - Rationality in the face of desparation - **Desperate neighbors are a security hazard**
 
