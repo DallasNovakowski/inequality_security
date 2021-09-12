@@ -74,17 +74,21 @@ knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 
 # Introduction
 
+<!--# 1.Inequality 2.Inequality risk-taking 3.Inequality high stakes 4. High stakes can't afford to sit out 5. (compositional - poverty) 6.(Psychosocial - relative deprivation) 7. Psychosocial relative fitness and positional bias 8. Self-protrction and trust -->
+
 A growing body of evidence suggests that economic inequality leads to increased risk-taking and conflict in humans [@krupp2018]. In unequal environments, individuals are more likely to resort to risky, hostile, and criminal activities in desperate attempts to compete for otherwise inaccessible positions and resources [@mishra2015]. The impact of inequality on individual decision-making likewise manifests through higher nation-level homicide rates [@daly2016], increased gambling [@payne2017], consumer debt [@christen2005], and reduced cooperation [@burton-chellew2013 ; @anderson2008]. Despite within-country inequality increasing [@saez2016], there is little research examining whether inequality causes people to *expect* desperation and risk-taking from others.
 
-<!--# gambling (3), and greater consumer debt (4). Inequality is also associated with social and health problems, including higher rates of violence, drug use, and shorter life expectancies (5–7). destabilize economies(Cynamon & Fazzari, 2016; Jayadev, 2013 Kumhof, Rancière, & Winant, 2015), and undermine democratic institutions (Bartels, 2010; Boix, 2003; Muller, 1995). inequality reduces cooperation (Anderson, Mellor, & Milyo, 2008;Barclay & Benard, 2013; Buckley & Croson, 2006; Burton Chellew, May, & West, 2013; Côté, House, & Willer, 2015), Likewise, inequality measured between groups predicts the onset of civil war (Cederman et al., 2013; Østby, 2008), but inequality measured over the entire population does not (Collier & Hoeffler, 2004; Fearon & Laitin, 2003). --->
+<!--# gambling (3), Inequality is also associated with social and health problems, including higher rates of violence, drug use, and shorter life expectancies (5–7). destabilize economies(Cynamon & Fazzari, 2016; Jayadev, 2013 Kumhof, Rancière, & Winant, 2015), and undermine democratic institutions (Bartels, 2010; Boix, 2003; Muller, 1995). Likewise, inequality measured between groups predicts the onset of civil war (Cederman et al., 2013; Østby, 2008), but inequality measured over the entire population does not (Collier & Hoeffler, 2004; Fearon & Laitin, 2003). --->
 
 ## Why inequality impacts decisions
 
 Important resources such as money, territory, status, or food tend to be contested. Inequality describes whether a resource is distributed unevenly between agents, with some parties getting more than their neighbors (REF). Inequality increases the stakes of competitions: beating one's peers can grant access to institutional influence, life-saving medications, or being able to feed one's family. In an unequal environment, falling behind can carry serious consequences, and humans are quick to respond to these conditions.
 
-According to risk-sensitivity theory [RST, @caraco1980], many risk-taking behaviours can be understood as an adaptive response to desperate circumstances. Originally conceived to explain the foraging behaviours of birds, RST predicts that organisms will be more likely to choose risky options when they cannot meet their goals (e.g., daily calorie requirements) through more predictable means.
+According to risk-sensitivity theory [RST, @caraco1980], many risk-taking behaviours can be understood as an adaptive response to desperate circumstances. Originally conceived to explain the foraging behaviours of birds, RST predicts that organisms will be more likely to choose risky options when they cannot meet their goals (e.g., daily calorie requirements) through more predictable means. Accordingly, inequality tends place goals further from one's reach, through means material or psychological.
 
-Biologically speaking, the ultimate goal of evolved features is to improve one's reproductive fitness relative to
+Two streams of explanation have been proposed for how inequality at the population level influences individual-level risk-taking [@decourson2021]. Firstly, compositional effects reflect how inequality increases risk-taking through *absolute deprivation*; societies with a skewed distribution of wealth tend to have higher poverty rates, and those in poverty are more likely to resort to criminal activities to have a chance at meeting their subsistence needs [@pridemore2008].
+
+Secondly, psychosocial effects describe how risk-taking is facilitated through social comparisons. In the presence of inequality, individuals who are well-off in absolute terms may be dissatisfied with their current endowments compared to others. High comparison standards can lead to more ambitious goals, and experiences of relative deprivation (i.e, envy, inequality aversion). As the psychological distance between one's current state and goal state becomes larger, individuals become more likely to resort to risky behaviours, in an effort to bridge the gap between themselves and their aspiration levels.
 
 successful competitors pass more of their genes onto future generations, meaning that fitness must be considered relative to competitors (Hamilton,
 
@@ -107,10 +111,6 @@ Inequality makes everything more serious
 The presence of inequality
 
 The prospect of being a winner or loser
-
-Two streams of explanation have been proposed for how inequality at the population level influences individual-level risk-taking [@decourson2021]. Firstly, compositional effects reflect how inequality increases risk-taking through *absolute deprivation*; societies with a skewed distribution of wealth tend to have higher poverty rates, and those in poverty are more likely to resort to criminal activities to have a chance at meeting their subsistence needs [@pridemore2008].
-
-Secondly, psychosocial effects describe how risk-taking is facilitated through social comparisons. In the presence of inequality, individuals who are well-off in absolute terms may be dissatisfied with their current endowments compared to others. High comparison standards can lead to more ambitious goals, and experiences of relative deprivation (i.e, envy, inequality aversion). As the psychological distance between one's current state and goal state becomes larger, individuals become more likely to resort to risky behaviours, in an effort to bridge the gap between themselves and their aspiration levels.
 
 the psychology of relative deprivation
 
