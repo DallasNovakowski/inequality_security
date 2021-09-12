@@ -76,13 +76,25 @@ knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 
 A growing body of evidence suggests that economic inequality leads to increased risk-taking and conflict in humans [@krupp2018]. In unequal environments, individuals are more likely to resort to risky, hostile, and criminal activities in desperate attempts to compete for otherwise inaccessible positions and resources [@mishra2015]. The impact of inequality on individual decision-making likewise manifests through higher nation-level homicide rates [@daly2016], increased gambling [@payne2017], consumer debt [@christen2005], and reduced cooperation [@burton-chellew2013 ; @anderson2008]. Despite within-country inequality increasing [@saez2016], there is little research examining whether inequality causes people to *expect* desperation and risk-taking from others.
 
-<!--# gambling (3), and greater consumer debt (4). Inequality is also associated with social and health problems, including higher rates of violence, drug use, and shorter life expectancies (5–7). destabilize economies(Cynamon & Fazzari, 2016; Jayadev, 2013 Kumhof, Rancière, & Winant, 2015), and undermine democratic institutions (Bartels, 2010; Boix, 2003; Muller, 1995). inequality reduces cooperation (Anderson, Mellor, & Milyo, 2008;Barclay & Benard, 2013; Buckley & Croson, 2006; Burton Chellew, May, & West, 2013; Côté, House, & Willer, 2015), Likewise, inequality measured between groups predicts the onset of civil war (Cederman et al., 2013; Østby, 2008), but inequality measured over the entire population does not (Collier & Hoeffler, 2004; Fearon & Laitin, 2003). --->;
+<!--# gambling (3), and greater consumer debt (4). Inequality is also associated with social and health problems, including higher rates of violence, drug use, and shorter life expectancies (5–7). destabilize economies(Cynamon & Fazzari, 2016; Jayadev, 2013 Kumhof, Rancière, & Winant, 2015), and undermine democratic institutions (Bartels, 2010; Boix, 2003; Muller, 1995). inequality reduces cooperation (Anderson, Mellor, & Milyo, 2008;Barclay & Benard, 2013; Buckley & Croson, 2006; Burton Chellew, May, & West, 2013; Côté, House, & Willer, 2015), Likewise, inequality measured between groups predicts the onset of civil war (Cederman et al., 2013; Østby, 2008), but inequality measured over the entire population does not (Collier & Hoeffler, 2004; Fearon & Laitin, 2003). --->
 
 ## Why inequality impacts decisions
 
-Given the importance of many resources such as money, status, or food, these resources are naturally contested. Inequality describes whether a resource is distributed unevenly between agents, with some parties getting more than their peers (REF). Inequality gives higher stakes to competitions: beating one's peers can grant access to institutional influence, life-saving medications, or being able to feed one's family. In an unequal environment, falling behind can carry serious consequences, and humans are quick to respond to these conditions
+Important resources such as money, territory, status, or food tend to be contested. Inequality describes whether a resource is distributed unevenly between agents, with some parties getting more than their neighbors (REF). Inequality increases the stakes of competitions: beating one's peers can grant access to institutional influence, life-saving medications, or being able to feed one's family. In an unequal environment, falling behind can carry serious consequences, and humans are quick to respond to these conditions.
 
-According to risk-sensitivity theory, risk-taking behaviour can be understood as a rational response to desperate circumstances. Namely, risk-sensitivity theory predicts that organisms will be more likely to accept high-variance, risky options, when they are in a state of need, and cannot
+According to risk-sensitivity theory [RST, @caraco1980], many risk-taking behaviours can be understood as an adaptive response to desperate circumstances. Originally conceived to explain the foraging behaviours of birds, RST predicts that organisms will be more likely to choose risky options when they cannot meet their goals (e.g., daily calorie requirements) through more predictable means.
+
+Biologically speaking, the ultimate goal of evolved features is to improve one's reproductive fitness relative to
+
+successful competitors pass more of their genes onto future generations, meaning that fitness must be considered relative to competitors (Hamilton,
+
+10
+
+1964).
+
+<!--# For instance, when close to starvation, a hummingbird might prefer flowers that gives large but unpredictable amounts of nectar, compared to flowers that give smaller, more consistent amounts. are in a state of need-->
+
+<!--# In risk-sensitivity theory, decision-making is characterized as a behavioral response designed to seek foraging returns in stochastic environments that allow for survival, with the ultimate goal of enhancing reproductive success or fitness (Bednekoff, 1996; Hurly, 2003; Stephens, 1981; Stephens & Krebs, 1986; Weber, Shafir, & Blais, 2004). -->
 
 are capable of responding to these acute problems, or are prepared to judge themselves by comparing their lot with others.
 
