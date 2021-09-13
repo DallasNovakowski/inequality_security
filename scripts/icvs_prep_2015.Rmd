@@ -25,8 +25,24 @@ library(readxl) # read xls file
 #surveytoolbox::extract_vallab()
 #raw_classes <- as.character(lapply(lapply(icvs_data, class),tail,1))
 
-icvs_data <- read_sav("C:/Users/dalla/Google Drive/R Coding/ICVS2015_2b.sav")  # Reading data
+icvs_data <- read_sav("C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/ICVS2015_2b.sav")  # Reading data
 
+names(icvs_data)
+
+# urban or rural
+glimpse(icvs_data$i004)
+
+# main city
+glimpse(icvs_data$i004a)
+
+glimpse(icvs_data$i005b)
+summary(as.factor(icvs_data$i005b))
+```
+
+i005b identifies the national surveys conducted
+
+The International Crime Victims Survey (ICVS) is a great dataset. Big, easy enough to access, and it's well documented. The identifiers and labels are available in the dataset, as well as  an accompanying codebook updated to the 2005 sweep of the ICVS. There is also a version of the questionnaire that participants see, which has been helpful in interpreting the items in plain language, in addition to clearing up some inconsistencies in the codebook.
+```{r janitor}
 raw_classes <- sapply(sapply(icvs_data, class),tail,1)
 
 icvs_data <- icvs_data %>% 
@@ -39,16 +55,61 @@ icvs_data <- icvs_data %>%
               pull(value)) %>%            # extract new variable name into a character vector
   janitor::clean_names()      # clean names to be all lowercase, replacing spaces with "_"     
 
+```
+
+
+
+```{r unlabeled}
+summary(icvs_data$i002b)
+summary(icvs_data$sweep)
+```
+
+i004 appears to be sweep information
+
+```{r nation-identifying}
+
+# extract characters between parentheses
 icvs_data$country <- gsub("(?<=\\()[^()]*(?=\\))(*SKIP)(*F)|.", "", icvs_data$main_city, perl=T)
 
+# view unique countries
+unique(icvs_data$country)
+
+# change blank to NA
 icvs_data$country <- gsub("^$|^ $", NA, icvs_data$country)
 
-icvs_data$country[is.na(icvs_data$country)] <- as.character(icvs_data$national_surveys)
+# for missing country variables, import national survey values
+icvs_data$country[is.na(icvs_data$country)] <- as.character(icvs_data$national_surveys[is.na(icvs_data$country)])
+  
+  
+
+# view after national survey
+unique(icvs_data$country)
+
+unique(icvs_data$country)
+summary(icvs_data$country)
+
 
 icvs_data$country <- as.factor(icvs_data$country)
 
-setnames(icvs_data, old=c("questionnaire_that_was_used","questionnaire_was_based_on"), new=c("questionnaire_used","questionnaire_based_on"), skip_absent=TRUE)
 
+icvs_data$country[is.na(icvs_data$country)] <- icvs_data$national_surveys[is.na(icvs_data$country)]
+
+#giving filling spain from regional responses
+icvs_data$country[is.na(icvs_data$country)] <- gsub("(?<=\\()[^()]*(?=\\))(*SKIP)(*F)|.", "", icvs_data$regional_survey[is.na(icvs_data$country)], perl=T)
+
+icvs_data$sweep[is.na(icvs_data$country)] %>%
+  summary()
+
+icvs_data$country <- as.factor(icvs_data$country)
+
+wat <- icvs_data %>%
+  filter(sweep == "5th sweep -2004-2006" | sweep == "EU ICS 2005") 
+
+summary(wat$country)[summary(wat$country) >0]
+
+#icvs_data[is.na(icvs_data$country),]
+
+#setnames(icvs_data, old=c("questionnaire_that_was_used","questionnaire_was_based_on"), new=c("questionnaire_used","questionnaire_based_on"), skip_absent=TRUE)
 
 
 #setnames(icvs_data3, old=c("i002a","i002b"), new=c("sweep_year", "sweep_num"), skip_absent=TRUE)
@@ -58,17 +119,20 @@ setnames(icvs_data, old=c("questionnaire_that_was_used","questionnaire_was_based
 #library(hfunk)
 #changeClass(icvs_data2, raw_classes)
 
-
 ```
 
+6020 NAs
 
-The International Crime Victims Survey (ICVS) is a great dataset. Big, easy enough to access, and it's well documented. The identifiers and labels are available in the dataset, as well as  an accompanying codebook updated to the 2005 sweep of the ICVS. There is also a version of the questionnaire that participants see, which has been helpful in interpreting the items in plain language, in addition to clearing up some inconsistencies in the codebook.
+math checks out for united kingdom
 
+missing cases for peru (7011 vs 10300), argentina (2529 vs 5260)
+
+does have slovenia, "RSA" (probably south africa)
 
 # **At a Glance**
 
 ```{r source scripts, warning=F, message=FALSE, echo=FALSE}
- source("C:/Users/dalla/Google Drive/R Coding/icvs_inequality/scripts/icvs_scripts.r", local = knitr::knit_global())
+ source("C:/Users/dalla/Google Drive/project_files/icvs_inequality/scripts/icvs_scripts.r", local = knitr::knit_global())
 ```
 
 ```{r ncols and nrow, warning=F, message=FALSE, include = TRUE}
@@ -76,7 +140,7 @@ nrow(icvs_data)
 ncol(icvs_data)
 ```
 
-As we can see, very large, 968 variables over 330,000 respondents
+As we can see, very large, `r ncol(icvs_data)` variables over `r nrow(icvs_data)` respondents
 
 <br>
 
