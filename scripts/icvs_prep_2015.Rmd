@@ -1,8 +1,10 @@
 ---
-title: "icvs_prep_report"
+title: "icvs_2015_prep_report"
 output:
   html_document:
     df_print: paged
+    number_sections: true
+    toc: true
 ---
 
 ```{r source script 1 & data, warning=F, message=FALSE, echo=FALSE}
@@ -158,12 +160,51 @@ missing cases for peru (7011 vs 1030 = 3289), argentina (2529 vs 5260= 2731);  2
 
 ## Peru and argentina
 
-This interactive table suggests that these observations are lacking country identification. They have latin america for global region, but nothing more specific 
+This interactive table of a subset of rows suggests that these observations are lacking country identification. They have latin america for global region, but nothing more specific 
+
+A combination of the region variable and questionnaire_that_was_used seems to hold some kind of promise. Reliably, the country-specific surveys have region information, bat FtoF 2000 does not.
 
 ```{r look at data}
-data_2005[is.na(data_2005$country),]
+set.seed(12345) 
+
+data_2005[is.na(data_2005$country),][sample(1:nrow(data_2005[is.na(data_2005$country),]), 30), ]
+
 ```
 
+
+```{r questionnaire missingness}
+setnames(data_2005, old=c("questionnaire_that_was_used","questionnaire_was_based_on"), new=c("questionnaire_used","questionnaire_based_on"), skip_absent=TRUE)
+
+
+questionnaire_screen <- data_2005 %>% group_by(questionnaire_used) %>% 
+  dplyr::count(country)
+
+# view number of responses for each country*sweep
+questionnaire_screen_c <- cast(questionnaire_screen,country~questionnaire_used)
+
+# compute total number of participants
+questionnaire_screen_c$total <- rowSums(questionnaire_screen_c[,2:ncol(questionnaire_screen_c)], na.rm=TRUE)
+
+questionnaire_screen_c$total[questionnaire_screen_c$total == 0] <- NA
+
+questionnaire_screen_c
+
+```
+
+Looking at the 2005.sav, Argentina got the FtoF 2000, and Peru got Country specific
+
+```{r argentina and peru}
+if (data_2005$questionnaire_used == "FtoF 2000" && is.na(data_2005$country)){
+  data_2005$country <- "Argentina"
+}
+
+if (data_2005$questionnaire_used == "Country specific" && is.na(data_2005$country)){
+  data_2005$country <- "Peru"
+} 
+ 
+summary(data_2005$country)[summary(data_2005$country) >0]
+```
+This treatment gives the same values as 2005.sav
 
 
 # Other descriptive stuff
@@ -194,12 +235,6 @@ We see above, that there are 84 countries in total across the entire ICVS.
 
 ```{r source scripts, warning=F, message=FALSE, echo=FALSE}
  source("C:/Users/dalla/Google Drive/project_files/icvs_inequality/scripts/icvs_scripts.r", local = knitr::knit_global())
-
-
-#icvs_data[is.na(icvs_data$country),]
-
-#setnames(icvs_data, old=c("questionnaire_that_was_used","questionnaire_was_based_on"), new=c("questionnaire_used","questionnaire_based_on"), skip_absent=TRUE)
-
 
 #setnames(icvs_data3, old=c("i002a","i002b"), new=c("sweep_year", "sweep_num"), skip_absent=TRUE)
 
@@ -245,7 +280,7 @@ There are many different years and versions of the survey; not every case, sweep
 If we're doing international comparisons, the most important first consideration is the distribution of responses by sweep year. We need to have cases be (roughly) comparable based on the year. For example, it would be unfair to compare norway in 2005 to lithuania in 1989.
 
 ```{r more country info, warning=F, message=FALSE, echo=FALSE}
-kable_summary(icvs_data$sweep)
+# kable_summary(icvs_data$sweep)
 ```
 
 
@@ -255,7 +290,7 @@ Next, it's worthwhile seeing what kinds of questionnaires people get, in case th
 
 
 ```{r questionnaires, warning=F, message=FALSE}
-kable_summary(icvs_data$questionnaire_used)
+# kable_summary(icvs_data$questionnaire_used)
 ```
 
 We can see  that *there are more than a dozen different surveys distributed as part of this project*: computer-assisted telephone interviewing (CATI), face to face, and something "country specific." I know with some questionnaires (possibly later, and outside this dataset) are done solely with computers, but those had very poor response rates. Likewise, we can see that the study has been conducted over 15 years, better seen below.
