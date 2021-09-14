@@ -102,10 +102,10 @@ icvs_data$sweep[is.na(icvs_data$country)] %>%
 
 icvs_data$country <- as.factor(icvs_data$country)
 
-wat <- icvs_data %>%
+data_2005 <- icvs_data %>%
   filter(sweep == "5th sweep -2004-2006" | sweep == "EU ICS 2005") 
 
-summary(wat$country)[summary(wat$country) >0]
+summary(data_2005$country)[summary(data_2005$country) >0]
 
 #icvs_data[is.na(icvs_data$country),]
 
@@ -123,11 +123,17 @@ summary(wat$country)[summary(wat$country) >0]
 
 6020 NAs
 
-math checks out for united kingdom
+math checks out for united kingdom (889+1004+2002+2010+2004 = 7909)
 
-missing cases for peru (7011 vs 10300), argentina (2529 vs 5260)
+missing cases for peru (7011 vs 1030 = 3289), argentina (2529 vs 5260= 2731);  2731+3289 = 6020. Accounts for all NAs
 
 does have slovenia, "RSA" (probably south africa)
+
+```{r look at data}
+data_2005[is.na(data_2005$country),]
+```
+
+
 
 # **At a Glance**
 
@@ -202,13 +208,13 @@ Next, it's worthwhile seeing what kinds of questionnaires people get, in case th
 ```{r questionnaires, warning=F, message=FALSE}
 kable_summary(icvs_data$questionnaire_used)
 ```
+
 We can see  that *there are more than a dozen different surveys distributed as part of this project*: computer-assisted telephone interviewing (CATI), face to face, and something "country specific." I know with some questionnaires (possibly later, and outside this dataset) are done solely with computers, but those had very poor response rates. Likewise, we can see that the study has been conducted over 15 years, better seen below.
 
 A potentially important note is that 9833 cases have "0" coded as the questionnaire they received, which doesn't have a code to it. Likewise, 16412 cases are NA. This means  about *25,000 participants were given an unknown questionnaire.* More on this later
 
 
 <br>
-
 
 This is important because the questions they receive, and the time they receive the questions, can change. There are  variables that may help us clear this up, but we need to keep this uncertainty in our consideration, because as explored later on, **this study often uses NA values in the place of 0** 
 
@@ -218,367 +224,3 @@ The codebook proves to be a useful, but incomplete, resource here. We can see wh
 
 <br>
 
-
-![](C:/Users/dalla/Google Drive/R Coding/ICVS_codebook_screenshot.png)
-
-
-# Choosing year(s) and questionnaire(s) for our analysis
-
-It's obvious we can't use all sweeps right off the bat.  Although we have the "seal of approval" for comparability, this is for specific questionnaire items - some questions are not displayed to participants in some years/surveys.
-
-This problem best reveals itself when we try to choose nation-level variables to include in the model - if we look at GDP or gini, what year do we extract from?
-
-```{r NA sweeps , warning=F, message=FALSE, echo = FALSE}
-library(reshape) # cast function
-what_m <- icvs_data %>% group_by(sweep) %>% 
-  count(country)
-
-# view number of responses for each country*sweep
-what_c <- cast(what_m,country~sweep)
-
-# compute total number of participants
-what_c$total <- rowSums(what_c[,2:ncol(what_c)], na.rm=TRUE)
-
-what_c$total[what_c$total == 0] <- NA
-
-what_c$eu_and_2005 <- rowSums(what_c[,c("5th sweep -2004-2006", "EU ICS 2005")], na.rm=TRUE)
-
-what_c$eu_and_2005[what_c$eu_and_2005 == 0] <- NA
-
-what_c
-```
-
-
-The above shows the number of participants in each country, for each wave, in addition to a total, AS WELL as the total number of participants for each country after combining the overlapping waves 5 and EU ICS (2004-2006 for sweep 5, and 2005 for the EU ICS 5.1)
-
-Although we could compare the sums of eu_and_2005 with its constituents, it's easier to **sum the number of non-NAs** (i.e., countries with at least 1 respondent) to see whether the 2004-2006 and EU ICS sweeps measure the same countries twice (i.e., there's redundancy)
-
-```{r count nonmissing,warning=F, message=FALSE, echo=FALSE}
-# sum missing 
-what_c %>% 
-  summarise_all(list(~ sum(!is.na(.))))
-```
-So here we can see that the 4th sweep by has the most countries **WITHOUT NAs**, followed by sweeps 3 then 2
-
-Likewise, we can see that 16+16=30, which is equal to "eu_and_2005," so there is zero redundancy between the 2004-2006 surveys and the 2005 EU ICS. Given that there's no overlap, sweep 5 and the EU sweep seem to be perfectly complementary.
-
-For now, let's assume that we'll be using the countries combined for sweeps 5 and 5.1.
-
-```{r 2005 nrow}
-data_2005 = filter(icvs_data,sweep == "5th sweep -2004-2006" |sweep == "EU ICS 2005") 
-
-nrow(data_2005)
-sum(summary(data_2005$country)>0)
-```
-**94,749 people** and surveyed between 2004 and 2006! Certainly encouraging for our sample size. Like mentioned earlier, there may be variability in the surveys people got in these two 2005 sweeps, so let's see.
-
-**The argument for using sweep 5 and the EU ICS for our analyses**
-
-Putting my bias out there: I'm inclined to use the combined eu_and_2005 data for our analyses. 
-
-A little under half of all countries are were surveyed between 2004 and 2006. This gives a reasonable balance of:
-
-1) the most recent data, 
-
-2) small time window encompassing  each observation, and 
-
-3) a decent number of level 2 clustering variables (which is needed for HLM).
-
-The most notable weakness is that this is data from WEIRD countries. Other, less WEIRD countries (e.g., phillipines, nigeria, india) are better represented throughout sweeps 2 to 4
-
-<br>
-
-I consider this topic in need for further discussion (including recognizing even how the newest data is 15 years old) 
-
-
-## Comparability of sweeps and questionnaires
-
-I reached out to John van Kesteren - one of the chief researchers involved in the ICVS:
-
-> "With regards to the different versions, the used questionnaires are much alike. Each country was allowed to ad a small amount of additional questions to the basic questionnaires. If the differences are too big, I used the 'based on xxx' qualification. In that case it was up to me to decide whether specific items were comparable to the main questionnaire. If not, they were not included in the main database.
-
-> It sounds a bit arrogant, but if it is in the main database, it has my personal seal of approval and the data are comparable."
-
-
-# **How do we measure security consumption?**
-
-Some people refused to answer on their use of security measures, so obviously can't be used for this study.
-
-```{r responders}
-responders_2005 = filter(data_2005, is.na(prev_refusal))
-nrow(responders_2005)
-sum(summary(responders_2005$country)>0)
-```
-
-Excluding refused participants leaves us with a total of `r length(summary(responders_2005$country)[summary(responders_2005$country)]>1)` countries and 
-`r format(nrow(responders_2005), scientific = FALSE)` respondents.
-
-```{r questionnaires after exclusions}
-kable_summary(responders_2005$questionnaire_used)
-kable_summary(responders_2005$questionnaire_based_on)
-```
-
-six unique values for the questionnaires received
-
-eight unique values for questionnaires_based_on, some ~31,000 responses
-
-No immediately discernible pattern for which cases get a based_on designation - Kerstern says  If the differences are too big, I used the 'based on xxx' qualification."
-
-
-At this moment, I'd propose we use the following variables as dependent variables:
-
-
-```{r prev variables, warning=F, message=FALSE, echo=FALSE}
-
-prevention_min <- c("prev_burglar_alarm", "prev_special_door_locks", "prev_special_grills", "prev_high_fence", "motion_detector", "prev_caretaker_security", "gun_ownership")
-prevention_mod <- c("prev_burglar_alarm", "prev_special_door_locks", "prev_special_grills", "prev_a_watch_dog", "prev_high_fence", "motion_detector", "prev_caretaker_security", "gun_ownership")
-prevention_max <- c("prev_burglar_alarm", "prev_special_door_locks", "prev_special_grills", "prev_a_watch_dog", "prev_high_fence", "prev_caretaker_security", "prev_caretaker_security", "prev_watch_scheme","firearm_incl_airrifle" )
-
-prevention_min1 <- c("prev_burglar_alarm", "prev_special_door_locks", "prev_special_grills", "prev_high_fence", "prev_caretaker_security", "gun_ownership")
-
-prevention_others <- c("prev_other", "prev_insurance" , "arrangement_with_neighbours", "prev_do_not_know", "prev_keep_lights_on")
-
-prevention_min1
-```
-
-As mentioned before, each item is either 1 or NA. This is  problematic when trying to discern true missing responses from participants saying "no" to that item. NAs could mean that the respondent didn't see the question, but if a category doesn't apply to them, they leave it blank.
-
-Tables for each questionnaire can help to determine whether the years have *ANY* "1" responses. This isn't conclusive, there's a small probability that a survey item presented to all participants, but no one answers it. At minimum, a FALSE value is a good signal though - participants can't indicate "yes" to any option if they don't see it.
-
-```{r missingness across questionnaires, warning=F, message=FALSE, echo=FALSE}
-na_tally(responders_2005,questionnaire_used,prevention_min1)
-```
-
-Motion detector and Gun ownership are the only problematic items. Only people that got "country specific"  questionnaires had only missing values for guns - can we troubleshoot this?
-
-```{r missingness_specific, warning=F, message=FALSE}
-responders_country_spec <- filter(responders_2005, questionnaire_used == "Country specific") 
-length(responders_country_spec$country)
-unique(responders_country_spec$country)
-
-
-kable_summary(responders_country_spec$questionnaire_based_on)
-```
-
-
-We see that Peru is the only country that received "country specific" designation, and they got an NA "based on" designation.
-
-However, as we see below, in the overall "based_on" breakdown, "cati 2000" also returned a missing flag for gun ownership
-
-
-```{r missingness_based_on, warning=F, message=FALSE, echo=FALSE}
-na_tally(responders_2005,questionnaire_based_on,prevention_min1)
-```
-
-
-
-
-```{r cati_2000_based , warning=F, message=FALSE, echo=FALSE}
-responders_cati_2000 <- filter(responders_2005, questionnaire_based_on == "Cati 2000") 
-length(responders_cati_2000$country)
-unique(responders_cati_2000$country)
-
-kable_summary(responders_cati_2000$questionnaire_used)
-```
-
-Using the same procedure, we see that  Hong Kong (and 2251 respondents) are not seeing (or not reporting on) items on gun ownership
-
-So this suggests that Hong Kong and Peru can't be used when measuring gun ownership.
-
-<br>
-
-
-**Do we use gun ownership as part of a dv?**
-
-Mentioning the propsect of gun ownership as a security measure, John van Kesteren suggested that firearms a as a preventative measure has been debunked. His 2013 article in *BJC* found that 
-
-> "owners of a handgun show increased risk for victimization by violent crime. High ownership levels, however, seem to diminish the victimization level for the less serious violent crimes for the non-owners."
-
-At baseline I'd like to keep  keep gun ownership. Even if guns have a null or inconsistent effect on safety, what matters is that consumers perceive that guns are effective in protection. Just like how real victimization risk  is not as important as perceived risk to result in security behaviours. Although people spend resources to get the guns for protection (as do 25% of the gun owners in the paper), the practice doesn't actually prevent victimization.
-
-What is maybe more pressing is losing Hong Kong and Peru from our dataset - each of them are valuable in getting us closer to non-WEIRD comparisons, and losing us a combined 12383 participants.
-
-So maybe our best bet is getting rid of guns and minimizing the DV set - Up for discussion though
-
-```{r ultra min prevention variables}
-prevention_min2 <- c("prev_burglar_alarm", "prev_special_door_locks", "prev_special_grills", "prev_high_fence", "prev_caretaker_security")
-```
-
-```{r exploration script, warning=F, message=FALSE, echo=FALSE}
-# source("C:/Users/dalla/Google Drive/R Coding/icvs_inequality/scripts/03_icvs_explore.r", local = knitr::knit_global())
-```
-
-
-One way of doing our analysis is to simply sum all of the security behaviours 
-(Need to consider whether these fall under the umbrella of consumption - e.g. watch schemes with neighbors)
-
-
-```{r rowsums security, warning=FALSE, message = F}
-responders_2005[ , prevention_min2] <- sapply(responders_2005[ , prevention_min2],
-                                             function(x) as.numeric(as.character(x)))
-
-responders_2005$total_security <- rowSums(responders_2005[ , prevention_min2], na.rm = TRUE) * NA ^ (rowSums(!is.na(responders_2005[ , prevention_min2])) == 0)
-
-responders_2005$total_securitprev_summaryy <- responders_2005$total_security
-
-responders_2005$total_security[is.na(responders_2005$total_security)] = 0
-
-summary(responders_2005$total_security)
-```
-
-This summing procedure gives us a max score of 5 on security consumption
-
-
-```{r total security, warning=F, message=FALSE, echo=FALSE}
-hist_plot(responders_2005, total_security, "Histogram of Total Security")
-
-library(moments) # skewness and kurtosis
-normality_stats(responders_2005$total_security)
-```
-
-A more kosher alternative is a square root transformation. Looks like it reduces the skew by a  fair amount.
-
-
-```{r sqrt security, warning=F, message=FALSE, echo=FALSE}
-responders_2005$sqrt_security <- sqrt(responders_2005$total_security) # square root transformation seems to provide something closer, so just use that?
-
-hist_plot(responders_2005, sqrt_security, "Histogram of Total Security (Square root)")
-
-normality_stats(responders_2005$sqrt_security)
-```
-
-A last alternative is a condensing transformation. Binning participants to either no security consumption, one unit of consumption, and anything higher than one
-
-It gets us the closest to a normal-looking distribution, but leads to loss of information and loss of power. 
-
-All told, let's remember that the assumptions of normality apply to the distribution of residuals, so can only be interpreted in the model. Good to keep skewness of the DV on our radar though.
-
-```{r ordinal security, warning=F, message=FALSE}
-responders_2005$ordinal_security <- NA
-
-responders_2005$ordinal_security <- ifelse(between(responders_2005$total_security,0,1), 1, NA)
-responders_2005$ordinal_security[responders_2005$total_security == 0] <- 0 
-responders_2005$ordinal_security[responders_2005$total_security > 1] <- 2
-
-hist_plot(responders_2005, ordinal_security, "Histogram of Ordinal Security")
-
-normality_stats(responders_2005$ordinal_security)
-```
-
-
-# **Nation-level variables**
-
-Our final spread of participants after screening refusers is as follows:
-
-```{r after exclusions}
-summary(responders_2005$country)[0!= summary(responders_2005$country)]
-
-na_countries = filter(responders_2005, is.na(country))
-
-summary(na_countries$global_region_2)
-summary(na_countries$main_city)
-summary(na_countries$main_city_last)
-summary(na_countries$national_surveys)
-summary(na_countries$regional_survey)
-summary(na_countries$region)
-summary(na_countries$global_region_2)
-
-
-responders_2005$country[is.na(responders_2005$country)]
-```
-
-One of the major benefits of an international study like this is being able to incorporate other nation-level variables. In this case, I am particularly interested in inequality, but it also allows to incorporate basic pieces like country prosperity
-
-
-## Inequality
-
-For inequality data, I used the Standardized World Income Inequality Database 9.0 (SWIID; Sotler, 2020). It is a great systematic effort at accumulating international comparisons of inequality over time. The Standardized World Income Inequality Database (SWIID) takes a Bayesian approach to standardizing observations collected from the OECD Income Distribution Database, the Socio-Economic Database for Latin America and the Caribbean generated by CEDLAS and the World Bank, Eurostat, the World Bank’s PovcalNet, the UN Economic Commission for Latin America and the Caribbean, national statistical offices around the world, and many other sources. Luxembourg Income Study data serves as the standard.
-
-
-```{r swidd summary, results='hide'}
-library(purrr)
-load("C:/Users/dalla/Google Drive/R Coding/swiid9_0/swiid9_0.rda")
-
-swiid_responders <-  swiid %>%
-  map(. %>% filter(.,country %in% names(summary(responders_2005$country)[0!= summary(responders_2005$country)]) )) %>%
-  map(. %>% filter(.,year == 2003 | year == 2004 | year == 2005 |year == 2006|year == 2007)) %>%
-  map(. %>% select(country,year,gini_disp))
-
-#swiid_spread <- swiid_responders %>%
-# map(.%>% spread(., year,gini_disp))
-
-
-swiid_spread <- swiid_responders %>%
-  map(.%>% pivot_wider(names_from = year, names_prefix ="gini_", values_from =gini_disp))
-
-swiid_2004_6 <- swiid_spread %>%
-  map(.%>% rowwise() %>%
-        mutate(gini_2004_6 = mean(c(gini_2004, gini_2005, gini_2006))))
-
-swiid_2004_6 <- map(swiid_2004_6, ~mutate_at(.x, "country", factor))
-
-#summarize dataframe #100 of the swiid
-summary(swiid_2004_6[[100]])
-
-#plot swiid
-
-swiid_summary %>%
-  filter(country == names(summary(responders_2005$country)[0!= summary(responders_2005$country)]) ) %>%
-  ggplot(aes(x=year, y=gini_disp, colour = country)) +
-  geom_line() +
-  geom_ribbon(aes(ymin = gini_disp-1.96*gini_disp_se,
-                  ymax = gini_disp+1.96*gini_disp_se,
-                  linetype=NA), alpha = .25) +
-  scale_x_continuous(breaks=seq(1960, 2015, 5)) +
-  theme_bw() +
-  labs(x = "Year",
-       y = "SWIID Gini Index, Disposable Income",
-       title = "Income Inequality over countries")
-```
-
-You can see that for the basic summary, there isn't gini data for all countries in our target study period. Accordingly, the dataset is imputed for some values. The inequality estimates and their associated uncertainty are represented by 100 draws from the posterior distribution: for any given observation, the differences across these imputations capture the uncertainty in the estimate
-
-As described in Solt (2020), the SWIID maximizes the comparability of available income inequality data for the broadest possible sample of countries and years. But incomparability remains, and it is sometimes substantial. This remaining incomparability is reflected in the standard errors of the SWIID estimates, making it often crucial to take this uncertainty into account when making comparisons across countries or over time (Solt 2009, 238; Solt 2016, 14; Solt 2020, 1196).
-
-## Living standards
-
-For a nation-level index of living standards, We'll use the Penn World Tables 10.0 (Feenstra, Inklaar and Timmer 2015). The PWT is devised to provide real GDP comparisons across countries and over time on the expenditure side. The PWT uses  prices collected  by the International Comparisons Program to construct purchasing-power-parity exchange rates. The PWT converts GDP at national prices to a common currency – U.S. dollars – making them comparable across countries
-
-We can see a breakdown of GDP per capita here:
-  
-```{r pwt summary,warning=F, message=FALSE, echo=FALSE, results='hide'}
-pwt <- read_excel("C:/Users/dalla/Google Drive/R Coding/pwt100.xlsx", sheet = "Data")
-
-pwt100_gdppc <- pwt %>% 
-  transmute(country = country,
-            year = year,
-            gdppc = rgdpe/pop) %>%
-  filter(!is.na(gdppc))
-
-pwt_responders <-  pwt100_gdppc %>%
-  filter(country%in% names(summary(responders_2005$country)[0!= summary(responders_2005$country)]) ) %>% 
-  filter(year == 2003 | year == 2004 | year == 2005 |year == 2006|year == 2007)
-
-pwt_spread <- spread(pwt_responders, year,gdppc) 
-
-colnames(pwt_spread)[2:6] = c("gdppc_2003", "gdppc_2004", "gdppc_2005", "gdppc_2006", "gdppc_2007") 
-
-pwt_2004_6 <- pwt_spread %>%
-  rowwise() %>%
-  mutate(gdppc_2004_6 = mean(c(gdppc_2004, gdppc_2005, gdppc_2006)))
-
-hist_plot(pwt_2004_6, gdppc_2004_6, "Histogram of average GDP per Capita over 2004-2006")
-```
-
-
-```{r merging}
-pwt_swiid <- swiid_2004_6 %>%
-  map(. %>% left_join(pwt_2004_6, by = c("country")))
-```
-
-
-# **Summary**
-
-Overall, I think this is a very encouraging first pass. The ICVS is retrievable and interpretable, and above all else, it does indeed measure security behaviours. We also appear to have a reasonable number of countries and participants after some pretty conservative exclusions.
-
-We certainly don't have to use the summed/transformed/ordinal aggregate of security consumption (opting for something like multiple logistic regressions instead), but being able to condense our analyses will certainly be more powerful for communicating the results.
