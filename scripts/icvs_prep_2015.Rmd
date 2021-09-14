@@ -42,7 +42,7 @@ summary(as.factor(icvs_data$i005b))
 i005b identifies the national surveys conducted
 
 The International Crime Victims Survey (ICVS) is a great dataset. Big, easy enough to access, and it's well documented. The identifiers and labels are available in the dataset, as well as  an accompanying codebook updated to the 2005 sweep of the ICVS. There is also a version of the questionnaire that participants see, which has been helpful in interpreting the items in plain language, in addition to clearing up some inconsistencies in the codebook.
-```{r janitor}
+```{r janitor, message=FALSE, echo=FALSE}
 raw_classes <- sapply(sapply(icvs_data, class),tail,1)
 
 icvs_data <- icvs_data %>% 
@@ -66,68 +66,99 @@ summary(icvs_data$sweep)
 
 i004 appears to be sweep information
 
-```{r nation-identifying}
+# Creating a variable for countries 
 
-# extract characters between parentheses
+Since my analysis is multilivel, with countries as clusters, identifying countries in a single variable is imperative.
+
+```{r nation-scan}
+summary(icvs_data$national_surveys)
+```
+
+A lot of missing values for national_surveys
+
+```{r main_city}
+summary(icvs_data$main_city)
+```
+
+still a lot of NAs, but gives values for missing data like Turkey
+
+```{r first country creation}
+# extract characters between parentheses from main_city
 icvs_data$country <- gsub("(?<=\\()[^()]*(?=\\))(*SKIP)(*F)|.", "", icvs_data$main_city, perl=T)
 
+summary(as.factor(icvs_data$country))
 # view unique countries
-unique(icvs_data$country)
+# unique(icvs_data$country)
+```
 
+Lots of blanks and NAs. Maybe we can supplement this with the national_surveys variable
+
+```{r missingness}
 # change blank to NA
 icvs_data$country <- gsub("^$|^ $", NA, icvs_data$country)
 
 # for missing country variables, import national survey values
 icvs_data$country[is.na(icvs_data$country)] <- as.character(icvs_data$national_surveys[is.na(icvs_data$country)])
-  
-  
 
 # view after national survey
-unique(icvs_data$country)
-
-unique(icvs_data$country)
-summary(icvs_data$country)
-
+summary(as.factor(icvs_data$country))
 
 icvs_data$country <- as.factor(icvs_data$country)
+```
 
+gets rid of NA values
 
-icvs_data$country[is.na(icvs_data$country)] <- icvs_data$national_surveys[is.na(icvs_data$country)]
+```{r does this work, message=FALSE, echo=FALSE}
+# I don't think this does anything
+# icvs_data$country[is.na(icvs_data$country)] <- icvs_data$national_surveys[is.na(icvs_data$country)]
+# 
+# summary(as.factor(icvs_data$country))
+```
 
-#giving filling spain from regional responses
+Looking at the 2005.sav, I know Spain should be visible by now, fortunately, the regional_survey variable seems uniquely created to handle this
+
+```{r regional spain}
+summary(icvs_data$regional_survey)
+
+# filling spain into country variable from regional_survey responses
 icvs_data$country[is.na(icvs_data$country)] <- gsub("(?<=\\()[^()]*(?=\\))(*SKIP)(*F)|.", "", icvs_data$regional_survey[is.na(icvs_data$country)], perl=T)
+```
 
+```{r post-spain}
+summary(icvs_data$country)
+```
+
+Spain is now in. Since I'm just using 2004-2006+ 2005 ICS, maybe I can just stop here. If there are no more missing values in my sweeps, I can just exclude the rest and move on
+
+```{r sweep country missingness}
 icvs_data$sweep[is.na(icvs_data$country)] %>%
   summary()
 
+```
+
+no luck
+
+```{r nation-identifying}
 icvs_data$country <- as.factor(icvs_data$country)
 
 data_2005 <- icvs_data %>%
   filter(sweep == "5th sweep -2004-2006" | sweep == "EU ICS 2005") 
 
 summary(data_2005$country)[summary(data_2005$country) >0]
-
-#icvs_data[is.na(icvs_data$country),]
-
-#setnames(icvs_data, old=c("questionnaire_that_was_used","questionnaire_was_based_on"), new=c("questionnaire_used","questionnaire_based_on"), skip_absent=TRUE)
-
-
-#setnames(icvs_data3, old=c("i002a","i002b"), new=c("sweep_year", "sweep_num"), skip_absent=TRUE)
-
-#attach names and classes to cleaned dataset
-
-#library(hfunk)
-#changeClass(icvs_data2, raw_classes)
-
 ```
 
 6020 NAs
+
+From 2005.sav file:
 
 math checks out for united kingdom (889+1004+2002+2010+2004 = 7909)
 
 missing cases for peru (7011 vs 1030 = 3289), argentina (2529 vs 5260= 2731);  2731+3289 = 6020. Accounts for all NAs
 
-does have slovenia, "RSA" (probably south africa)
+
+## Peru and argentina
+
+This interactive table suggests that these observations are lacking country identification. They have latin america for global region, but nothing more specific 
 
 ```{r look at data}
 data_2005[is.na(data_2005$country),]
@@ -135,11 +166,8 @@ data_2005[is.na(data_2005$country),]
 
 
 
-# **At a Glance**
+# Other descriptive stuff
 
-```{r source scripts, warning=F, message=FALSE, echo=FALSE}
- source("C:/Users/dalla/Google Drive/project_files/icvs_inequality/scripts/icvs_scripts.r", local = knitr::knit_global())
-```
 
 ```{r ncols and nrow, warning=F, message=FALSE, include = TRUE}
 nrow(icvs_data)
@@ -157,9 +185,30 @@ unique(icvs_data$country)
 length(unique(icvs_data$country))
 ```
 
-<br>
 
+<br>
 We see above, that there are 84 countries in total across the entire ICVS. 
+
+
+# **At a Glance**
+
+```{r source scripts, warning=F, message=FALSE, echo=FALSE}
+ source("C:/Users/dalla/Google Drive/project_files/icvs_inequality/scripts/icvs_scripts.r", local = knitr::knit_global())
+
+
+#icvs_data[is.na(icvs_data$country),]
+
+#setnames(icvs_data, old=c("questionnaire_that_was_used","questionnaire_was_based_on"), new=c("questionnaire_used","questionnaire_based_on"), skip_absent=TRUE)
+
+
+#setnames(icvs_data3, old=c("i002a","i002b"), new=c("sweep_year", "sweep_num"), skip_absent=TRUE)
+
+#attach names and classes to cleaned dataset
+
+#library(hfunk)
+#changeClass(icvs_data2, raw_classes)
+
+```
 
 The ICVS provides more specific regional data compared to the LIS or World Bank, distinguishing data collection across England and Wales, Ireland, Northern Ireland, and Scotland (in addition to the United Kingdom).
 
