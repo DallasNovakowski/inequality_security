@@ -29,16 +29,16 @@ library(readxl) # read xls file
 
 icvs_data <- read_sav("C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/ICVS2015_2b.sav")  # Reading data
 
-names(icvs_data)
-
-# urban or rural
-glimpse(icvs_data$i004)
-
-# main city
-glimpse(icvs_data$i004a)
-
-glimpse(icvs_data$i005b)
-summary(as.factor(icvs_data$i005b))
+# names(icvs_data)
+# 
+# # urban or rural
+# glimpse(icvs_data$i004)
+# 
+# # main city
+# glimpse(icvs_data$i004a)
+# 
+# glimpse(icvs_data$i005b)
+# summary(as.factor(icvs_data$i005b))
 ```
 
 i005b identifies the national surveys conducted
@@ -180,7 +180,7 @@ questionnaire_screen <- data_2005 %>% group_by(questionnaire_used) %>%
   dplyr::count(country)
 
 # view number of responses for each country*sweep
-questionnaire_screen_c <- cast(questionnaire_screen,country~questionnaire_used)
+questionnaire_screen_c <- reshape::cast(questionnaire_screen,country~questionnaire_used)
 
 # compute total number of participants
 questionnaire_screen_c$total <- rowSums(questionnaire_screen_c[,2:ncol(questionnaire_screen_c)], na.rm=TRUE)
@@ -194,17 +194,16 @@ questionnaire_screen_c
 Looking at the 2005.sav, Argentina got the FtoF 2000, and Peru got Country specific
 
 ```{r argentina and peru}
-if (data_2005$questionnaire_used == "FtoF 2000" && is.na(data_2005$country)){
-  data_2005$country <- "Argentina"
-}
+data_2005$country <- ifelse(is.na(data_2005$country),ifelse(data_2005$questionnaire_used == "FtoF 2000", "Argentina",ifelse(data_2005$questionnaire_used == "Country specific", "Peru",NA)),as.character(data_2005$country))
 
-if (data_2005$questionnaire_used == "Country specific" && is.na(data_2005$country)){
-  data_2005$country <- "Peru"
-} 
- 
-summary(data_2005$country)[summary(data_2005$country) >0]
+data_2005$country <- as.factor(data_2005$country)
+
+summary(data_2005$country)
 ```
+
 This treatment gives the same values as 2005.sav
+
+
 
 
 # Other descriptive stuff
