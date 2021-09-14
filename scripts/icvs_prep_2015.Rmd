@@ -41,9 +41,7 @@ icvs_data <- read_sav("C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/dat
 # summary(as.factor(icvs_data$i005b))
 ```
 
-i005b identifies the national surveys conducted
 
-The International Crime Victims Survey (ICVS) is a great dataset. Big, easy enough to access, and it's well documented. The identifiers and labels are available in the dataset, as well as  an accompanying codebook updated to the 2005 sweep of the ICVS. There is also a version of the questionnaire that participants see, which has been helpful in interpreting the items in plain language, in addition to clearing up some inconsistencies in the codebook.
 ```{r janitor, message=FALSE, echo=FALSE}
 raw_classes <- sapply(sapply(icvs_data, class),tail,1)
 
@@ -59,14 +57,24 @@ icvs_data <- icvs_data %>%
 
 ```
 
-
-
-```{r unlabeled}
-summary(icvs_data$i002b)
-summary(icvs_data$sweep)
+```{r source scripts, warning=F, message=FALSE, echo=FALSE}
+ source("C:/Users/dalla/Google Drive/project_files/icvs_inequality/scripts/icvs_scripts.r", local = knitr::knit_global())
 ```
 
-i004 appears to be sweep information
+```{r unlabeled,message=FALSE, echo=FALSE}
+# i005b identifies the national surveys conducted
+
+summary(icvs_data$i002b)
+summary(icvs_data$sweep)
+
+# i004 appears to be sweep information
+```
+
+
+
+The ICVS provides more specific regional data compared to the LIS or World Bank, distinguishing data collection across England and Wales, Ireland, Northern Ireland, and Scotland (in addition to the United Kingdom).
+
+
 
 # Creating a variable for countries 
 
@@ -108,7 +116,7 @@ summary(as.factor(icvs_data$country))
 icvs_data$country <- as.factor(icvs_data$country)
 ```
 
-gets rid of NA values
+gets rid of under half of NA values
 
 ```{r does this work, message=FALSE, echo=FALSE}
 # I don't think this does anything
@@ -172,7 +180,9 @@ data_2005[is.na(data_2005$country),][sample(1:nrow(data_2005[is.na(data_2005$cou
 ```
 
 
-```{r questionnaire missingness}
+Another perspective is to look at patterns of response country X survey type
+
+```{r questionnaire missingness, message=FALSE}
 setnames(data_2005, old=c("questionnaire_that_was_used","questionnaire_was_based_on"), new=c("questionnaire_used","questionnaire_based_on"), skip_absent=TRUE)
 
 
@@ -205,49 +215,11 @@ This treatment gives the same values as 2005.sav
 
 
 
+# Uk transformations
 
-# Other descriptive stuff
-
-
-```{r ncols and nrow, warning=F, message=FALSE, include = TRUE}
-nrow(icvs_data)
-ncol(icvs_data)
-```
-
-As we can see, very large, `r ncol(icvs_data)` variables over `r nrow(icvs_data)` respondents
-
-<br>
-
-
-
-```{r country info}
-unique(icvs_data$country)
-length(unique(icvs_data$country))
-```
-
-
-<br>
-We see above, that there are 84 countries in total across the entire ICVS. 
-
-
-# **At a Glance**
-
-```{r source scripts, warning=F, message=FALSE, echo=FALSE}
- source("C:/Users/dalla/Google Drive/project_files/icvs_inequality/scripts/icvs_scripts.r", local = knitr::knit_global())
-
-#setnames(icvs_data3, old=c("i002a","i002b"), new=c("sweep_year", "sweep_num"), skip_absent=TRUE)
-
-#attach names and classes to cleaned dataset
-
-#library(hfunk)
-#changeClass(icvs_data2, raw_classes)
-
-```
-
-The ICVS provides more specific regional data compared to the LIS or World Bank, distinguishing data collection across England and Wales, Ireland, Northern Ireland, and Scotland (in addition to the United Kingdom).
 
 ```{r non adjusted countries}
-summary(icvs_data$country)[c("United Kingdom","England & Wales", "England", "Northern Ireland", "Scotland", "Ireland")]
+summary(data_2005$country)[c("United Kingdom","England & Wales", "England", "Northern Ireland", "Scotland", "Ireland")]
 ```
 
 
@@ -255,55 +227,21 @@ It would be preferable to retain data granularity across the United Kingdom. Fir
 
 Unfortunately, smaller regions seem less likely to systematically collect data. For instance, some critical variables such as income inequality are not available either in the LIS, World Bank, nor government-level data in countries such as Northern Ireland or Scotland. Since this study seeks to integrate individual and nation-level observations, members of the United Kingdom were combined under the single country of the UK.
 
-```{r adjusting countries, echo = FALSE}
+```{r adjusting countries}
 # substituting specific british isles regions with UK
-icvs_data$country[icvs_data$country %in% c("England & Wales", "England", "Northern Ireland", "Scotland")] <- "United Kingdom"
+data_2005$country[data_2005$country %in% c("England & Wales", "England", "Northern Ireland", "Scotland")] <- "United Kingdom"
 
-icvs_data$country<- recode(icvs_data$country, "SAR China"= "Hong Kong",
+data_2005$country<- recode(data_2005$country, "SAR China"= "Hong Kong",
                            "USA" = "United States", "RSA" = "South Africa")
 ```
 
 
 ```{r total adjusted countries}
-summary(icvs_data$country)[c("United Kingdom","England & Wales", "England", "Northern Ireland", "Scotland", "Ireland")]
-sum(summary(icvs_data$country)>0)
+summary(data_2005$country)[c("United Kingdom","England & Wales", "England", "Northern Ireland", "Scotland", "Ireland")]
+sum(summary(data_2005$country)>0)
 ```
 
 Notably, Ireland is not part of the UK, so has better data coverage and is left separately for this study
 
 
-# **Data wrangling**
-
-There are many different years and versions of the survey; not every case, sweep, or questionnaire will yield the data we're looking for.
-
-If we're doing international comparisons, the most important first consideration is the distribution of responses by sweep year. We need to have cases be (roughly) comparable based on the year. For example, it would be unfair to compare norway in 2005 to lithuania in 1989.
-
-```{r more country info, warning=F, message=FALSE, echo=FALSE}
-# kable_summary(icvs_data$sweep)
-```
-
-
-We can see that there are five major sweeps of data collection, each potentially spanning a couple years. There is also a specific EU sweep, overlapping the 5th sweep.
-
-Next, it's worthwhile seeing what kinds of questionnaires people get, in case there are any meaningful differences
-
-
-```{r questionnaires, warning=F, message=FALSE}
-# kable_summary(icvs_data$questionnaire_used)
-```
-
-We can see  that *there are more than a dozen different surveys distributed as part of this project*: computer-assisted telephone interviewing (CATI), face to face, and something "country specific." I know with some questionnaires (possibly later, and outside this dataset) are done solely with computers, but those had very poor response rates. Likewise, we can see that the study has been conducted over 15 years, better seen below.
-
-A potentially important note is that 9833 cases have "0" coded as the questionnaire they received, which doesn't have a code to it. Likewise, 16412 cases are NA. This means  about *25,000 participants were given an unknown questionnaire.* More on this later
-
-
-<br>
-
-This is important because the questions they receive, and the time they receive the questions, can change. There are  variables that may help us clear this up, but we need to keep this uncertainty in our consideration, because as explored later on, **this study often uses NA values in the place of 0** 
-
-<br>
-
-The codebook proves to be a useful, but incomplete, resource here. We can see which countries took part in each sweep, and what items were included (it even specifies the order of presentation!).
-
-<br>
 
