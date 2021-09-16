@@ -22,41 +22,61 @@ load("C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005.RData")
 
 source("C:/Users/dalla/Google Drive/project_files/icvs_inequality/scripts/icvs_scripts.r", local = knitr::knit_global())
 
-
-# icvs_joined <-  icvs_joined %>%
-#   map(. %>% filter(., !is.na(num_victim_5yr)))
-
 iv_2005 <- iv_2005 %>% 
         filter(!is.na(num_victim_5yr))
-
-
-# mean centering gdp
-iv_2005[["gdppc_2004_6_cent"]] <-  iv_2005[["gdppc_2004_6"]] - mean(iv_2005[["gdppc_2004_6"]])
 ```
 
 # Data and variables
 
-The relationship between country-level inequality and the consumption of security products will be tested using a multilevel linear regression. This analysis will be accomplished using a combination of three archival datasets.
-
-Firstly, indicators of security consumption have been accessed from the International Crime Victimization survey (ICVS; REF), which is an accumulation of standardized sample surveys to look at householders' experiences with crime, policing, crime prevention and feelings of unsafety. Although it does not consist of longitudinal observations, the ICVS has been distributed across five phases over fifteen years (1989, 1992, 1996, 2000, 2005), totaling 300,000 people and 78 different countries (Data Archiving and Networked Services, n.d.). For the purposes of this study, it is most notable that this survey contains items such as respondents' adopted measures to protect themselves against burglary.
-
-Secondly, nation-level inequality in disposable income was accessed through the Standardized World Income Inequality Database (SWIID; REF). The SWIID has been designed to maximize the comparability of income inequality data while maintaining the widest possible coverage across countries and over time. As a result, the gini coefficients are accompanied by standard errors to reflect uncertainty in the estimates.
-
-Lastly, countries' expenditure-side real GDP was retrieved from the Penn World Table, version 10.0 (PWT; REF). The selected GDP values are adjusted for Purchasing Power Parity, "to compare relative living standards across countries at a single point in time" (<https://www.rug.nl/ggdc/productivity/pwt/?lang=en>). Nations' GDP values were divided by their population sizes to yield a per-capita GDP value, which will be used for these analysis.
-
-Although the above datasets extend across multiple years, the current analysis will be limited to observations across 2004-2006. Imposing this restriction allows for a sufficient number of countries, combined with relative recency of data. After a conservative exclusion process for missing data, survey sweeps conducted across 2004-6 yielded 31 countries with 85,085 participants, with a minimum of 790 participants per country. An exclusion strategy maximizing the number of variables yields 27 countries, and 48,671 participants.
+<!--# The relationship between country-level inequality and the consumption of security products will be tested using a multilevel linear regression. This analysis will be accomplished using a combination of three archival datasets. Firstly, indicators of security consumption have been accessed from the International Crime Victimization survey (ICVS; REF), which is an accumulation of standardized sample surveys to look at householders' experiences with crime, policing, crime prevention and feelings of unsafety. Although it does not consist of longitudinal observations, the ICVS has been distributed across five phases over fifteen years (1989, 1992, 1996, 2000, 2005), totaling 300,000 people and 78 different countries (Data Archiving and Networked Services, n.d.). For the purposes of this study, it is most notable that this survey contains items such as respondents' adopted measures to protect themselves against burglary. Secondly, nation-level inequality in disposable income was accessed through the Standardized World Income Inequality Database (SWIID; REF). The SWIID has been designed to maximize the comparability of income inequality data while maintaining the widest possible coverage across countries and over time. As a result, the gini coefficients are accompanied by standard errors to reflect uncertainty in the estimates. Lastly, countries' expenditure-side real GDP was retrieved from the Penn World Table, version 10.0 (PWT; REF). The selected GDP values are adjusted for Purchasing Power Parity, "to compare relative living standards across countries at a single point in time" (https://www.rug.nl/ggdc/productivity/pwt/?lang=en). Nations' GDP values were divided by their population sizes to yield a per-capita GDP value, which will be used for these analysis.Although the above datasets extend across multiple years, the current analysis will be limited to observations across 2004-2006. Imposing this restriction allows for a sufficient number of countries, combined with relative recency of data. After a conservative exclusion process for missing data, survey sweeps conducted across 2004-6 yielded 31 countries with 85,085 participants, with a minimum of 790 participants per country. An exclusion strategy maximizing the number of variables yields 27 countries, and 48,671 participants. -->
 
 # Analysis procedure
 
-If the assumptions underlying a multilevel regression hold in this dataset, the analysis will be conducted using maximum likelihood estimates (MLE) in Stata (IC 14.2; @REF), as there are a relatively small number of level-2 units in this data. Likewise, the use of full maximum lilkelihood will enable the use of statistical weights to increase the representativeness of the available data.
+If the assumptions underlying a multilevel regression hold in this dataset, the analysis will be conducted using maximum likelihood estimates (MLE) in Stata (IC 14.2; REF), as there are a relatively small number of level-2 units in this data. Likewise, the use of full maximum lilkelihood will enable the use of statistical weights to increase the representativeness of the available data.
 
 Given that the SWIID is presented in a list of 100 different dataframes, the analysis will firstly be conducted on each dataframe, with the results stored separately.
 
 I would prefer to use an r package for my analyses (lme4, EdSurvey, WeMix, BIFIEsurvey ). However, we saw that lme4 runs into convergence problems; likewise the other packages are so new and specific that they don't generate objects that can be used for analyses like cook's distance. By contrast, Stata is far more developed for multilevel analysis with survey weights. For instance, it provides model-wide Cook's D values for just level-2 units. If we are going to use a package that has poor integration with r, we might as well use the program that best handles the statistics.
 
-
-
 # Exploration
+
+```{r total security, warning=F, message=FALSE, echo=FALSE}
+#trying to overlay histogram and density plots
+# https://www.datanovia.com/en/blog/ggplot-histogram-with-density-curve-in-r-using-secondary-y-axis/
+
+hist_plot(iv_2005, total_security, "Histogram of Total Security")
+```
+
+At first glance it looks like a poisson process with λ \~ .5, but we have little reason to believe that our outcome variables (e.g., security, number of victimizations) follow a strictly poisson process. Namely, violating the assumption that the occurence of one event does not affect occurence of a subsequent event. I would guess that purchasing security or being victimized by a crime has *some* effect on later occurences in either direction (e.g., having less money from the prior security purchase)
+
+A question though - is the independence supposed to be observed within observations or between observations?
+
+A more kosher alternative is a square root transformation. Looks like it reduces the skew by a fair amount:
+
+A last alternative is a condensing transformation. Binning participants to either no security consumption, one unit of consumption, and anything higher than one
+
+It gets us the closest to a normal-looking distribution, but leads to loss of information and loss of power.
+
+All told, let's remember that the assumptions of normality apply to the distribution of residuals, so can only be interpreted in the model. Important to keep skewness of the DV on our radar though.
+
+```{r security summary}
+summary(iv_2005$total_security)
+
+normality_stats(iv_2005$total_security)
+```
+
+This summing procedure gives us a max score of `r max(iv_2005$total_security)` on security consumption, with substantial positive skew
+
+```{r iv plots, message=F, warning=F}
+ggplot(iv_2005, aes(x = age_num, y = num_victim_5yr)) +
+    geom_jitter(color = "#40B0A6", alpha = .08) + geom_smooth(method = "lm")
+
+# ggplot(iv_2005, aes(x = city_size_k, y = num_victim_5yr)) +
+#     geom_point(position = "jitter", color = "#40B0A6", alpha = 0.08) + geom_smooth(method = "lm")
+# 
+# ggplot(iv_2005, aes(x = num_victim_5yr, y = total_security)) +
+#     geom_point(position = "jitter", color = "#40B0A6", alpha = 0.08) + geom_smooth(method = "lm")
+```
 
 Starting with scatterplots. Nation Values with a cook's distance of 4 times the mean cook's distance values are flagged
 
@@ -97,19 +117,6 @@ victim_gdp_full <- gd %>%
   ggplot(aes(x = gdppc_2004_6, y = num_victim_5yr, label = outlier_country)) +
   geom_point(position = "jitter") + geom_smooth(alpha = .25, color = "red", span = 1.25) + geom_smooth(method = "lm", alpha = .25) + ggtitle("Victimization & GDP - Full") + theme_minimal() + coord_cartesian(xlim = c(0, 85000), ylim = c(.25, 1.125)) + ggrepel::geom_label_repel(label.size = 0.02)
 
-
-
- 
-# victim_gini_full <- ggplot(gd, aes(x = gini_2004_6, y = num_victim_5yr)) +
-#     geom_point() + geom_smooth(alpha = .25, color = "red", span = 1.25) + geom_smooth(method = "lm", alpha = .25) + 
-#     theme_minimal() + ggtitle("Victimization & Gini - Full")  + coord_cartesian(xlim = c(20, 65), ylim = c(.25, 1.25))
-
-# 
-# 
-# victim_gdp_full <- ggplot(gd, aes(x = gdppc_2004_6, y = num_victim_5yr)) +
-#     geom_point() + geom_smooth(alpha = .25, color = "red", span = 1.25) + geom_smooth(method = "lm", alpha = .25) + 
-#     theme_minimal() + ggtitle("Victimization & GDP - Full")  + coord_cartesian(xlim = c(1500, 85000), ylim = c(.25, 1.25))
-
 gridExtra::grid.arrange(victim_age, victim_gini_full,victim_gdp_full, gini_gdp_full, nrow = 2, ncol=2)
 
 ```
@@ -119,13 +126,12 @@ gridExtra::grid.arrange(victim_age, victim_gini_full,victim_gdp_full, gini_gdp_f
 Now there are obviously some heavy tails in this data.
 
 ```{r estimation preview2, warning=T, message=FALSE}
-
 # Fixed effect variables in model
 summary(iv_2005[,c("num_victim_5yr", "av_gini", "gdppc_2004_6_cent", "age_cent", "employed", "male")])
 
 
 # Estimate model
-m1_sample <- lme4::lmer(num_victim_5yr ~ gini_cent + scale(gdppc_2004_6) +
+m1_sample <- lme4::lmer(num_victim_5yr ~ gini_2004_6_cent + scale(gdppc_2004_6) +
                      age_cent + employed + male + (1 | country), data = iv_2005, REML=FALSE)
 
 # call basic unweighted model
@@ -162,37 +168,12 @@ abline(h = 4/nrow(iv_2005), lty = 2, col = "steelblue") # add cutoff line
 abline(h = 4*mean(cooksD, na.rm=T), col="red") 
 
 
-# nation_cook <- cooks.distance(lm(gini_2004_6 ~ gdppc_2004_6, gd))
-# 
-# plot(nation_cook, main="Nation-level (Gini ~ GDP) Cook's D", ylim=c(0,1))
-# abline(h = 4/nrow(gd), lty = 2, col = "steelblue") # add cutoff line
-# abline(h = 4*mean(nation_cook, na.rm=T), col="red") 
-# text(x=1:length(nation_cook)+1, y=nation_cook, labels=ifelse(nation_cook>4*mean(nation_cook, na.rm=T), gd$country,""), col="red")
-
 victim_nation_cook <- cooks.distance(lm(num_victim_5yr ~ gini_2004_6 + gdppc_2004_6, gd))
 
 plot(victim_nation_cook, main="Cook's D, Victimization ~ Gini + GDP", ylim=c(0,1))
 abline(h = 4/nrow(gd), lty = 2, col = "steelblue") # add cutoff line
 abline(h = 4*mean(victim_nation_cook, na.rm=T), col="red") 
 text(x=1:length(victim_nation_cook)+1, y=victim_nation_cook, labels=ifelse(victim_nation_cook>4*mean(victim_nation_cook, na.rm=T), gd$country,""), col="red") 
-
- 
- # lablist.x<-gd$country
-# axis(1, at=seq(1, 31, by=1), labels = lablist.x)
-# text(x = seq(0, 31, by=1),par("usr")[3] - 0.45, labels = lablist.x, srt = 45, pos = 2, xpd = FALSE)
-
-
- 
- # add labels
-# 
-# axis(1, by=1, at = 1:31, labels = gd$country)
-
-# 
-# gd %>% 
-#   mutate(cooks = cooks.distance(lm(gini_2004_6 ~ gdppc_2004_6)),
-#          outlier_country = ifelse(cooks > 4/nrow(.), country, NA)) %>% 
-#   ggplot(aes(x = gini_2004_6, y = gdppc_2004_6, label = outlier_country)) +
-#   geom_point() + ggrepel::geom_label_repel()
 
 ```
 
@@ -206,27 +187,9 @@ We can see that level-2 analysis yields much larger Cook's D values. The cooks d
 
 Since these influential observations are not a mistake - but rather truly extreme data, we will not delete the data, but instead winzorize these extreme values.
 
-```{r winzorize descriptives, warning=F, message=FALSE, echo=FALSE, fig.show="hold", out.width="50%"}
-
-
-iv_2005[["num_victim_5yr_winz"]] <-  DescTools::Winsorize(iv_2005[["num_victim_5yr"]])
-
-
-iv_2005[["gdppc_2004_6_winz"]] <-  DescTools::Winsorize(iv_2005[["gdppc_2004_6"]])
-
-iv_2005[["gdppc_2004_6_wc"]] <-  iv_2005[["gdppc_2004_6_winz"]] - mean(iv_2005[["gdppc_2004_6_winz"]])
-
-iv_2005[["gdppc_2004_6_scale"]] <- scale(iv_2005[["gdppc_2004_6"]])
-
-iv_2005[["gdppc_2004_6_ws"]] <- scale(iv_2005[["gdppc_2004_6_winz"]])
-
-
-iv_2005[["security_winz"]] <-  DescTools::Winsorize(iv_2005$total_security)
-
-
-iv_2005[,c("num_victim_5yr", "num_victim_5yr_winz", "gdppc_2004_6", "gdppc_2004_6_winz", "av_gini", "gini_winz")] %>%
+```{r winzorized descriptives, warning=F, message=FALSE, echo=FALSE, fig.show="hold", out.width="50%"}
+iv_2005[,c("num_victim_5yr", "num_victim_5yr_winz", "gdppc_2004_6", "gdppc_2004_6_winz", "av_gini", "gini_2004_6_winz")] %>%
   summary()
-
 
 gd <- iv_2005 %>% 
         filter(!is.na(num_victim_5yr)) %>%
@@ -236,7 +199,7 @@ gd <- iv_2005 %>%
                   num_victim_5yr  = mean(num_victim_5yr),
                   num_victim_5yr_winz = mean(num_victim_5yr_winz),
                   gini_2004_6  = mean(av_gini),
-                  gini_winz = mean(gini_winz)
+                  gini_winz = mean(gini_2004_6_winz)
                   )
 ```
 
@@ -299,7 +262,7 @@ iv_2005 <- iv_2005 %>%
   filter(!is.na(num_victim_5yr)) %>%
   mutate(num_victim_5yr_winz_sqrt = sqrt(num_victim_5yr_winz),
           gdppc_2004_6_winz_sqrt = sqrt(gdppc_2004_6_winz),
-          gini_winz_sqrt = sqrt(gini_winz),
+          gini_winz_sqrt = sqrt(gini_2004_6_winz),
          num_victim_5yr_winz_rankit = RNOmni::RankNorm(num_victim_5yr+1)
          )
 
@@ -314,121 +277,36 @@ qqline(resid(m1_sample), col = "darkgreen")
 
 qqnorm(resid(m1_winz_sqrt), main = "sqrt winzorized gini + victim - QQ plot")
 qqline(resid(m1_winz_sqrt), col = "darkgreen")
-# 
-# qqnorm(resid(m1_winz_log), main = "only logged winzorized gini - QQ plot")
-# qqline(resid(m1_winz_log), col = "darkgreen")
+
 ```
 
 Winzorizing definitely seems to help the normality of the model. Again, it does not remedy normality by any stretch; there are still some very heavy tails
 
 Interestingly, winzorizing with no other transformations seems to have the same (best) fit to the qq line
 
-# Stata Analyses
+## Poisson distribution
+```{r poisson model}
 
-```{r write stata document (.dta)}
-iv_2005 <- dplyr::rename(iv_2005, iw_mcity = individual_weight_for_main_cities, 
-                  iw_lastmcity = individual_weight_for_last_main_city, 
-         iw_nat = individual_weight_for_national_surveys, 
-       lik_elected = likely_elected_minicipal_councilors)
+m_pois <- glmer(num_victim_5yr ~ gdppc_2004_6_scale + gini_2004_6_cent + age_cent + employed + male + (1 | country), family = poisson,data = iv_2005)
 
-haven::write_dta(iv_2005,"C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta")
-```
+qqnorm(resid(m_pois), main = "Poisson - QQ plot")
+qqline(resid(m_pois), col = "darkgreen")
+plot(fitted(m_pois),resid(m_pois))
 
-```{stata empty model, collectcode = TRUE}
-use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta", clear
+m_bino <- glmer.nb(num_victim_5yr ~ gdppc_2004_6_scale + gini_2004_6_cent + age_cent + employed + male + (1 | country),data = iv_2005)
 
-mixed num_victim_5yr  || country:
+qqnorm(resid(m_bino), main = "binomial - QQ plot")
+qqline(resid(m_bino), col = "darkgreen")
+plot(fitted(m_bino),resid(m_bino))
 
-estat icc   *intraclass correlation
-```
+library("blmeco") 
+dispersion_glmer(m_pois)  # chec for dispersion, cutoff 1.4 https://stackoverflow.com/questions/22842017/model-checking-and-test-of-overdispersion-for-glmer
+# cutoff 1.1 https://stats.stackexchange.com/questions/230721/how-to-check-overdispersion-of-binomial-glmms-lme4-package
 
-```{stata first model}
-use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta"
-
-*First model
-
-xtmixed num_victim_5yr gini_cent gdppc_2004_6_cent age_cent employed male [pw=individual_weight] || country:, pwscale(size)
-
-mltcooksd, fixed random graph
-
-estat icc   *intraclass correlation
-
-estat ic       *BIC and AIC
+#runs Zero-inflated Poisson regression
+# pscl::vuong(poisson,zero inflat pois)
 
 ```
-
-Similar to the level-2 Cook's D's values on the lm model, argentian, peru, and the united states were all flagged as influential observations.
-
-```{stata plots, echo = 1}
-*use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta", clear
-
-*scatter num_victim_5yr total_security, jitter(5)
-
-*graph export scatter.svg, replace
-
-```
-
-<!-- ![Mileage \~ Weight](scatter.svg) -->
-
-```{stata winzorized model, collectcode = TRUE}
-use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta"
-
-*Winzorized model
-xtmixed num_victim_5yr_winz gini_wc gdppc_2004_6_ws age_cent employed male [pw=individual_weight] || country:, pwscale(size)
-
-*xtmixed num_victim_5yr_winz victim_nation_mean gini_wc gdppc_2004_6_ws age_cent employed male [pw=individual_weight] || country:, pwscale(size)
-
-
-estat icc
-estat ic
-
-mltcooksd, fixed random graph
-
-```
-
-```{stata excluded model}
-use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta"
-
-set more off
-
-gen dropcook=1 if country == "Peru" | country == "Argentina" | country ==  "United States"
-
-*Winzorized model
-xtmixed num_victim_5yr_winz gini_wc gdppc_2004_6_ws age_cent employed male [pw=individual_weight] || country: if dropcook !=1, pwscale(size)
-
-estat icc
-estat ic
-
-mltcooksd, fixed random graph
-```
-
-```{r create flags and update data}
-# create dummy flags for outlier countries
-iv_2005$extreme <- ifelse(iv_2005$country == "Peru" | iv_2005$country == "Argentina" | iv_2005$country == "United States", 1,0)
-
-iv_2005$extreme1 <- ifelse(iv_2005$country == "Peru" | iv_2005$country == "Argentina" | iv_2005$country == "United States"| iv_2005$country == "South Africa", 1,0)
-
-haven::write_dta(iv_2005,"C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta")
-```
-
-
-```{stata flag extreme lv2 model}
-
-use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta"
-
-set more off
-
-xtmixed num_victim_5yr_winz extreme gini_wc gdppc_2004_6_ws || country:
-
-```
-
-> When Ruiter and de Graaf (2010) excluded 23 cases based on DFBETAS, they found that their results held The point is that ultimately you need to have analyses that you can defend under scrutiny
-
-> Some suggest absolute values of greater than 1 Cohen et al. (2003); Fox (2003) But Fox (2003) points out that this may not be effective large samples Cites additional research suggesting 2/(square root of n) This rule was also used by Van der Meer et al (2010:175) n refers to the n at the specific level, in this case level-2
-
-> when I have around 30 clusters, I tend to depend on an absolute value of 1
-
-> Unlike an OLS model, if we exclude a case at level-2, we also lose additional cases, in terms of all the cases at level-1 associated with that unit Van de Meer et al (2010) suggest retaining the level-1 cases, and then adding a dummy variable at level-2 to control for their unit That is, 0=not in excluded unit, 1=in excluded unit Also fix intercept to 0 for this cluster
 
 # Assumption checks and and contingencies
 
@@ -523,24 +401,7 @@ DFFit: difference between adjusted predicted value and original value
 
 -   **Check**: Plot residuals vs predicted values, for changes in residual variance across levels of predicted values
 
-```{stata heteroscedasticity plot}
-
-*use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta"
-
-
-*Winzorized model
-*xtmixed num_victim_5yr_winz gini_wc gdppc_2004_6_ws age_cent employed male [pw=individual_weight] || country:, pwscale(size)
-
-
-*predict double xb, xb
-*predict double re, residuals
-
-*graph twoway scatter re xb, mcolor(black) msize(small) ylabel( , angle(horizontal) nogrid)
-
-```
-
--   **Treatment:**  Transformation of DV (e.g., box-cox, square root, log, rankit). Beyond this, the model already has robust standard errors
-
+-   **Treatment:** Transformation of DV (e.g., box-cox, square root, log, rankit). Beyond this, the model already has robust standard errors
 
 ```{r victimization transformation}
 
@@ -570,8 +431,6 @@ iv_2005$log_victimization <- log10(iv_2005$num_victim_5yr+1)
 
 
 ```
-
-
 
 ```{r sqrt security, warning=F, message=FALSE, echo=FALSE}
 # Square root method
@@ -608,25 +467,22 @@ security_boxcox<- geoR::boxcoxfit(iv_2005$total_security, lambda=0, lambda2 = 1)
   # security_boxcox <- MASS::boxcox(iv_2005$total_security)
 ```
 
-
 -   **Stopping rule:**
 
 ## Correlated random effects
 
-McNeish et al (2017) 
+McNeish et al (2017)
 
 ```{stata random effects plot}
 xtmixed num_victim_5yr_winz gini_wc gdppc_2004_6_ws age_cent employed male [pw=individual_weight] || country:, pwscale(size)
 
 ```
 
-
 pwcorr rint resids
 
-* graph of correlation between within-level residuals and random effects
+-   graph of correlation between within-level residuals and random effects
 
-twoway (scatter resids rint) (lfit resids rint) 
-
+twoway (scatter resids rint) (lfit resids rint)
 
 #### Sampling
 
