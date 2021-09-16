@@ -121,6 +121,114 @@ strength of evidence : 0-2 - weak; 2-6 = positive, 6-10 = strong, > 10 = very st
 From Long 1997:112
 
 
+# Stata Analyses
+
+```{r write stata document (.dta)}
+iv_2005 <- dplyr::rename(iv_2005, iw_mcity = individual_weight_for_main_cities, 
+                  iw_lastmcity = individual_weight_for_last_main_city, 
+         iw_nat = individual_weight_for_national_surveys, 
+       lik_elected = likely_elected_minicipal_councilors)
+
+haven::write_dta(iv_2005,"C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta")
+```
+
+```{stata empty model, collectcode = TRUE}
+use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta", clear
+
+mixed num_victim_5yr  || country:
+
+estat icc   *intraclass correlation
+```
+
+```{stata first model}
+use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta"
+
+*First model
+
+xtmixed num_victim_5yr gini_cent gdppc_2004_6_cent age_cent employed male [pw=individual_weight] || country:, pwscale(size)
+
+mltcooksd, fixed random graph
+
+estat icc   *intraclass correlation
+
+estat ic       *BIC and AIC
+
+```
+
+Similar to the level-2 Cook's D's values on the lm model, argentian, peru, and the united states were all flagged as influential observations.
+
+```{stata plots, echo = 1}
+*use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta", clear
+
+*scatter num_victim_5yr total_security, jitter(5)
+
+*graph export scatter.svg, replace
+
+```
+
+<!-- ![Mileage \~ Weight](scatter.svg) -->
+
+```{stata winzorized model, collectcode = TRUE}
+use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta"
+
+*Winzorized model
+xtmixed num_victim_5yr_winz gini_wc gdppc_2004_6_ws age_cent employed male [pw=individual_weight] || country:, pwscale(size)
+
+*xtmixed num_victim_5yr_winz victim_nation_mean gini_wc gdppc_2004_6_ws age_cent employed male [pw=individual_weight] || country:, pwscale(size)
+
+
+estat icc
+estat ic
+
+mltcooksd, fixed random graph
+
+```
+
+```{stata excluded model}
+use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta"
+
+set more off
+
+gen dropcook=1 if country == "Peru" | country == "Argentina" | country ==  "United States"
+
+*Winzorized model
+xtmixed num_victim_5yr_winz gini_wc gdppc_2004_6_ws age_cent employed male [pw=individual_weight] || country: if dropcook !=1, pwscale(size)
+
+estat icc
+estat ic
+
+mltcooksd, fixed random graph
+```
+
+```{r create flags and update data}
+# create dummy flags for outlier countries
+iv_2005$extreme <- ifelse(iv_2005$country == "Peru" | iv_2005$country == "Argentina" | iv_2005$country == "United States", 1,0)
+
+iv_2005$extreme1 <- ifelse(iv_2005$country == "Peru" | iv_2005$country == "Argentina" | iv_2005$country == "United States"| iv_2005$country == "South Africa", 1,0)
+
+haven::write_dta(iv_2005,"C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta")
+```
+
+```{stata flag extreme lv2 model}
+
+use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta"
+
+set more off
+
+xtmixed num_victim_5yr_winz extreme gini_wc gdppc_2004_6_ws || country:
+
+```
+
+> When Ruiter and de Graaf (2010) excluded 23 cases based on DFBETAS, they found that their results held The point is that ultimately you need to have analyses that you can defend under scrutiny
+
+> Some suggest absolute values of greater than 1 Cohen et al. (2003); Fox (2003) But Fox (2003) points out that this may not be effective large samples Cites additional research suggesting 2/(square root of n) This rule was also used by Van der Meer et al (2010:175) n refers to the n at the specific level, in this case level-2
+
+> when I have around 30 clusters, I tend to depend on an absolute value of 1
+
+> Unlike an OLS model, if we exclude a case at level-2, we also lose additional cases, in terms of all the cases at level-1 associated with that unit Van de Meer et al (2010) suggest retaining the level-1 cases, and then adding a dummy variable at level-2 to control for their unit That is, 0=not in excluded unit, 1=in excluded unit Also fix intercept to 0 for this cluster
+
+
+
 ```{stata excluded model1}
 use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta"
 
@@ -154,6 +262,23 @@ estat icc
 estat ic
 
 mltcooksd, fixed random graph
+
+```
+
+
+```{stata heteroscedasticity plot}
+
+*use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta"
+
+
+*Winzorized model
+*xtmixed num_victim_5yr_winz gini_wc gdppc_2004_6_ws age_cent employed male [pw=individual_weight] || country:, pwscale(size)
+
+
+*predict double xb, xb
+*predict double re, residuals
+
+*graph twoway scatter re xb, mcolor(black) msize(small) ylabel( , angle(horizontal) nogrid)
 
 ```
 
