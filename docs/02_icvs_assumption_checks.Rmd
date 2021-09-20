@@ -4,6 +4,7 @@ output:
   html_document:
     number_sections: true
     toc: true
+bibliography: references.bib
 ---
 
 ```{r setup, include=FALSE}
@@ -22,7 +23,7 @@ load("C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005.RData")
 
 source("C:/Users/dalla/Google Drive/project_files/icvs_inequality/scripts/icvs_scripts.r", local = knitr::knit_global())
 
-iv_2005 <- iv_2005 %>% 
+iv_2005_mod <- iv_2005_mod %>% 
         filter(!is.na(num_victim_5yr))
 ```
 
@@ -30,18 +31,19 @@ iv_2005 <- iv_2005 %>%
 
 The purpose of this section is to outline the branches of how this data will be explored and modified depending on various assumption checks. This a priori examiniation is particularly important given the substantial degrees of freedom that comes with analyzing archival data, allowing a researcher to pick and choose those data and analyses that best suit their preferred story (simmons et al., 2011).
 
-This data has `r sweep5_nrow` respondents and `r sweep5_countries` countries. After a conservative exclusion process for missing data, survey sweeps conducted across 2004-6 yielded 31 countries with 85,085 participants, with a minimum of 790 participants per country. An exclusion strategy maximizing the number of variables yields 27 countries, and 48,671 participants.
+The following describes two survey sweeps of the International Crime Victimization Survey conducted across 2004-6. At first, this data had `r sweep5_nrow` respondents and `r sweep5_countries` countries. After a exclusion process maximizing the number of countries and observations, there were 31 countries with 85,085 participants, with a minimum of 790 participants per country. An exclusion strategy maximizing the number of variables yields 27 countries, and 48,671 participants.
+
+The following and planned analyses will be carried out with `r sum(summary(iv_2005_mod$country)>0)` countries, and `r format(nrow(iv_2005_mod), big.mark = ",", scientific = FALSE)` participants.
 
 If the assumptions underlying a multilevel regression hold in this dataset, the analysis will be conducted using maximum likelihood estimates (MLE) in Stata (IC 14.2; REF), as there are a relatively small number of level-2 units in this data. Likewise, the use of full maximum lilkelihood will enable the use of statistical weights to increase the representativeness of the available data.
 
 ## Analysis plan
 
-I would prefer to use an r package for my analyses (lme4, EdSurvey, WeMix, BIFIEsurvey ). However, throughout this screening process, lme4 ran into convergence problems (particularly when incorporating survey weights). Likewise the other packages are so new and specific that they don't generate objects that can be used for analyses like cook's distance. 
+I would prefer to use an r package for my analyses (lme4, EdSurvey, WeMix, BIFIEsurvey ). However, throughout this screening process, lme4 ran into convergence problems (particularly when incorporating survey weights). Likewise the other packages are so new and specific that they don't generate objects that can be used for analyses like cook's distance.
 
 By contrast, Stata is far more developed for multilevel analysis with survey weights. For instance, it provides model-wide Cook's D values for just level-2 units, whereas R can do it only after making a new dataset. If we are going to use a package that has poor integration with rmarkdown, we might as well use the program that best handles the statistics, and save ambitions for a reproducible manuscript for later projects.
 
 <!--# The relationship between country-level inequality and the consumption of security products will be tested using a multilevel linear regression. This analysis will be accomplished using a combination of three archival datasets. Firstly, indicators of security consumption have been accessed from the International Crime Victimization survey (ICVS; REF), which is an accumulation of standardized sample surveys to look at householders' experiences with crime, policing, crime prevention and feelings of unsafety. Although it does not consist of longitudinal observations, the ICVS has been distributed across five phases over fifteen years (1989, 1992, 1996, 2000, 2005), totaling 300,000 people and 78 different countries (Data Archiving and Networked Services, n.d.). For the purposes of this study, it is most notable that this survey contains items such as respondents' adopted measures to protect themselves against burglary. Secondly, nation-level inequality in disposable income was accessed through the Standardized World Income Inequality Database (SWIID; REF). The SWIID has been designed to maximize the comparability of income inequality data while maintaining the widest possible coverage across countries and over time. As a result, the gini coefficients are accompanied by standard errors to reflect uncertainty in the estimates. Lastly, countries' expenditure-side real GDP was retrieved from the Penn World Table, version 10.0 (PWT; REF). The selected GDP values are adjusted for Purchasing Power Parity, "to compare relative living standards across countries at a single point in time" (https://www.rug.nl/ggdc/productivity/pwt/?lang=en). Nations' GDP values were divided by their population sizes to yield a per-capita GDP value, which will be used for these analysis.Although the above datasets extend across multiple years, the current analysis will be limited to observations across 2004-2006. Imposing this restriction allows for a sufficient number of countries, combined with relative recency of data. After a conservative exclusion process for missing data, survey sweeps conducted across 2004-6 yielded 31 countries with 85,085 participants, with a minimum of 790 participants per country. An exclusion strategy maximizing the number of variables yields 27 countries, and 48,671 participants. -->
-
 
 # Assumption checks and and contingencies
 
@@ -51,9 +53,13 @@ By contrast, Stata is far more developed for multilevel analysis with survey wei
 -   **Treatment:** winzorize variables that demonstrate exhibit sufficient influence on model
 -   **Robustness check:**
 
-a.  retain the level-1 cases of extreme values, add a dummy variable at level-2 to control for their unit, rerun analysis (Van de Meer et al, 2010). Document whether any coefficients change.
+a.  Retain the level-1 cases of extreme values, add a dummy variable at level-2 to control for their unit, rerun analysis (Van de Meer et al, 2010). Document whether any coefficients change.
 
-b. run analyses excluding cases that exceed the threshold 4/n; where n = \# of clusters. Following, evaluate cook's D values on this reduced dataset. Eliminate any cases that exceed a cook's d of .5, and conduct a third analysis.
+b.  Run analyses excluding cases that exceed the threshold 4/n; where n = \# of clusters. Following, evaluate cook's D values on this reduced dataset.
+
+c.  Eliminate any cases that exceed a cook's d of .5, and conduct a third analysis.
+
+*Then document whether any coefficients have gained/lost significance*
 
 ## Linearity
 
@@ -68,7 +74,7 @@ Especially with a small sample at level-2, adding polynomials seems more likely 
 
 -   **Check**: QQplots (The Normal Probability Plot method.) for whether lie on normal distribution
 
-**NO treatment:** Although there are many possible transformations possible for this kind of data (square root, rankit/INT, log(x+1), boxcox(x+1)), nonnormal data, by itself, is not expected to adversely impact the proposed analysis. Lumley, Diehr, Emerson, & Chen (2002) provided simulation evidence that linear regressions conducted on large samples are robust to departures from normality. With at least 500 observations, they found that linear regression can be conducted with negligible impact on Type I errors. 
+**NO treatment:** Although there are many possible transformations possible for this kind of data (square root, rankit/INT, log(x+1), boxcox(x+1)), nonnormal data, by itself, is not expected to adversely impact the proposed analysis. Lumley, Diehr, Emerson, & Chen (2002) provided simulation evidence that linear regressions conducted on large samples are robust to departures from normality. With at least 500 observations, they found that linear regression can be conducted with negligible impact on Type I errors.
 
 ## Heteroscedasticity (Homogeneity of Variance)
 
@@ -76,103 +82,121 @@ Especially with a small sample at level-2, adding polynomials seems more likely 
 
 -   **Treatment:** Transformation of DV (e.g., box-cox, square root, log, rankit). Beyond this, the model already has robust standard errors
 
+> There is a two-parameter version of the Box-Cox transformation that allows a shift before transformation:\The usual Box-Cox transformation sets λ2=0. One common choice with the two-parameter version is λ1=0 and λ2=1 which has the neat property of mapping zero to zero. There is even an R function for this: log1p(). More generally, both parameters can be estimated. In R, the boxcox.fit() function in package geoR will fit the parameters.
+
+<!-- Inverse hyperbolic sine (IHS) transformation, mixture models (<https://robjhyndman.com/hyndsight/transformations/>) Other options: -->
+
+> For a heteroskedasticity robust F test we perform a Wald test using the waldtest function, which is also contained in the lmtest package. It can be used in a similar way as the anova function, i.e., it uses the output of the restricted and unrestricted model and the robust variance-covariance matrix as argument vcov. Based on the variance-covariance matrix of the unrestriced model we, again, calculate White standard errors.
+
+Wald test: a way to find out if explanatory variables in a model are significant.
+
+If the Wald test shows that the parameters for certain explanatory variables are zero, you can remove the variables from the model
+
+Weighted distance between the unrestricted estimate and its hypothesized value under the null hypothesis, where the weight is the precision of the estimate
+
+
+
+<!-- >knief2021  Most elegantly,heteroscedasticity can be modeled directly, for instance by using the "weights" argument in lme (see Pinheiro & Bates, 2000, p. 214), which also enables us to test directly whether allowing for heteroscedasticity increases the fit of the model significantly. Similarly, heteroscedasticity-consistent standard errors could be estimated (Hayes & Cai, 2007). For more advice on handling heteroscedasticity, see McGuinness (2002). -->
+
+## Multicolinnearity
+
+-   **Check**: VIF/tolerances
+-   **Fix** remove values \>= 5
+
+> we did not cover collinearity between predictors or the distribution of random effects, but others have dealt with these aspects before (Freckleton, 2011; Schielzeth et al., 2020).
 
 ```{r victimization transformation, warning=F, message=FALSE, echo=FALSE}
 # Square root method
-iv_2005$sqrt_victimization <- sqrt(iv_2005$num_victim_5yr)
-  # normality_stats(iv_2005$sqrt_victimization)
+iv_2005_mod$sqrt_victimization <- sqrt(iv_2005_mod$num_victim_5yr)
+  # normality_stats(iv_2005_mod$sqrt_victimization)
 
 # Cube root method
-iv_2005$cubrt_victimization <- '^'(iv_2005$num_victim_5yr,1/3) # cube root transformation
-  #normality_stats(iv_2005$cubrt_victimization)
+iv_2005_mod$cubrt_victimization <- '^'(iv_2005_mod$num_victim_5yr,1/3) # cube root transformation
+  #normality_stats(iv_2005_mod$cubrt_victimization)
 
 # rankit method
-iv_2005$rankit_victimization <- RNOmni::RankNorm(iv_2005$num_victim_5yr) # rank-based inverse normal transformation (approximately normalize most distribtutional shapes, and which effectively minimizes type I errors and maximizes statistical power; Bishara & Hittner, 2012; Puth et al., 2014
-  #normality_stats(iv_2005$rankit_victimization)
+iv_2005_mod$rankit_victimization <- RNOmni::RankNorm(iv_2005_mod$num_victim_5yr) # rank-based inverse normal transformation (approximately normalize most distribtutional shapes, and which effectively minimizes type I errors and maximizes statistical power; Bishara & Hittner, 2012; Puth et al., 2014
+  #normality_stats(iv_2005_mod$rankit_victimization)
 
-#ggplot(iv_2005, aes(x = rankit_victimization))  +  geom_histogram(binwidth= 1, alpha=.7, fill="#40B0A6", colour='grey') + geom_density(adjust=6, aes(y=..count..)) + theme_minimal()
+#ggplot(iv_2005_mod, aes(x = rankit_victimization))  +  geom_histogram(binwidth= 1, alpha=.7, fill="#40B0A6", colour='grey') + geom_density(adjust=6, aes(y=..count..)) + theme_minimal()
 
 # Ordinal method
-iv_2005$ordinal_victimization <- NA
-iv_2005$ordinal_victimization <- ifelse(between(iv_2005$num_victim_5yr,0,1), 1, NA)
-iv_2005$ordinal_victimization[iv_2005$num_victim_5yr == 0] <- 0 
-iv_2005$ordinal_victimization[iv_2005$num_victim_5yr > 1] <- 2
+iv_2005_mod$ordinal_victimization <- NA
+iv_2005_mod$ordinal_victimization <- ifelse(between(iv_2005_mod$num_victim_5yr,0,1), 1, NA)
+iv_2005_mod$ordinal_victimization[iv_2005_mod$num_victim_5yr == 0] <- 0 
+iv_2005_mod$ordinal_victimization[iv_2005_mod$num_victim_5yr > 1] <- 2
 
 # Log method
-iv_2005$log_victimization <- log10(iv_2005$num_victim_5yr+1)
-  #normality_stats(iv_2005$log_victimization)
+iv_2005_mod$log_victimization <- log10(iv_2005_mod$num_victim_5yr+1)
+  #normality_stats(iv_2005_mod$log_victimization)
 
 
 ```
 
 ```{r sqrt security, warning=F, message=FALSE, echo=FALSE}
 # Square root method
-iv_2005$sqrt_security <- sqrt(iv_2005$total_security) # square root transformation seems to provide something closer, so just use that?
+iv_2005_mod$sqrt_security <- sqrt(iv_2005_mod$total_security) # square root transformation seems to provide something closer, so just use that?
 
-  #hist_plot(iv_2005, sqrt_security, "Histogram of Total Security (Square root)")
-  #normality_stats(iv_2005$sqrt_security)
+  #hist_plot(iv_2005_mod, sqrt_security, "Histogram of Total Security (Square root)")
+  #normality_stats(iv_2005_mod$sqrt_security)
 
 
 # Ordinal security
-iv_2005$ordinal_security <- NA
+iv_2005_mod$ordinal_security <- NA
 
-iv_2005$ordinal_security <- ifelse(between(iv_2005$total_security,0,1), 1, NA)
-iv_2005$ordinal_security[iv_2005$total_security == 0] <- 0 
-iv_2005$ordinal_security[iv_2005$total_security > 1] <- 2
-  # hist_plot(iv_2005, ordinal_security, "Histogram of Ordinal Security")
-  # normality_stats(iv_2005$ordinal_security)
-
+iv_2005_mod$ordinal_security <- ifelse(between(iv_2005_mod$total_security,0,1), 1, NA)
+iv_2005_mod$ordinal_security[iv_2005_mod$total_security == 0] <- 0 
+iv_2005_mod$ordinal_security[iv_2005_mod$total_security > 1] <- 2
+  # hist_plot(iv_2005_mod, ordinal_security, "Histogram of Ordinal Security")
+  # normality_stats(iv_2005_mod$ordinal_security)
 
 # log+1 method
-iv_2005$log_security <- log10(iv_2005$total_security+1)
-  # hist_plot(iv_2005, log_security, "Histogram of Logged Security")
-  # normality_stats(iv_2005$log_security)
+iv_2005_mod$log_security <- log10(iv_2005_mod$total_security+1)
+  # hist_plot(iv_2005_mod, log_security, "Histogram of Logged Security")
+  # normality_stats(iv_2005_mod$log_security)
 
 
 # inverse method
-iv_2005$inv_security <- 1/(iv_2005$total_security+1)
-  # hist_plot(iv_2005, inv_security, "Histogram of inverted Security")
-
-
+iv_2005_mod$inv_security <- 1/(iv_2005_mod$total_security+1)
+  # hist_plot(iv_2005_mod, inv_security, "Histogram of inverted Security")
 
 # Box Cox Method
-security_boxcox<- geoR::boxcoxfit(iv_2005$total_security, lambda=0, lambda2 = 1) 
-  # security_boxcox <- MASS::boxcox(iv_2005$total_security)
+security_boxcox<- geoR::boxcoxfit(iv_2005_mod$total_security, lambda=0, lambda2 = 1) 
+  # security_boxcox <- MASS::boxcox(iv_2005_mod$total_security)
 ```
 
 # Exploration
 
 ```{r total security, warning=F, message=FALSE, echo=FALSE, fig.show="hold", out.width="50%"}
-hist_plot(iv_2005, total_security, "Histogram of Total Security")
-hist_plot(iv_2005, num_victim_5yr, "Histogram of victimizations over past 5 years")
+hist_plot(iv_2005_mod, total_security, "Histogram of Total Security")
+hist_plot(iv_2005_mod, num_victim_5yr, "Histogram of victimizations over past 5 years")
 
 ```
 
 ```{r security summary}
-summary(iv_2005$total_security)
+summary(iv_2005_mod$total_security)
 
-normality_stats(iv_2005$total_security)
+normality_stats(iv_2005_mod$total_security)
 ```
 
 ## On the distribution
 
-At first glance, victimization looks like a poisson process, but we have limited reason to believe that our outcome variables (e.g., security, number of victimizations) follow a strictly poisson process. Namely, violating the assumption that the occurence of one event does not affect occurrence of a subsequent event. I would guess that purchasing security or being victimized by a crime has *some* effect on later occurrences in either direction (e.g., having less money from the prior security purchase).
+The population distribution for our dependent variables is not known in advance. All we can say is that we know it is a count variable. This uncertainty opens up the possibility of a model selection bias
 
-> Poisson distribution - lambdas specify variance and mean of the distribution (doesn't have to be an integer)
+At first glance, victimization looks like a poisson process, but we have limited reason to believe that our outcome variables (e.g., security, number of victimizations) follow a strictly poisson process. Namely, violating the assumption that the occurence of one event does not affect occurrence of a subsequent event. I would guess that purchasing security or being victimized by a crime has *some* effect on later occurrences in either direction (e.g., having less money from the prior security purchase).
 
 One note is that victimizations seem to have inflated zeros - more indicative of negative binomial. Another is that both variables have larger variances than means. A question though - is the independence supposed to be observed within observations or between observations?
 
 All told, let's remember that the assumptions of normality apply to the distribution of residuals, so can only be interpreted in the model. Important to keep skewness of the DV on our radar though.
 
-This summing procedure gives us a max score of `r max(iv_2005$total_security)` on security consumption, with substantial positive skew
-
+This summing procedure gives us a max score of `r max(iv_2005_mod$total_security)` on security consumption, with substantial positive skew
 
 Starting with scatterplots. Nation Values with a cook's distance of 4 times the mean cook's distance values (for bivariate relationship) are flagged.
 
 ## Influential observations
 
 ```{r influence screen, warning=F, message=FALSE, echo=FALSE}
-gd <- iv_2005 %>% 
+gd <- iv_2005_mod %>% 
         filter(!is.na(num_victim_5yr)) %>%
         group_by(country) %>% 
         summarise(gdppc_2004_6 = mean(gdppc_2004_6),
@@ -184,7 +208,7 @@ gd <- iv_2005 %>%
                   gini_winz = mean(gini_2004_6_winz)
                   )
 
-# gd <- iv_2005 %>% 
+# gd <- iv_2005_mod %>% 
 #         filter(!is.na(num_victim_5yr)) %>%
 #         group_by(country) %>% 
 #         summarise(gdppc_2004_6 = mean(gdppc_2004_6),
@@ -199,7 +223,7 @@ gd$country <- as.character(gd$country)
 
 # gd$country <- as.factor(gd$country)
 
-victim_age <- ggplot(iv_2005, aes(x = age_cent, y = num_victim_5yr)) +
+victim_age <- ggplot(iv_2005_mod, aes(x = age_cent, y = num_victim_5yr)) +
     geom_point(alpha = .02, position = "jitter", color = "#40B0A6") + geom_smooth(alpha = .25, color = "red", span = 1.25) + geom_smooth(method = "lm", alpha = .25) + theme_minimal()+ ggtitle("Age & victimization")
 
 
@@ -230,15 +254,17 @@ gridExtra::grid.arrange(victim_age, victim_gini_full,victim_gdp_full, gini_gdp_f
 
 # Assuming a normal distribution
 
-The case for using a normal distribution: 
+The case for using a normal distribution:
 
-Initially, a poisson process seems to better describe the distribution of this study's dependent variable. However, the variables *num_victim_5yr* and *security_total* each likely violate the assumption of event independence, where one event does not affect the likelihood of a subsequent event. For instance, in the case of security consumption, the psychological and material impacts of buying a security product (e.g., feelings of safety, reduced budget), can plausibly impact a consumers' decision to purchase further security goods. 
+Initially, a poisson process seems to better describe the distribution of this study's dependent variable. However, the variables *num_victim_5yr* and *security_total* each likely violate the assumption of event independence, where one event does not affect the likelihood of a subsequent event. For instance, in the case of security consumption, the psychological and material impacts of buying a security product (e.g., feelings of safety, reduced budget), can plausibly impact a consumers' decision to purchase further security goods.
 
-Knief & Forstmeier (2021) found a Gaussian error distribution to be far more robust to violations of its assumptions than Poisson and Binomial distributions. Given the potential for heavy bias in poisson and negative binomial models, a gaussian error structure's comparative robustness appears to make a (violated) assumption of normality be the safer choice compared to a possibly misattributed poisson distribution.
+@knief2021 found a Gaussian error distribution to be far more robust to violations of its assumptions than Poisson and Binomial distributions. Given the potential for heavy bias in poisson and negative binomial models, a gaussian error structure's comparative robustness appears to make a (violated) assumption of normality be the safer choice compared to a possibly misattributed poisson distribution.
 
 > We have shown that Poisson models yielded heavily biased type I error rates (at α = 0.05) in either direction ranging from 0 to as high as 0.55 when their distribution assumption is violated (Fig. 3 right column, Fig. S7).
 
-Knief & Forstmeier (2021) also concluded that for anything other than very small sample sizes, "p-values from Gaussian models are highly robust to even extreme violation of the normality assumption and can be trusted, except when involving X and Y distributions with extreme outliers (p. ??). Likewise, "for N = 1000, power was essentially unaffected by the distribution of Y and X."
+@knief2021 also concluded that for anything other than very small sample sizes:
+
+> "p-values from Gaussian models are highly robust to even extreme violation of the normality assumption and can be trusted, except when involving X and Y distributions with extreme outliers (p. ??). Likewise, "for N = 1000, power was essentially unaffected by the distribution of Y and X."
 
 For our purposes, it is important to note that we are dealing with a small sample size at the cluster/nation level.
 
@@ -248,21 +274,21 @@ Assuming a normal distribution, there are obviously some heavy tails in this dat
 
 ```{r estimation preview2, warning=T, message=FALSE}
 # Fixed effect variables in model
-summary(iv_2005[,c("num_victim_5yr", "age_cent", "employed", "male")])
+summary(iv_2005_mod[,c("num_victim_5yr", "age_cent", "employed", "male")])
 
 summary(gd[,c("gini_2004_6", "gdppc_2004_6_cent", "gdppc_2004_6")])
 
-m1_null <- lme4::lmer(num_victim_5yr ~ (1 | country), data = iv_2005, REML=FALSE)
+m1_null <- lme4::lmer(num_victim_5yr ~ (1 | country), data = iv_2005_mod, REML=FALSE)
 
 # Estimate model
 m1_sample <- lme4::lmer(num_victim_5yr ~ gini_2004_6_cent + gdppc_2004_6_scale +
-                     age_cent + employed + male + (1 | country), data = iv_2005, REML=FALSE)
+                     age_cent + employed + male + (1 | country), data = iv_2005_mod, REML=FALSE)
 
 # call basic unweighted model
 summary(m1_sample)
 
 # estimate weighted model - fails to converge (even with all numeric variables scaled)
-m1_weight <- lme4::lmer(num_victim_5yr ~ gini_2004_6_cent + gdppc_2004_6_scale + age_cent + employed +   male + (1 | country),data = iv_2005, REML=FALSE, weights = individual_weight)
+m1_weight <- lme4::lmer(num_victim_5yr ~ gini_2004_6_cent + gdppc_2004_6_scale + age_cent + employed +   male + (1 | country),data = iv_2005_mod, REML=FALSE, weights = individual_weight)
 ```
 
 Further seen in the normality statistics for the residuals - high skewness and kurtosis
@@ -284,7 +310,6 @@ DFBeta values: difference between estimate including and deleting outlier
 
 DFFit: difference between adjusted predicted value and original value
 
-
 ```{r cooksd model, warning=F, message=FALSE, fig.show="hold", out.width="50%"}
 # influential cases (Cook's Distance. Any values over 1 are likely to be significant outliers)
 cooksD <- cooks.distance(m1_sample)
@@ -294,7 +319,7 @@ summary(cooksD)
 ```{r cooksd lv2, warning=F, message=FALSE, echo=FALSE, fig.show="hold", out.width="50%"}
 # look for influential observations in nation-level
 plot(cooksD, main="Model-wide Cook's D * BEWARE Y AXIS", ylim=c(0,.01))
-abline(h = 4/nrow(iv_2005), lty = 2, col = "steelblue") # add cutoff line
+abline(h = 4/nrow(iv_2005_mod), lty = 2, col = "steelblue") # add cutoff line
 abline(h = 4*mean(cooksD, na.rm=T), col="red") 
 
 
@@ -315,12 +340,14 @@ We can see that level-2 analysis yields much larger Cook's D values. The cooks d
 
 ## Handling influential observations - Winzorization
 
+Going on with citing @knief2021:
+
 > "Importantly, the robustness of regression methods to deviations from normality of the regression errors e does not only depend on sample size, but also on the distribution of the predictor X (Box & Watson, 1962; Mardia, 1971). Specifically, when the predictor variable X contains a single outlier, then it is possible that the case coincides with an outlier in Y, creating an extreme observation with high leverage on the regression line. This is the only case where statistical significance gets seriously misestimated based on the assumption of Gaussian errors in Y which is violated by the outlier in Y. This problem has been widely recognized (Ali & Sharma, 1996; Box&Watson, 1962; Miller, 1986; Osborne &Waters, 2002; Ramsey & Schafer, 2013; Zuur et al., 2010) leading to the conclusion that Gaussian models are robust as long as there are Trimmed values \> 4\*mean(cook) that occur in X and Y simultaneously."
 
 Since these influential observations are not a mistake - but rather truly extreme data, we will not delete the data, but instead winzorize these extreme values.
 
 ```{r winzorized descriptives, warning=F, message=FALSE, echo=FALSE, fig.show="hold", out.width="50%"}
-iv_2005[,c("num_victim_5yr", "num_victim_5yr_winz")] %>%
+iv_2005_mod[,c("num_victim_5yr", "num_victim_5yr_winz")] %>%
   summary()
 
 gd[,c("gdppc_2004_6", "gdppc_2004_6_winz", "gini_2004_6", "gini_winz")] %>%
@@ -334,8 +361,8 @@ Dramatic changes to the max values, less-so for the mean values (with the except
 gridExtra::grid.arrange(
 
 
-hist_plot(iv_2005,num_victim_5yr,"Regular number of victimizations"),
-hist_plot(iv_2005,num_victim_5yr_winz,"Winzorized number of victimizations"),
+hist_plot(iv_2005_mod,num_victim_5yr,"Regular number of victimizations"),
+hist_plot(iv_2005_mod,num_victim_5yr_winz,"Winzorized number of victimizations"),
 
 
 hist_plot(gd,gdppc_2004_6,"Regular GDP"),
@@ -382,7 +409,7 @@ victim_gdp_winz
 ```
 
 ```{r sqrt winz, echo = FALSE, warning=FALSE}
-iv_2005 <- iv_2005 %>%
+iv_2005_mod <- iv_2005_mod %>%
   filter(!is.na(num_victim_5yr)) %>%
   mutate(num_victim_5yr_winz_sqrt = sqrt(num_victim_5yr_winz),
           gdppc_2004_6_winz_sqrt = sqrt(gdppc_2004_6_winz),
@@ -391,20 +418,18 @@ iv_2005 <- iv_2005 %>%
          )
 
 m1_winz_sqrt <- lme4::lmer(num_victim_5yr_winz_sqrt ~ gdppc_2004_6_winz_sqrt + gini_2004_6_winz_sqrt +
-                     age_cent + employed + male + (1 | country),data = iv_2005, REML=FALSE)
+                     age_cent + employed + male + (1 | country),data = iv_2005_mod, REML=FALSE)
 ```
 
 ```{r winzorize model, message=F, warning=FALSE}
 m1_winz <- lme4::lmer(num_victim_5yr_winz ~ gdppc_2004_6_wc + gini_2004_6_winz +
-                     age_cent + employed + male + (1 | country),data = iv_2005, REML=FALSE)
+                     age_cent + employed + male + (1 | country),data = iv_2005_mod, REML=FALSE)
 ```
-
 
 ```{r model winz skewness kurtosis,  warning=F, message=FALSE}
 moments::skewness(resid(m1_winz))
 moments::kurtosis(resid(m1_winz))
 ```
-
 
 Winzorizing reduces non-normality, from a skewness of `r round(moments::skewness(resid(m1_sample)),2)` to skewness of *`r round(moments::skewness(resid(m1_winz)),2)`*, and from a kurtosis of `r round(moments::kurtosis(resid(m1_sample)),2)` to *`r round(moments::kurtosis(resid(m1_winz)),2)`*
 
@@ -430,22 +455,26 @@ plot(fitted(m1_winz),resid(m1_winz), main = "Winzorized resid ~ fitted")
 
 Winzorizing definitely seems to help the normality of the model. Again, it does not remedy normality by any stretch; there are still some very heavy tails
 
-
-
 # Poisson distribution
 
-Poisson is the go-to distribution for handling count data, which tends to exhibit a positive skew.
+Poisson is the go-to distribution for handling count data, which tends to exhibit a positive skew, and could provide an alternate way to model our data.
+
+<!-- poisson assumptions \* rate at which events occur is constant \* occurence of one event does not affect occurence of a subsequent event -->
+
+<!-- Probability Mass Function (PMF) - how likely a given value is -->
+
+<!-- cumulative distribution function - all of the likelihoods of values up to and including the designated value -->
 
 ```{r pois dis, message=FALSE}
 library('fitdistrplus')
-plot(fitdist(iv_2005$total_security,"pois"))
-plot(fitdist(iv_2005$num_victim_5yr,"pois"))
+plot(fitdist(iv_2005_mod$total_security,"pois"))
+plot(fitdist(iv_2005_mod$num_victim_5yr,"pois"))
 
 
-# ggplot(data = iv_2005,
+# ggplot(data = iv_2005_mod,
 #        mapping = aes(sample = total_security)) + 
 #   stat_qq(distribution = stats::qpois,
-#           dparams = list(lambda = mean(iv_2005$total_security))) + 
+#           dparams = list(lambda = mean(iv_2005_mod$total_security))) + 
 #   geom_step(data = data.frame(x = 0:10,
 #                               total_security = 0:10),
 #             mapping = aes(x = x,
@@ -454,34 +483,59 @@ plot(fitdist(iv_2005$num_victim_5yr,"pois"))
 #             alpha = 0.5) 
 
 # print("Security mean is")
-mean(iv_2005$total_security)
+mean(iv_2005_mod$total_security)
 # print("Security variance is")
-var(iv_2005$total_security)
+var(iv_2005_mod$total_security)
 
 # print("Victimization mean is")
-mean(iv_2005$num_victim_5yr)
+mean(iv_2005_mod$num_victim_5yr)
 # print("Victimization variance is")
-var(iv_2005$num_victim_5yr)
+var(iv_2005_mod$num_victim_5yr)
 ```
 
+Mean and variance values are slightly overdispersed (larger variances than means) - How close do they need to be to argue for poisson?
 
-Mean and variance values are slightly overdispersed (larger variances than means) - How close do they need to be to argue for poisson? 
+Specifying the poisson model:
 
-Specifying the poisson model
 ```{r poisson model, message=FALSE, fig.show="hold", out.width="50%"}
-m_pois <- glmer(num_victim_5yr ~ gdppc_2004_6_scale + gini_2004_6_cent + age_cent + employed + male + (1 | country), family = poisson, data = iv_2005)
+m_pois <- glmer(num_victim_5yr ~ gdppc_2004_6_scale + gini_2004_6_cent + age_cent + employed + male + (1 | country), family = poisson, data = iv_2005_mod)
 ```
 
 ## Poisson assumptions and contingencies
 
-The assumptions for poisson (and negative binomial) models will be tested using the r package DHARMA.
+The traditional procedure for testing binomial assumptions is conducted in seven steps:
 
-**DHARMa: residual diagnostics for hierarchical (multi-level/mixed) regression models**
-> The ‘DHARMa’ package uses a simulation-based approach to create readily interpretable scaled (quantile) residuals for fitted (generalized) linear mixed models. 
+1\. Conduct the D&L score test for overdispersion (H0: Poisson vs. H1: NB).
+
+2\. If the D&L score test fails to reject the null, conduct a Vuong test for zero-inflation (H0: Poisson vs. H1: ZIP). *Otherwise, proceed to Step 5*.
+
+3\. If the Vuong test for zero-inflation fails to reject the null, **fit a Poisson GLM** and calculate the p-value (H0 : βX = 0 vs. H1 : βX ≠ 0). *Otherwise, proceed to Step 4.*
+
+4\. If the Vuong test for zero-inflation rejects the null, **fit the ZIP model** and calculate the p-value (H0 : βX = γX = 0).
+
+5\. If the D&L score test rejects the null, conduct the Vuong test for zero-inflation (H0: NB vs. H1: ZINB).
+
+6\. If the Vuong test for zero-inflation fails to reject the null, **fit the NB model** and calculate the p-value (H0 : βX = 0). *Otherwise, proceed to Step 7.*
+
+7\. If the Vuong test for zero-inflation rejects the null, **fit the ZINB regression model** and calculate the p-value (H0 : βX = γX = 0).
+
+Following a simulation analysis of this seven-step testing procedure @campbell2021 discusses the consequences of testing the assumptions of a poisson distribution:
+
+> if one does not have sufficient power to confidently test for overdispersion and zero-inflation, it may be best to simply use a model that can accommodate for these possibilities (e.g. use a robust model) instead of going through a model selection procedure that might inflate the type 1 error.
+
+> However, when the distributional assumptions of a Poisson GLM do hold, Tsou (2006) acknowledge that the 'robust approach might not be as efficient'.
+
+This loss of efficiency reduces statistical power, so researchers may seek other methods to correct for model selection bias
+
+> Our simulation study suggests that, if sample sizes are sufficiently large, there is little need to worry about model selection bias following a series of sequential score tests. However, when sample sizes are small, our simulation study demonstrated that model selection bias can lead to potentially substantial type 1 error inflation
+
+The assumptions for poisson (and negative binomial) models will be tested using the r package **DHARMa: residual diagnostics for hierarchical (multi-level/mixed) regression models**
+
+> The 'DHARMa' package uses a simulation-based approach to create readily interpretable scaled (quantile) residuals for fitted (generalized) linear mixed models.
 
 <!-- Currently supported are linear and generalized linear (mixed) models from ‘lme4’ (classes ‘lmerMod’, ‘glmerMod’), ‘glmmTMB’, ‘GLMMadaptive’ and ‘spaMM’, generalized additive models (‘gam’ from ‘mgcv’), ‘glm’ (including ‘negbin’ from ‘MASS’, but excluding quasi-distributions) and ‘lm’ model classes -->
 
->To interpret the residuals, remember that a scaled residual value of 0.5 means that half of the simulated data are higher than the observed value, and half of them lower. A value of 0.99 would mean that nearly all simulated data are lower than the observed value. 
+> To interpret the residuals, remember that a scaled residual value of 0.5 means that half of the simulated data are higher than the observed value, and half of them lower. A value of 0.99 would mean that nearly all simulated data are lower than the observed value.
 
 ```{r dharma}
 library(DHARMa) #  “Diagnostics for HierArchical Regression Models”
@@ -489,29 +543,44 @@ simulationOutput <- simulateResiduals(fittedModel = m_pois, plot = F)
 ```
 
 ### Overdispersion
-As said above, overdispersion describes excess variance, given the mean. 
--   **Check:** DHARMA:: testDispersion()
--   **Treatment:** negative binomial model
--   **Robustness check:**
+
+As said above, overdispersion describes excess variance, given the mean.
+
+\- **Check:** DHARMA:: testDispersion() - **Treatment:** negative binomial model - **Robustness check:**
 
 ```{r dharma dispersion}
-testDispersion(m_pois)
 testDispersion(simulationOutput)
+
+# another package, blemco
+
+blmeco::dispersion_glmer(m_pois)  # chec for dispersion, cutoff 1.4 https://stackoverflow.com/questions/22842017/model-checking-and-test-of-overdispersion-for-glmer
+# # cutoff 1.1 https://stats.stackexchange.com/questions/230721/how-to-check-overdispersion-of-binomial-glmms-lme4-package
 ```
 
 ### Zero-inflation
+
 Zero-inflation describes the extent to which more zeros are present in the data than what the distribution assumes
--   **Check:** DHARMA:: testZeroInflation()
--   **Treatment:** zero-inflated model
+
+- **Check:** DHARMA:: testZeroInflation() 
+- **Treatment:** zero-inflated model
 
 ```{r dharma zero inflation}
 testZeroInflation(simulationOutput)
 ```
 
+Simulation outliers (data points that are outside the range of simulated values) are highlighted as red stars. To provide a visual aid in detecting deviations from uniformity in y-direction, the plot function calculates an (optional default) quantile regression, which compares the empirical 0.25, 0.5 and 0.75 quantiles in y direction (red solid lines) with the theoretical 0.25, 0.5 and 0.75 quantiles (dashed black line), and provides a p-value for the deviation from the expected quantile.
+
 ```{r dharma outliers}
 testOutliers(simulationOutput)
 ```
 
+By default, plotResiduals plots against predicted values. However, you can also use it to plot residuals against a specific other predictors (highly recommend).
+
+```{r dharma plot against}
+testQuantiles(simulationOutput)
+
+plotResiduals(simulationOutput, form = iv_2005_mod$gini_2004_6_cent)
+```
 
 ```{r poisson qq, echo = FALSE}
 # qqnorm(resid(m_pois), main = "Poisson - QQ plot")
@@ -521,60 +590,52 @@ testOutliers(simulationOutput)
 # Likewise qq plot indicates the bottom quantiles deviate from the normality line. Not sure whether it's anticipated, but some indication of heteroscedasticiy in the poisson model, with variance decreasing with larger fitted values
 ```
 
-
-
-
-
 ```{r dharma plots}
 plot(simulationOutput)
 ```
 
-
 ```{r poisson overdispersion, message=FALSE}
-# blmeco::dispersion_glmer(m_pois)  # chec for dispersion, cutoff 1.4 https://stackoverflow.com/questions/22842017/model-checking-and-test-of-overdispersion-for-glmer
+blmeco::dispersion_glmer(m_pois)  # chec for dispersion, cutoff 1.4 https://stackoverflow.com/questions/22842017/model-checking-and-test-of-overdispersion-for-glmer
 # # cutoff 1.1 https://stats.stackexchange.com/questions/230721/how-to-check-overdispersion-of-binomial-glmms-lme4-package
 # 
 # # zero inflation test https://stats.stackexchange.com/questions/118322/how-to-test-for-zero-inflation-in-a-dataset
-# vcdExtra::zero.test(iv_2005$total_security)
+# vcdExtra::zero.test(iv_2005_mod$total_security)
 ```
 
-Vuong test compares the zero-inflated model with an ordinary Poisson regression model
-
-<!-- https://errickson.net/stata-mixed/generalized-linear-mixed-models.html -->
-Stata: Poisson mixed models can be run with the mepoisson command. A meqrpoisson command exists and has benefits just like meqrlogit, but again, is an outdated command. If over-dispersion is an issue, menbreg exists for negative binomial regression. 
+## Other packages to run modified glmm
 
 <!-- https://stats.stackexchange.com/questions/474228/zero-inflated-generalized-poisson-mixed-effect-model-with-glmmtmb-still-zero-inf  -->
-DHARMa package to test for dispersion and zero-inflation. Because the model diagnostics showed underdispersion and a zero-inflation, I used the glmmTMB package with a Zero-inflated generalized Poisson
+
+glmmTMB package with a Zero-inflated generalized Poisson
 
 <!-- https://drizopoulos.github.io/GLMMadaptive/ -->
-fits mixed effects models for grouped/clustered outcome variables for which the integral over the random effects in the definition of the marginal likelihood cannot be solved analytically. The package approximates these integrals using the adaptive Gauss-Hermite quadrature rule.
 
+GLMMadaptive: fits mixed effects models for grouped/clustered outcome variables
 
-Simulation outliers (data points that are outside the range of simulated values) are highlighted as red stars. To provide a visual aid in detecting deviations from uniformity in y-direction, the plot function calculates an (optional default) quantile regression, which compares the empirical 0.25, 0.5 and 0.75 quantiles in y direction (red solid lines) with the theoretical 0.25, 0.5 and 0.75 quantiles (dashed black line), and provides a p-value for the deviation from the expected quantile. 
-
-By default, plotResiduals plots against predicted values. However, you can also use it to plot residuals against a specific other predictors (highly recommend).
-
-```{r dharma plot against}
-testQuantiles(simulationOutput)
-
-plotResiduals(simulationOutput, form = iv_2005$gini_2004_6_cent)
-```
+**Vuong test**: a test of distinghuishability and fit for two models compares the zero-inflated model with an ordinary Poisson regression model
 
 ```{r vuong}
-m1 <- zeroinfl(count ~ child + camper | persons, data = zinb)
+# https://stackoverflow.com/questions/51016328/mixed-effects-model-with-zero-inflated-data-error-message-using-zeroinfl-fro 
+# m_nbinom <- glmmTMB::glmmTMB(num_victim_5yr ~ gdppc_2004_6_scale  + av_gini + age_cent + employed + male + (1 | country),zi = ~ gdppc_2004_6_scale  + av_gini + age_cent + employed + male, data = iv_2005_mod, family = poisson)
+# 
+# summary(m_nbinom)
 
-mnull <- update(m1, . ~ 1)
+# If you set zi ~ 1 then the ZIM is assumed to be independent of any predictors. 
 
-pchisq(2 * (logLik(m1) - logLik(mnull)), df = 3, lower.tail = FALSE)
+# Interpreting zero-inflation coefficients: every unit change in predictor increases/decreases the log odds of the being in the structural zero group (those who cannot have cancer) 
 
-p1 <- glm(count ~ child + camper, family = poisson, data = zinb)
-
-vuong(p1, m1)
+# mnull <- update(m_nbinom)
+# 
+# pchisq(2 * (logLik(m_nbinom) - logLik(mnull)), df = 3, lower.tail = FALSE)
+# # 
+# p1 <- glm(count ~ child + camper, family = poisson, data = zinb)
+# 
+# pscl::vuong(m1,m_pois)
 ```
 
-
 ```{r nbinom, echo=FALSE}
-# m_bino <- glmer.nb(num_victim_5yr ~ gdppc_2004_6_scale + gini_2004_6_cent + age_cent + employed + male + (1 | country),data = iv_2005)
+
+# m_bino <- glmer.nb(num_victim_5yr ~ gdppc_2004_6_scale + gini_2004_6_cent + age_cent + employed + male + (1 | country),data = iv_2005_mod)
 # 
 # bino_sim <- simulateResiduals(fittedModel = m_bino, plot = F)
 
@@ -587,54 +648,53 @@ vuong(p1, m1)
 # plot(fitted(m_bino),resid(m_bino), main = "negative binomial resid ~ fitted")
 
 
-#runs Zero-inflated Poisson regression
+#compares Zero-inflated Poisson regression
 # pscl::vuong(poisson,zero inflat pois)
-```
 
+```
 
 ```{r other distributions, warning=F, message=FALSE, echo=FALSE, results='hide', fig.show="hold", out.width="50%"}
 # https://www.juliapilowsky.com/2018/10/19/a-practical-guide-to-mixed-models-in-r/
 
 # # unexpected missingness exclusion
-# summary(!is.na(iv_2005[["num_victim_5yr"]]))
-# which(is.na(iv_2005[["num_victim_5yr"]]))
+# summary(!is.na(iv_2005_mod[["num_victim_5yr"]]))
+# which(is.na(iv_2005_mod[["num_victim_5yr"]]))
 # 
-# iv_2005$num_victim_5yr_winz_1 <- iv_2005$num_victim_5yr_winz + 1
+# iv_2005_mod$num_victim_5yr_winz_1 <- iv_2005_mod$num_victim_5yr_winz + 1
 # 
-# norm <- MASS::fitdistr(iv_2005$num_victim_5yr_winz_1, "normal")
+# norm <- MASS::fitdistr(iv_2005_mod$num_victim_5yr_winz_1, "normal")
 # 
-# # qqp(iv_2005$num_victim_5yr, "norm", main = "Normal distribution")
+# # qqp(iv_2005_mod$num_victim_5yr, "norm", main = "Normal distribution")
 # 
-# qqp(iv_2005$num_victim_5yr_winz_1, "norm", main = "Normal distribution")
+# qqp(iv_2005_mod$num_victim_5yr_winz_1, "norm", main = "Normal distribution")
 # 
 # 
-# qqp(sqrt(iv_2005$num_victim_5yr_winz), "norm", main = "Normal distribution, square root")
-# # qqp(sqrt(iv_2005$num_victim_5yr_winz), "norm", main = "winzorized and square root")
+# qqp(sqrt(iv_2005_mod$num_victim_5yr_winz), "norm", main = "Normal distribution, square root")
+# # qqp(sqrt(iv_2005_mod$num_victim_5yr_winz), "norm", main = "winzorized and square root")
 # 
-# qqp(iv_2005$num_victim_5yr_winz_1, "lnorm", main = "Logged normal distribution")
-# # qqp(iv_2005$num_victim_5yr_winz + 1, "lnorm", main = "Winzorized and Logged")
+# qqp(iv_2005_mod$num_victim_5yr_winz_1, "lnorm", main = "Logged normal distribution")
+# # qqp(iv_2005_mod$num_victim_5yr_winz + 1, "lnorm", main = "Winzorized and Logged")
 # 
 # # negative binomial - fails to optimize with +1 transformation
-# # nbinom <- MASS::fitdistr(iv_2005$num_victim_5yr_1, "Negative Binomial")
-# # qqp(iv_2005$num_victim_5yr_1, "nbinom", main = "Negative binomial distribution", size = nbinom$estimate[[1]], mu = nbinom$estimate[[2]])
+# # nbinom <- MASS::fitdistr(iv_2005_mod$num_victim_5yr_1, "Negative Binomial")
+# # qqp(iv_2005_mod$num_victim_5yr_1, "nbinom", main = "Negative binomial distribution", size = nbinom$estimate[[1]], mu = nbinom$estimate[[2]])
 # 
 # 
 # #poisson distribution
-# poisson <- MASS::fitdistr(iv_2005$num_victim_5yr_winz_1, "Poisson")
-# qqp(iv_2005$num_victim_5yr_winz_1, "pois", main = "Poisson distribution", lambda = poisson$estimate)
+# poisson <- MASS::fitdistr(iv_2005_mod$num_victim_5yr_winz_1, "Poisson")
+# qqp(iv_2005_mod$num_victim_5yr_winz_1, "pois", main = "Poisson distribution", lambda = poisson$estimate)
 # 
 # 
 # #poisson modeldistribution
-# poisson <- MASS::fitdistr(iv_2005$num_victim_5yr_winz_1, "Poisson")
-# qqp(iv_2005$num_victim_5yr_winz_1, "pois", main = "Poisson distribution", lambda = poisson$estimate)
+# poisson <- MASS::fitdistr(iv_2005_mod$num_victim_5yr_winz_1, "Poisson")
+# qqp(iv_2005_mod$num_victim_5yr_winz_1, "pois", main = "Poisson distribution", lambda = poisson$estimate)
 # 
 
-# qqp(iv_2005$num_victim_5yr_winz+1, "pois", main = "Winzorized Poisson distribution", lambda = poisson$estimate)
+# qqp(iv_2005_mod$num_victim_5yr_winz+1, "pois", main = "Winzorized Poisson distribution", lambda = poisson$estimate)
 
 
 # lattice::qqmath(m1_sample, id=0.05)
 ```
-
 
 # Correlated random effects
 
@@ -646,15 +706,7 @@ pwcorr rint resids
 
 twoway (scatter resids rint) (lfit resids rint)
 
-
 from <https://notstatschat.rbind.io/2019/04/19/progress-on-linear-mixed-models-for-surveys/>
-
-from Dr. B on Kenward Roger test:
-
-> Issue is that in smaller samples, sampling distribution may not be normal The KR is an "approximation" method that accounts for small-sample bias Can be used in Stata with dfmethod(kroger) Using this method will also invoke t-distribution The problem is that it can only be used with REML estimation So it really can't be used with survey estimation
-
-
-
 
 ```{r heteroscedasticity, warning=F, message=FALSE, echo=FALSE, fig.show="hold", out.width="50%"}
 # plot(m1_sample, resid(., type = "pearson") ~ fitted(.), abline = 0, main="Heteroscedasticity check - fitted values vs. residuals")
@@ -664,57 +716,39 @@ from Dr. B on Kenward Roger test:
 
 The variance of residuals seems consistent across all levels - so no notable heteroscedasticity?
 
-Not too sure how to interpret these plots - but I think this one isn't great
-
 In particular, the residuals don't appear to be symmetrically distributed (tending to cluster towards the middle of the plot). For low fitted values, residuals seem to be skewed higher, leveling off as the fitted values get larger
 
-> There is a two-parameter version of the Box-Cox transformation that allows a shift before transformation:\The usual Box-Cox transformation sets λ2=0. One common choice with the two-parameter version is λ1=0 and λ2=1 which has the neat property of mapping zero to zero. There is even an R function for this: log1p(). More generally, both parameters can be estimated. In R, the boxcox.fit() function in package geoR will fit the parameters.
-
-> -   Inverse hyperbolic sine (IHS) transformation, mixture models (<https://robjhyndman.com/hyndsight/transformations/>) Other options:
-
-> -   we want to obtain heteroskedasticity robust standard errors and their corresponding t values. In R the function coeftest from the lmtest package can be used in combination with the function vcovHC from the sandwich package to do this.
-
-# Sandwich estimators
-
-<https://stackoverflow.com/questions/48479984/r-mixed-model-with-heteroscedastic-data-only-lm-function-works>
-
-> The sandwich package is not limited to lm/glm only but it is in principle object-oriented, see vignette("sandwich-OOP", package = "sandwich") (also published as <doi:10.18637/jss.v016.i09>.
->
-> There are suitable methods for a wide variety of packages/models but not for nlme or lme4. The reason is that it's not so obvious for which mixed-effects models the usual sandwich trick actually works. (Disclaimer: But I'm no expert in mixed-effects modeling.)
->
-> However, for lme4 there is a relatively new package called merDeriv (<https://CRAN.R-project.org/package=merDeriv>) that supplies estfun and bread methods so that sandwich covariances can be computed for lmer output etc. There is also a working paper associated with that package: <https://arxiv.org/abs/1612.04911>
-
-**Snijders & Bosker, on sandwich estimators (p. 173)** \> sandwich estimators for standard errors, also called cluster-robust standard errors, make no assumptions about the distributional shape of the random coefficients. Verbeke and Lesaffre (1997) and Yan and Bentler (2002) proposed sandwich estimators to provide standard errors applicable for nonnormalily distributed random effects... However, sandwich estimators do require large enough numbers of units at the highest level; see Verbeke and Lesaffre 997), Maas and Hox (2004), and hthe further discussion in 12.2 \* <https://www.r-econometrics.com/methods/hcrobusterrors/>
-
-> For a heteroskedasticity robust F test we perform a Wald test using the waldtest function, which is also contained in the lmtest package. It can be used in a similar way as the anova function, i.e., it uses the output of the restricted and unrestricted model and the robust variance-covariance matrix as argument vcov. Based on the variance-covariance matrix of the unrestriced model we, again, calculate White standard errors.
-
-knief and Forstmeier, 2021 \> Most elegantly,heteroscedasticity can be modeled directly, for instance by using the "weights" argument in lme (see Pinheiro & Bates, 2000, p. 214), which also enables us to test directly whether allowing for heteroscedasticity increases the fit of the model significantly. Similarly, heteroscedasticity-consistent standard errors could be estimated (Hayes & Cai, 2007). For more advice on handling heteroscedasticity, see McGuinness (2002).
-
-> we did not cover collinearity between predictors or the distribution of random effects, but others have dealt with these aspects before (Freckleton, 2011; Schielzeth et al., 2020).
-
-## Multicolinnearity
-
--   **Check**: VIF/tolerances
--   **Fix** remove values \>= 5
+> In R the function coeftest from the lmtest package can be used in combination with the function vcovHC from the sandwich package to obtain heteroskedasticity robust standard errors and their corresponding t values.
 
 ```{r VIF1, warning=F, message=FALSE}
 performance::check_collinearity(m1_sample)
 
-#car::vif(m1_sample) # display VIF values
+car::vif(m1_sample) # display VIF values
 ```
 
+# Design-based approaches
 
-poisson assumptions \* rate at which events occur is constant \* occurence of one event does not affect occurence of a subsequent event
+@mcneish2017
 
-Probability Mass Function (PMF) - how likely a given value is
+> these methods estimate a general or generalized linear model and provide standard errors that are robust to misspecifications of the covariance matrix of the outcome variable. Common methods in this class include so-called heteroscedasticity-corrected covariance matrix estimators or sandwich estimators (Huber, 1967; White, 1980), and generalized estimating equations (GEEs; Liang and Zeger,
 
-cumulative distribution function - all of the likelihoods of values up to and including the designated value
+## Sandwich estimators
 
-# GEE: GENERALIZED LINEAR MODELS FOR DEPENDENT DATA (<https://cehs-research.github.io/eBook_multilevel/gee-count-outcome-epilepsy.html>)
+<https://stackoverflow.com/questions/48479984/r-mixed-model-with-heteroscedastic-data-only-lm-function-works>
+
+> The sandwich package is not limited to lm/glm only but it is in principle object-oriented, see vignette("sandwich-OOP", package = "sandwich") (also published as <doi:10.18637/jss.v016.i09>.
+
+> There are suitable methods for a wide variety of packages/models but not for nlme or lme4. The reason is that it's not so obvious for which mixed-effects models the usual sandwich trick actually works. (Disclaimer: But I'm no expert in mixed-effects modeling.)
+
+> However, for lme4 there is a relatively new package called merDeriv (<https://CRAN.R-project.org/package=merDeriv>) that supplies estfun and bread methods so that sandwich covariances can be computed for lmer output etc. There is also a working paper associated with that package: <https://arxiv.org/abs/1612.04911>
+
+**Snijders & Bosker, on sandwich estimators (p. 173)** \> sandwich estimators for standard errors, also called cluster-robust standard errors, make no assumptions about the distributional shape of the random coefficients. Verbeke and Lesaffre (1997) and Yan and Bentler (2002) proposed sandwich estimators to provide standard errors applicable for nonnormalily distributed random effects... However, sandwich estimators do require large enough numbers of units at the highest level; see Verbeke and Lesaffre 997), Maas and Hox (2004), and hthe further discussion in 12.2 \* <https://www.r-econometrics.com/methods/hcrobusterrors/>
+
+## GEE: GENERALIZED LINEAR MODELS FOR DEPENDENT DATA (<https://cehs-research.github.io/eBook_multilevel/gee-count-outcome-epilepsy.html>)
 
 **Snijders & Bosker, on Generalized Estimating Equations (GEE) (p. 1198)**
 
--   assumes linear or genarlized linear model for the *expected values* of de[emdemt variable in a multilevel data structure, conditional on the explanatory variables
+-   assumes linear or genarlized linear model for the *expected values* of dependemt variable in a multilevel data structure, conditional on the explanatory variables
 
 -   No assumptions made with respect to the variances and correlations, except that these are independent between highest-level units
 
@@ -738,10 +772,6 @@ bootMer
 
 <https://www.juliapilowsky.com/2018/10/19/a-practical-guide-to-mixed-models-in-r/> Semi-parametric multilevel modeling (Tihomir Asparouhov)
 
-Probably the advice on this site will be to start with what kind of data your dependent variable is, and then choose an appropriate glm or regression approach. That is, if your dv is count, perhaps Poisson or negative binomial regression. If your dv is concentration, perhaps gamma regression. --
-
-Note that the negative binomial and gamma distributions can only handle positive numbers, and the Poisson distribution can only handle positive whole numbers
-
 # Limitations
 
 The most notable weakness is that this is data from WEIRD countries. Other, less WEIRD countries (e.g., phillipines, nigeria, india) are better represented throughout sweeps 2 to 4
@@ -749,3 +779,5 @@ The most notable weakness is that this is data from WEIRD countries. Other, less
 -   Unaccounted third variables
 
 Limited
+
+# References
