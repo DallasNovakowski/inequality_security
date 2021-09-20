@@ -281,8 +281,12 @@ summary(gd[,c("gini_2004_6", "gdppc_2004_6_cent", "gdppc_2004_6")])
 m1_null <- lme4::lmer(num_victim_5yr ~ (1 | country), data = iv_2005_mod, REML=FALSE)
 
 # Estimate model
-m1_sample <- lme4::lmer(num_victim_5yr ~ gini_2004_6_cent + gdppc_2004_6_scale +
-                     age_cent + employed + male + (1 | country), data = iv_2005_mod, REML=FALSE)
+m1_sample <- lme4::lmer(num_victim_5yr ~ gini_2004_6_cent + gdppc_2004_6_scale + 
+                     age_cent + employed + male + police_effective + income_quartile + (1 | country), data = iv_2005_mod, REML=FALSE)
+
+#row-maximizing model
+# m1_sample <- lme4::lmer(num_victim_5yr ~ gini_2004_6_cent + gdppc_2004_6_scale +
+#                     age_cent + employed + male + police_effective + income_quartile + (1 | country), data = iv_2005_mod, REML=FALSE)
 
 # call basic unweighted model
 summary(m1_sample)
@@ -418,12 +422,12 @@ iv_2005_mod <- iv_2005_mod %>%
          )
 
 m1_winz_sqrt <- lme4::lmer(num_victim_5yr_winz_sqrt ~ gdppc_2004_6_winz_sqrt + gini_2004_6_winz_sqrt +
-                     age_cent + employed + male + (1 | country),data = iv_2005_mod, REML=FALSE)
+                     age_cent + employed + male + police_effective + income_quartile + (1 | country),data = iv_2005_mod, REML=FALSE)
 ```
 
 ```{r winzorize model, message=F, warning=FALSE}
 m1_winz <- lme4::lmer(num_victim_5yr_winz ~ gdppc_2004_6_wc + gini_2004_6_winz +
-                     age_cent + employed + male + (1 | country),data = iv_2005_mod, REML=FALSE)
+                     age_cent + employed + male + police_effective + income_quartile + (1 | country),data = iv_2005_mod, REML=FALSE)
 ```
 
 ```{r model winz skewness kurtosis,  warning=F, message=FALSE}
@@ -498,7 +502,7 @@ Mean and variance values are slightly overdispersed (larger variances than means
 Specifying the poisson model:
 
 ```{r poisson model, message=FALSE, fig.show="hold", out.width="50%"}
-m_pois <- glmer(num_victim_5yr ~ gdppc_2004_6_scale + gini_2004_6_cent + age_cent + employed + male + (1 | country), family = poisson, data = iv_2005_mod)
+m_pois <- glmer(num_victim_5yr ~ gdppc_2004_6_scale + gini_2004_6_cent + age_cent + employed + male + police_effective + income_quartile + (1 | country), family = poisson, data = iv_2005_mod)
 ```
 
 ## Poisson assumptions and contingencies
@@ -616,7 +620,7 @@ GLMMadaptive: fits mixed effects models for grouped/clustered outcome variables
 
 ```{r vuong}
 # https://stackoverflow.com/questions/51016328/mixed-effects-model-with-zero-inflated-data-error-message-using-zeroinfl-fro 
-# m_nbinom <- glmmTMB::glmmTMB(num_victim_5yr ~ gdppc_2004_6_scale  + av_gini + age_cent + employed + male + (1 | country),zi = ~ gdppc_2004_6_scale  + av_gini + age_cent + employed + male, data = iv_2005_mod, family = poisson)
+# m_nbinom <- glmmTMB::glmmTMB(num_victim_5yr ~ gdppc_2004_6_scale  + av_gini + age_cent + employed + male + police_effective + income_quartile + (1 | country),zi = ~ gdppc_2004_6_scale  + av_gini + age_cent + employed + male, data = iv_2005_mod, family = poisson)
 # 
 # summary(m_nbinom)
 
@@ -635,7 +639,7 @@ GLMMadaptive: fits mixed effects models for grouped/clustered outcome variables
 
 ```{r nbinom, echo=FALSE}
 
-# m_bino <- glmer.nb(num_victim_5yr ~ gdppc_2004_6_scale + gini_2004_6_cent + age_cent + employed + male + (1 | country),data = iv_2005_mod)
+# m_bino <- glmer.nb(num_victim_5yr ~ gdppc_2004_6_scale + gini_2004_6_cent + age_cent + employed + male + police_effective + income_quartile + (1 | country),data = iv_2005_mod)
 # 
 # bino_sim <- simulateResiduals(fittedModel = m_bino, plot = F)
 
