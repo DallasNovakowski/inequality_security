@@ -37,10 +37,10 @@ hist_plot <- function(mydf, myycol, mytitle) {
 # stats
 normality_stats <- function(data){
   print("skewness is")
-  print(skewness(data))
+  print(moments::skewness(data))
   print("kurtosis is")
-  print(kurtosis(data))
-  jarque.test(data)
+  print(moments::kurtosis(data))
+  moments::jarque.test(data)
 }
 
 
