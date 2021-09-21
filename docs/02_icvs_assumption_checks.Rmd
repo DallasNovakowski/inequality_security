@@ -29,6 +29,8 @@ iv_2005_mod <- iv_2005_mod %>%
 
 # At a glance
 
+<!--# useful tutorials at https://www.juliapilowsky.com/2018/10/19/a-practical-guide-to-mixed-models-in-r/ -->
+
 The purpose of this section is to outline the branches of how this data will be explored and modified depending on various assumption checks. This a priori examiniation is particularly important given the substantial degrees of freedom that comes with analyzing archival data, allowing a researcher to pick and choose those data and analyses that best suit their preferred story (simmons et al., 2011).
 
 The following describes two survey sweeps of the International Crime Victimization Survey conducted across 2004-6. At first, this data had `r sweep5_nrow` respondents and `r sweep5_countries` countries. After a exclusion process maximizing the number of countries and observations, there were 31 countries with 85,085 participants, with a minimum of 790 participants per country. An exclusion strategy maximizing the number of variables yields 27 countries, and 48,671 participants.
@@ -93,8 +95,6 @@ Wald test: a way to find out if explanatory variables in a model are significant
 If the Wald test shows that the parameters for certain explanatory variables are zero, you can remove the variables from the model
 
 Weighted distance between the unrestricted estimate and its hypothesized value under the null hypothesis, where the weight is the precision of the estimate
-
-
 
 <!-- >knief2021  Most elegantly,heteroscedasticity can be modeled directly, for instance by using the "weights" argument in lme (see Pinheiro & Bates, 2000, p. 214), which also enables us to test directly whether allowing for heteroscedasticity increases the fit of the model significantly. Similarly, heteroscedasticity-consistent standard errors could be estimated (Hayes & Cai, 2007). For more advice on handling heteroscedasticity, see McGuinness (2002). -->
 
@@ -459,6 +459,8 @@ plot(fitted(m1_winz),resid(m1_winz), main = "Winzorized resid ~ fitted")
 
 Winzorizing definitely seems to help the normality of the model. Again, it does not remedy normality by any stretch; there are still some very heavy tails
 
+Likewise, there is some imbalance in the resid\~fitted plots, with more positive residuals accompanying smaller fitted values.
+
 # Poisson distribution
 
 Poisson is the go-to distribution for handling count data, which tends to exhibit a positive skew, and could provide an alternate way to model our data.
@@ -565,8 +567,8 @@ blmeco::dispersion_glmer(m_pois)  # chec for dispersion, cutoff 1.4 https://stac
 
 Zero-inflation describes the extent to which more zeros are present in the data than what the distribution assumes
 
-- **Check:** DHARMA:: testZeroInflation() 
-- **Treatment:** zero-inflated model
+-   **Check:** DHARMA:: testZeroInflation()
+-   **Treatment:** zero-inflated model
 
 ```{r dharma zero inflation}
 testZeroInflation(simulationOutput)
@@ -702,7 +704,7 @@ GLMMadaptive: fits mixed effects models for grouped/clustered outcome variables
 
 # Correlated random effects
 
-McNeish et al (2017)
+@mcneish2017
 
 pwcorr rint resids
 
@@ -730,29 +732,15 @@ performance::check_collinearity(m1_sample)
 car::vif(m1_sample) # display VIF values
 ```
 
-# Design-based approaches
-
 @mcneish2017
 
-> these methods estimate a general or generalized linear model and provide standard errors that are robust to misspecifications of the covariance matrix of the outcome variable. Common methods in this class include so-called heteroscedasticity-corrected covariance matrix estimators or sandwich estimators (Huber, 1967; White, 1980), and generalized estimating equations (GEEs; Liang and Zeger,
+> [Design-based] methods estimate a general or generalized linear model and provide standard errors that are robust to misspecifications of the covariance matrix of the outcome variable. Common methods in this class include so-called heteroscedasticity-corrected covariance matrix estimators or sandwich estimators (Huber, 1967; White, 1980), and generalized estimating equations (GEEs; Liang and Zeger, 1986) DBMs are often employed when the marginal response is of interest rather than individual responses or how responses vary across clustering units.
 
-## Sandwich estimators
+## GEE: [Generalized linear models for dependent data](https://cehs-research.github.io/eBook_multilevel/gee-count-outcome-epilepsy.html)
 
-<https://stackoverflow.com/questions/48479984/r-mixed-model-with-heteroscedastic-data-only-lm-function-works>
+@snijders2011**, on Generalized Estimating Equations (GEE) (p. 198)**
 
-> The sandwich package is not limited to lm/glm only but it is in principle object-oriented, see vignette("sandwich-OOP", package = "sandwich") (also published as <doi:10.18637/jss.v016.i09>.
-
-> There are suitable methods for a wide variety of packages/models but not for nlme or lme4. The reason is that it's not so obvious for which mixed-effects models the usual sandwich trick actually works. (Disclaimer: But I'm no expert in mixed-effects modeling.)
-
-> However, for lme4 there is a relatively new package called merDeriv (<https://CRAN.R-project.org/package=merDeriv>) that supplies estfun and bread methods so that sandwich covariances can be computed for lmer output etc. There is also a working paper associated with that package: <https://arxiv.org/abs/1612.04911>
-
-**Snijders & Bosker, on sandwich estimators (p. 173)** \> sandwich estimators for standard errors, also called cluster-robust standard errors, make no assumptions about the distributional shape of the random coefficients. Verbeke and Lesaffre (1997) and Yan and Bentler (2002) proposed sandwich estimators to provide standard errors applicable for nonnormalily distributed random effects... However, sandwich estimators do require large enough numbers of units at the highest level; see Verbeke and Lesaffre 997), Maas and Hox (2004), and hthe further discussion in 12.2 \* <https://www.r-econometrics.com/methods/hcrobusterrors/>
-
-## GEE: GENERALIZED LINEAR MODELS FOR DEPENDENT DATA (<https://cehs-research.github.io/eBook_multilevel/gee-count-outcome-epilepsy.html>)
-
-**Snijders & Bosker, on Generalized Estimating Equations (GEE) (p. 1198)**
-
--   assumes linear or genarlized linear model for the *expected values* of dependemt variable in a multilevel data structure, conditional on the explanatory variables
+-   assumes linear or generalized linear model for the *expected values* of dependent variable in a multilevel data structure, conditional on the explanatory variables
 
 -   No assumptions made with respect to the variances and correlations, except that these are independent between highest-level units
 
@@ -764,24 +752,71 @@ car::vif(m1_sample) # display VIF values
 
 -   LARGE SAMPLE METHOD - without large sample, need a tailored small-sample version with a differently defined sandwich estimators
 
+## Sandwich estimators
+
+**Snijders & Bosker, on sandwich estimators (p. 173)**
+
+> sandwich estimators for standard errors, also called cluster-robust standard errors, make no assumptions about the distributional shape of the random coefficients. Verbeke and Lesaffre (1997) and Yan and Bentler (2002) proposed sandwich estimators to provide standard errors applicable for nonnormalily distributed random effects... However, sandwich estimators do require large enough numbers of units at the highest level; see Verbeke and Lesaffre 997), Maas and Hox (2004), and hthe further discussion in 12.2 \*
+
+[<https://www.r-econometrics.com/methods/hcrobusterrors/>https://stackoverflow.com/questions/48479984/r-mixed-model-with-heteroscedastic-data-only-lm-function-works](https://www.r-econometrics.com/methods/hcrobusterrors/){.uri}
+
+> The sandwich package is not limited to lm/glm only but it is in principle object-oriented, see vignette("sandwich-OOP", package = "sandwich") (also published as <doi:10.18637/jss.v016.i09>.
+
+> <!--# There are suitable methods for a wide variety of packages/models but not for nlme or lme4. The reason is that it's not so obvious for which mixed-effects models the usual sandwich trick actually works. (Disclaimer: But I'm no expert in mixed-effects modeling.)  -->
+
+> However, for lme4 there is a relatively new package called merDeriv (<https://CRAN.R-project.org/package=merDeriv>) that supplies estfun and bread methods so that sandwich covariances can be computed for lmer output etc. There is also a working paper associated with that package: <https://arxiv.org/abs/1612.04911>
+
 Match Poisson Regresssion (GLM)
 
 restricted maximum likelihood (REML)
 
-Thus REML, by accounting for the loss in degrees of freedom from estimating the fixed effects, provides an unbiased estimate of variance components, while ML estimators for variance components are biased under assumptions of normality, since they use estimated fixed effects rather than the true values.
+-   REML, by accounting for the loss in degrees of freedom from estimating the fixed effects, provides an unbiased estimate of variance components, while ML estimators for variance components are biased under assumptions of normality, since they use estimated fixed effects rather than the true values.
 
-lmeresampler provides an easy way to bootstrap nested linear-mixed effects models using either the parametric, residual, cases, CGR (semi-parametric), or random effects block (REB) bootstrap fit using either lme4 or nlme. The output from lmeresampler is an lmeresamp <http://aloy.github.io/lmeresampler/>
+# Other approaches
 
-bootMer
+## Bootstrapping
 
-<https://www.juliapilowsky.com/2018/10/19/a-practical-guide-to-mixed-models-in-r/> Semi-parametric multilevel modeling (Tihomir Asparouhov)
+[**lmeresampler**](http://aloy.github.io/lmeresampler/): provides an easy way to bootstrap nested linear-mixed effects models using either the parametric, residual, cases, CGR (semi-parametric), or random effects block (REB) bootstrap fit using either lme4 or nlme. The output from lmeresampler is an lmeresamp
+
+**bootMer**
+
+**Semi-parametric multilevel modeling** (Tihomir Asparouhov)
+
+**Penalized quasilikelihood (PQL)**
+
+flexible technique that can deal with non-normal data, unbalanced design, and crossed random effects. However, it produces biased estimates if your response variable fits a discrete count distribution, like Poisson or binomial, and the mean is less than 5 - or if your response variable is binary.
+
+what if the mean of your response variable is less than 5, or you have a binary response variable, and you can't use PQL? Here you're going to have to make another decision, because there are two alternatives you can use: the **Laplace approximation** and **Markov chain Monte Carlo algorithms (MCMC)**. The Laplace approximation can handle up to 3 random effects. Any more than that, and you'll have to use MCMC, which is a Bayesian method that can be somewhat confusing.
+<!--# https://www.juliapilowsky.com/2018/10/19/a-practical-guide-to-mixed-models-in-r/ -->
+
+**laplace** looks like follows
+
+    glmer(repeatgr ~ Minority + ses + ses * Minority + (1 | schoolNR),
+        data = bdf, family = binomial(link = "logit"))
+
+There is one more consideration, though, when using this method. It
+becomes inaccurate when used on overdispersed data - that is, when the
+combined residuals are much larger than the residual degrees of freedom.
+
+**MCMCglmm**, which can not only handle many random effects, but provides confidence intervals for the random effects, MCM is a Bayesian statistical method. All models make assumptions about the distribution of the variance in your data, but in a Bayesian method these assumptions are explicit, and we need to specify these assumed distributions. In Bayesian statistics, we call these priors.
+
+Just keep in mind that one **R structure** needs to be specified for each fixed effect and one **G structure** needs to be specified for each random effect. Also remember my caution about the lognormal distribution: these priors may not play nicely with data modeled with a log link, so do
+some research on what priors to use for data on a log scale.
+
+Looks like this:
+
+    prior <- list(R = list(V = 1, n = 0, fix = 1), G = list(G1 = list(V = 1, n = 1),
+        G2 = list(V = 1, n = 1), G3 = list(V = 1, n = 1), G4 = list(V = 1, n = 1),
+        G5 = list(V = 1, n = 1)))
+    set.seed(45)
+    MCMC <- MCMCglmm(fixed = profit ~ 1, random = ~year + farmer + place + gen + district, data = farmers, family = "categorical", prior = prior, verbose = FALSE)
 
 # Limitations
 
 The most notable weakness is that this is data from WEIRD countries. Other, less WEIRD countries (e.g., phillipines, nigeria, india) are better represented throughout sweeps 2 to 4
 
--   Unaccounted third variables
+Unaccounted third variables (e.g., corruption)
 
-Limited
+Small clusters, limited representativeness.
 
 # References
