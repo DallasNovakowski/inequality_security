@@ -2,7 +2,8 @@
 title: "icvs_prep_report"
 output:
   html_document:
-    df_print: paged
+    df_print: paged\
+bibliography: references.bib
 ---
 
 ```{r source script 1 & data, warning=F, message=FALSE, echo=FALSE}
@@ -301,7 +302,6 @@ eight unique values for questionnaires_based_on, some ~31,000 responses
 No immediately discernible pattern for which cases get a based_on designation - Kerstern says  If the differences are too big, I used the 'based on xxx' qualification."
 
 ```{r questionnaire missingness}
-
 questionnaire_screen <- responders_2005 %>% group_by(questionnaire_used) %>% 
   dplyr::count(country)
 
@@ -314,7 +314,6 @@ questionnaire_screen_c$total <- rowSums(questionnaire_screen_c[,2:ncol(questionn
 questionnaire_screen_c$total[questionnaire_screen_c$total == 0] <- NA
 
 questionnaire_screen_c
-
 ```
 
 
@@ -338,10 +337,9 @@ na_tally(responders_2005,country,prevention_max) %>%
 
 Gun ownership is missing for South Africa, Peru, Hong Kong, and Japan
 
-including airrifle is missing for turkey and honkg kong
+including airrifle is missing for turkey and hong kong
 
 <br>
-
 
 **Do we use gun ownership as part of a dv?**
 
@@ -357,7 +355,6 @@ So maybe our best bet is getting rid of guns and minimizing the DV set - Up for 
 
 ```{r ultra min prevention variables}
 prevention_min2 <- c("prev_burglar_alarm", "prev_special_door_locks", "prev_special_grills", "prev_high_fence", "prev_caretaker_security")
-
 ```
 
 ```{r min prev missingness, warning=F, message=FALSE, echo=FALSE}
@@ -384,32 +381,7 @@ responders_2005$total_security <- rowSums(responders_2005[ , prevention_min2], n
 
 # any NA values are coded as 0
 responders_2005$total_security[is.na(responders_2005$total_security)] = 0
-
-summary(responders_2005$total_security)
-
-normality_stats(responders_2005$total_security)
 ```
-
-This summing procedure gives us a max score of `r max(responders_2005$total_security)` on security consumption, with substantial positive skew
-
-
-```{r total security, warning=F, message=FALSE, echo=FALSE}
-hist_plot(responders_2005, total_security, "Histogram of Total Security")
-
-```
-
-
-At first glance it looks like a poisson process with λ ~ .5, but we have little reason to believe that our outcome variables (e.g., security, number of victimizations) follow a strictly poisson process. Namely, violating the assumption that the occurence of one event does not affect occurence of a subsequent event. I would guess that purchasing security or being victimized by a crime has *some* effect on later occurences in either direction (e.g., having less money from the prior security purchase)
-
-A question though - is the independence supposed to be observed within observations or between observations?
-
-A more kosher alternative is a square root transformation. Looks like it reduces the skew by a  fair amount:
-
-A last alternative is a condensing transformation. Binning participants to either no security consumption, one unit of consumption, and anything higher than one
-
-It gets us the closest to a normal-looking distribution, but leads to loss of information and loss of power. 
-
-All told, let's remember that the assumptions of normality apply to the distribution of residuals, so can only be interpreted in the model. Important to keep skewness of the DV on our radar though.
 
 
 ```{r after exclusions}
@@ -426,10 +398,8 @@ var_40k <- (nrow(responders_2005) - colSums(is.na(responders_2005[,potential_ivs
 responders_2005[,names(var_40k)] %>%     
  summary()
 ```
+
 ```{r victimization variables, warning=F, message=F}
-# particularly for sexoff and assault, needs to be checked against each candidate country to see if items were administered
-
-
 # create small dataset with victimization items recoded
 victim_2005 <- responders_2005[,names(var_40k)] %>%   
  dplyr::select(ends_with("_5_years")) %>%
@@ -457,9 +427,6 @@ asutralia missing sexual offences
 estonia missing motortheft
 
 probably drop assaults and sexual offences
-
-
-
 
 ```{r sum victim, message=F}
 vic_var_drop <- select(victim_2005,-c("assault_5yrs","sexoff_5yrs"))
@@ -507,12 +474,7 @@ na_tally(responders_2005,country,names(victim_2005)) %>%
                       across(where(is.character), ~"Total")))
 
 
-#trying to overlay histogram and density plots
-# https://www.datanovia.com/en/blog/ggplot-histogram-with-density-curve-in-r-using-secondary-y-axis/
-
 ```
-
-
 
 We've sorted out some victimization variables, but there are still some basic demographics and crime-related variables that we need to assess missingness and recode
 
@@ -559,8 +521,8 @@ responders_2005 <- responders_2005 %>%
 new_iv <- names(responders_2005[,ncol(responders_2005):sum(ncol(responders_2005),-16)])
 new_iv
 
-new_iv_missing <- responders_2005 %>% group_by(sweep_num) %>% 
-  dplyr::count(country)
+# new_iv_missing <- responders_2005 %>% group_by(sweep_num) %>% 
+#   dplyr::count(country)
 
 na_tally(responders_2005,country,all_of(new_iv)) %>%
     bind_rows(dplyr::summarise(.,
@@ -641,17 +603,6 @@ na_tally(iv_2005,country,all_of(new_iv)) %>%
 
 ```
 
-
-```{r iv plots, message=F, warning=F}
-ggplot(iv_2005, aes(x = age_num, y = num_victim_5yr)) +
-    geom_jitter(color = "#40B0A6", alpha = .08) + geom_smooth(method = "lm")
-
-# ggplot(iv_2005, aes(x = city_size_k, y = num_victim_5yr)) +
-#     geom_point(position = "jitter", color = "#40B0A6", alpha = 0.08) + geom_smooth(method = "lm")
-# 
-# ggplot(iv_2005, aes(x = num_victim_5yr, y = total_security)) +
-#     geom_point(position = "jitter", color = "#40B0A6", alpha = 0.08) + geom_smooth(method = "lm")
-```
 
 ## Survey Weights
 
@@ -768,6 +719,8 @@ assault_data$victim_nation_assault_winz <- DescTools::Winsorize(assault_data$vic
 
 iv_2005_mod <- assault_data %>%
   left_join(iv_2005_mod, by = c("country"))
+
+rm(vic_var_assault, vic_var_drop)
 ```
 
 Two other datasets, filtered on more tangential variables (feeling safe after dark and perceived break-in threat). iv_2005_lib is created from the iv_2005_mod dataset, so has the fewest variables. iv_2005_lib1 is filtered from iv_2005, so has more clusters than lib, (and even mod)' tradeoff for lib1 is that it is has missing data for income and police effectiveness 
@@ -797,8 +750,6 @@ sum(summary(iv_2005_lib1$country)>0)
 
 iv_2005[,c("age_num", "male", "employed", "partnered", "police_effective", "income_quartile", "feel_safe_dark", "break_in_threat")] %>%
  summary()
-
-
 ```
 
 
@@ -1094,7 +1045,7 @@ icvs_joined <- swiid_2004_6 %>%
 # rm(icvs_data, pwt, swiid, data_2005)
 
 
-save(icvs_joined, file = "C:/Users/dalla/Google Drive/project_files/icvs_inequality/data/icvs_swiid_pwt_joined.RData")
+save(icvs_joined, file = "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/icvs_swiid_pwt_joined.RData")
 
 # join_sample <- icvs_joined[[1]]
 ```
@@ -1105,3 +1056,5 @@ save(icvs_joined, file = "C:/Users/dalla/Google Drive/project_files/icvs_inequal
 Overall, I think this is a very encouraging first pass. The ICVS is retrievable and interpretable, and above all else, it does indeed measure security behaviours. We also appear to have a reasonable number of countries and participants after some pretty conservative exclusions.
 
 We certainly don't have to use the summed/transformed/ordinal aggregate of security consumption (opting for something like multiple logistic regressions instead), but being able to condense our analyses will certainly be more powerful for communicating the results.
+
+# References
