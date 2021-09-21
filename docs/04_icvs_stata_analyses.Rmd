@@ -21,6 +21,11 @@ load("C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.R
 
 ```
 
+# Moderate (targeted) inclusion data
+
+Given that the SWIID is presented in a list of 100 different dataframes, the analysis will firstly be conducted on each dataframe, with the results stored separately, and aggregated upon reporting.
+
+
 regular model
 
 xtmixed total_security num_victim_5yr gini_cent gdppc_2004_6_scale age_cent employed male [pw=individual_weight] || country:, pwscale(size)
@@ -129,19 +134,157 @@ iv_2005 <- dplyr::rename(iv_2005, iw_mcity = individual_weight_for_main_cities,
          iw_nat = individual_weight_for_national_surveys, 
        lik_elected = likely_elected_minicipal_councilors)
 
-haven::write_dta(iv_2005,"C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta")
+iv_2005_mod <- dplyr::rename(iv_2005_mod, iw_mcity = individual_weight_for_main_cities, 
+                  iw_lastmcity = individual_weight_for_last_main_city, 
+         iw_nat = individual_weight_for_national_surveys, 
+       lik_elected = likely_elected_minicipal_councilors)
+
+haven::write_dta(iv_2005,"C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005.dta")
+haven::write_dta(iv_2005_mod,"C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005_mod.dta")
 ```
 
-```{stata empty model, collectcode = TRUE}
-use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta", clear
+## iv_2005_mod analyses
+
+
+```{stata iv_2005_mod empty model, collectcode = TRUE}
+use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005_mod.dta", clear
 
 mixed num_victim_5yr  || country:
 
 estat icc   *intraclass correlation
 ```
 
-```{stata first model}
-use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta"
+
+```{stata first iv_2005_mod model}
+use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005_mod.dta"
+
+*First model
+
+xtmixed total_security num_victim_5yr gini_cent gdppc_2004_6_scale police_effective income_quartile age_cent employed male [pw=individual_weight] || country:, pwscale(size)
+
+mltcooksd, fixed random graph
+
+estat icc   *intraclass correlation
+
+estat ic       *BIC and AIC
+```
+
+```{stata plots iv_2005_mod, echo = 1}
+*use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005_mod.dta", clear
+
+*scatter num_victim_5yr total_security, jitter(5)
+
+*graph export scatter_iv_2005_mod.svg, replace
+```
+
+```{stata winzorized model iv_2005_mod, collectcode = TRUE}
+use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005_mod.dta"
+
+*Winzorized model
+xtmixed num_victim_5yr_winz gini_wc gdppc_2004_6_ws age_cent employed male police_effective income_quartile [pw=individual_weight] || country:, pwscale(size)
+
+*xtmixed num_victim_5yr_winz victim_nation_mean gini_wc gdppc_2004_6_ws age_cent employed male police_effective income_quartile [pw=individual_weight] || country:, pwscale(size)
+
+
+estat icc
+estat ic
+
+mltcooksd, fixed random graph
+```
+
+
+```{stata excluded iv_2005_mod model}
+use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005_mod.dta"
+
+set more off
+
+gen dropcook=1 if country == "Peru" | country == "Argentina" | country ==  "United States"
+
+*Winzorized model
+xtmixed num_victim_5yr_winz gini_wc gdppc_2004_6_ws age_cent employed male police_effective income_quartile [pw=individual_weight] || country: if dropcook !=1, pwscale(size)
+
+estat icc
+estat ic
+
+mltcooksd, fixed random graph
+```
+
+
+```{r create flags and update data iv_2005_mod}
+# create dummy flags for outlier countries
+iv_2005$extreme <- ifelse(iv_2005$country == "Peru" | iv_2005$country == "Argentina" | iv_2005$country == "United States", 1,0)
+
+iv_2005$extreme1 <- ifelse(iv_2005$country == "Peru" | iv_2005$country == "Argentina" | iv_2005$country == "United States"| iv_2005$country == "South Africa", 1,0)
+
+# create dummy flags for outlier countries
+iv_2005_mod$extreme <- ifelse(iv_2005$country == "Peru" | iv_2005$country == "Argentina" | iv_2005$country == "United States", 1,0)
+
+iv_2005_mod$extreme1 <- ifelse(iv_2005$country == "Peru" | iv_2005$country == "Argentina" | iv_2005$country == "United States"| iv_2005$country == "South Africa", 1,0)
+
+haven::write_dta(iv_2005,"C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005.dta")
+haven::write_dta(iv_2005_mod,"C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005_mod.dta")
+```
+
+
+```{stata flag extreme lv2 model iv_2005_mod}
+use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005_mod.dta"
+
+set more off
+
+xtmixed num_victim_5yr_winz extreme gini_wc gdppc_2004_6_ws || country:
+```
+
+```{stata poisson}
+use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005_mod.dta"
+
+mepoisson total_security num_victim_5yr gini_cent gdppc_2004_6_scale police_effective income_quartile age_cent employed male [pw=individual_weight] || country:, pwscale(size)
+```
+
+### Exploratory
+
+```{stata interaction model}
+use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005_mod.dta"
+
+*Winzorized model
+xtmixed num_victim_5yr_winz c.gini_2004_6_wc##c.gdppc_2004_6_ws age_cent employed male [pw=individual_weight] || country:, pwscale(size)
+
+estat icc
+estat ic
+
+mltcooksd, fixed random graph
+```
+
+```{stata heteroscedasticity plot}
+*use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta"
+
+*Winzorized model
+*xtmixed num_victim_5yr_winz gini_wc gdppc_2004_6_ws age_cent employed male [pw=individual_weight] || country:, pwscale(size)
+
+*predict double xb, xb
+*predict double re, residuals
+
+*graph twoway scatter re xb, mcolor(black) msize(small) ylabel( , angle(horizontal) nogrid)
+```
+
+```{stata random effects plot}
+xtmixed num_victim_5yr_winz gini_wc gdppc_2004_6_ws age_cent employed male [pw=individual_weight] || country:, pwscale(size)
+```
+
+
+
+## iv_2005 analyses
+
+```{stata empty model iv_2005, collectcode = TRUE}
+use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005.dta", clear
+
+mixed num_victim_5yr  || country:
+
+estat icc   *intraclass correlation
+```
+
+
+```{stata first model iv_2005}
+use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005.dta"
 
 *First model
 
@@ -152,24 +295,22 @@ mltcooksd, fixed random graph
 estat icc   *intraclass correlation
 
 estat ic       *BIC and AIC
-
 ```
 
 Similar to the level-2 Cook's D's values on the lm model, argentian, peru, and the united states were all flagged as influential observations.
 
-```{stata plots, echo = 1}
-*use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta", clear
+```{stata plots iv_2005, echo = 1}
+*use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005.dta", clear
 
 *scatter num_victim_5yr total_security, jitter(5)
 
-*graph export scatter.svg, replace
-
+*graph export scatter_iv_2005.svg, replace
 ```
 
 <!-- ![Mileage \~ Weight](scatter.svg) -->
 
-```{stata winzorized model, collectcode = TRUE}
-use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta"
+```{stata winzorized model iv_2005, collectcode = TRUE}
+use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005.dta"
 
 *Winzorized model
 xtmixed num_victim_5yr_winz gini_wc gdppc_2004_6_ws age_cent employed male [pw=individual_weight] || country:, pwscale(size)
@@ -184,8 +325,8 @@ mltcooksd, fixed random graph
 
 ```
 
-```{stata excluded model}
-use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta"
+```{stata excluded model iv_2005}
+use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005.dta"
 
 set more off
 
@@ -200,23 +341,13 @@ estat ic
 mltcooksd, fixed random graph
 ```
 
-```{r create flags and update data}
-# create dummy flags for outlier countries
-iv_2005$extreme <- ifelse(iv_2005$country == "Peru" | iv_2005$country == "Argentina" | iv_2005$country == "United States", 1,0)
 
-iv_2005$extreme1 <- ifelse(iv_2005$country == "Peru" | iv_2005$country == "Argentina" | iv_2005$country == "United States"| iv_2005$country == "South Africa", 1,0)
-
-haven::write_dta(iv_2005,"C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta")
-```
-
-```{stata flag extreme lv2 model}
-
-use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta"
+```{stata flag extreme lv2 model iv_2005}
+use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005.dta"
 
 set more off
 
 xtmixed num_victim_5yr_winz extreme gini_wc gdppc_2004_6_ws || country:
-
 ```
 
 > When Ruiter and de Graaf (2010) excluded 23 cases based on DFBETAS, they found that their results held The point is that ultimately you need to have analyses that you can defend under scrutiny
@@ -227,10 +358,8 @@ xtmixed num_victim_5yr_winz extreme gini_wc gdppc_2004_6_ws || country:
 
 > Unlike an OLS model, if we exclude a case at level-2, we also lose additional cases, in terms of all the cases at level-1 associated with that unit Van de Meer et al (2010) suggest retaining the level-1 cases, and then adding a dummy variable at level-2 to control for their unit That is, 0=not in excluded unit, 1=in excluded unit Also fix intercept to 0 for this cluster
 
-
-
-```{stata excluded model1}
-use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta"
+```{stata excluded model1 iv_2005}
+use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005.dta"
 
 set more off
 
@@ -247,45 +376,21 @@ mltcooksd, fixed random graph
 
 ```
 
-
-
-# Exploratory
-
-
-```{stata interaction model}
-use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta"
-
-*Winzorized model
-xtmixed num_victim_5yr_winz c.gini_2004_6_wc##c.gdppc_2004_6_ws age_cent employed male [pw=individual_weight] || country:, pwscale(size)
-
-estat icc
-estat ic
-
-mltcooksd, fixed random graph
-
-```
-
-
-```{stata heteroscedasticity plot}
-
-*use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta"
-
-
-*Winzorized model
-*xtmixed num_victim_5yr_winz gini_wc gdppc_2004_6_ws age_cent employed male [pw=individual_weight] || country:, pwscale(size)
-
-
-*predict double xb, xb
-*predict double re, residuals
-
-*graph twoway scatter re xb, mcolor(black) msize(small) ylabel( , angle(horizontal) nogrid)
-
-```
-
-
 # reporting effects and models
 
 
+# Poisson
+
+<!-- https://errickson.net/stata-mixed/generalized-linear-mixed-models.html -->
+Stata: Poisson mixed models can be run with the mepoisson command. A meqrpoisson command exists and has benefits just like meqrlogit, but again, is an outdated command. If over-dispersion is an issue, menbreg exists for negative binomial regression. 
+
+# Negative binomial
+
+
+
+menbreg num_victim_5yr_winz gini_wc gdppc_2004_6_ws age_cent employed male [pw=individual_weight] || country:, pwscale(size)
+
+menbreg
 
 What can an empty model tell us?
 -	Intraclass correlation
