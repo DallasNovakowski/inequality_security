@@ -32,7 +32,6 @@ iv_2005 <- iv_2005 %>%
 
 ```
 
-
 # Analysis procedure
 
 If the assumptions underlying a multilevel regression hold in this dataset, the analysis will be conducted using maximum likelihood estimates (MLE) in Stata (IC 14.2; @REF), as there are a relatively small number of level-2 units in this data. Likewise, the use of full maximum lilkelihood will enable the use of statistical weights to increase the representativeness of the available data.
@@ -40,8 +39,6 @@ If the assumptions underlying a multilevel regression hold in this dataset, the 
 Given that the SWIID is presented in a list of 100 different dataframes, the analysis will firstly be conducted on each dataframe, with the results stored separately.
 
 I would prefer to use an r package for my analyses (lme4, EdSurvey, WeMix, BIFIEsurvey ). However, we saw that lme4 runs into convergence problems; likewise the other packages are so new and specific that they don't generate objects that can be used for analyses like cook's distance. By contrast, Stata is far more developed for multilevel analysis with survey weights. For instance, it provides model-wide Cook's D values for just level-2 units. If we are going to use a package that has poor integration with r, we might as well use the program that best handles the statistics.
-
-
 
 # Exploration
 
@@ -310,7 +307,6 @@ Winzorizing definitely seems to help the normality of the model. Again, it does 
 
 Interestingly, winzorizing with no other transformations seems to have the same (best) fit to the qq line
 
-
 # Assumption checks and and contingencies
 
 ## Influential observations
@@ -420,8 +416,7 @@ DFFit: difference between adjusted predicted value and original value
 
 ```
 
--   **Treatment:**  Transformation of DV (e.g., box-cox, square root, log, rankit). Beyond this, the model already has robust standard errors
-
+-   **Treatment:** Transformation of DV (e.g., box-cox, square root, log, rankit). Beyond this, the model already has robust standard errors
 
 ```{r victimization transformation}
 
@@ -451,8 +446,6 @@ iv_2005$log_victimization <- log10(iv_2005$num_victim_5yr+1)
 
 
 ```
-
-
 
 ```{r sqrt security, warning=F, message=FALSE, echo=FALSE}
 # Square root method
@@ -489,25 +482,22 @@ security_boxcox<- geoR::boxcoxfit(iv_2005$total_security, lambda=0, lambda2 = 1)
   # security_boxcox <- MASS::boxcox(iv_2005$total_security)
 ```
 
-
 -   **Stopping rule:**
 
 ## Correlated random effects
 
-McNeish et al (2017) 
+McNeish et al (2017)
 
 ```{stata random effects plot}
 xtmixed num_victim_5yr_winz gini_wc gdppc_2004_6_ws age_cent employed male [pw=individual_weight] || country:, pwscale(size)
 
 ```
 
-
 pwcorr rint resids
 
-* graph of correlation between within-level residuals and random effects
+-   graph of correlation between within-level residuals and random effects
 
-twoway (scatter resids rint) (lfit resids rint) 
-
+twoway (scatter resids rint) (lfit resids rint)
 
 #### Sampling
 
