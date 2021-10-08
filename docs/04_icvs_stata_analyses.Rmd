@@ -12,41 +12,62 @@ knitr::opts_chunk$set(echo = TRUE)
 library(dplyr) # pipe
 library(purrr) # map function
 library(car) #qqPlot
-load("C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.RData")
+load("C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005.RData")
 
-
-# 
 # icvs_joined <-  icvs_joined %>%
 #   map(. %>% filter(., !is.na(num_victim_5yr)))
-
 ```
-
-# Moderate (targeted) inclusion data
-
-Given that the SWIID is presented in a list of 100 different dataframes, the analysis will firstly be conducted on each dataframe, with the results stored separately, and aggregated upon reporting.
-
-
-regular model
-
-xtmixed total_security num_victim_5yr gini_cent gdppc_2004_6_scale age_cent employed male [pw=individual_weight] || country:, pwscale(size)
-
-Stronger test - including national victimization
-
-xtmixed total_security num_victim_5yr gini_cent gdppc_2004_6_scale victim_nation_mean age_cent employed male [pw=individual_weight] || country:, pwscale(size)
-
-
-winzorized model
-
-xtmixed security_winz num_victim_5yr_winz victim_nation_mean gini_wc gdppc_2004_6_ws age_cent employed male [pw=individual_weight] || country:, pwscale(size)
 
 
 # Analysis procedure
 
-If the assumptions underlying a multilevel regression hold in this dataset, the analysis will be conducted using maximum likelihood estimates (MLE) in r package lme4 (REF). Despite the possibility of nonnormal data, the large sample size in this study will yield similar variance estimates to REML estimation.
+Despite the possibility of nonnormal data, the large sample size in this study will yield similar variance estimates to REML estimation.
 
+## estimation procedure
+
+Comparison of fixed portion of the model should use deviance tests based on MLE
+Comparison of random components can use REML if fixed portions are identical
+
+- S+B suggest standard errors in t-tests of fixed effects should be based on REML in N≤50 (pg. 94)
+Sample size in this case is based on number of level 2 units
+“Large” samples indicated by N-q-1≥50, where q indicates number of level 2 predictors (S+B pg. 60)
+
+- But, the problem is that statistical weights require FML
+
+Variance components in MLE are downward biased
+
+## Three-level logistic regression wtf
+
+
+
+
+##KR adjustment
+- The KR method estimates different SE’s, but not different random effects, from just REML
+- SE’s became progressively larger, producing more conservative significance tests
+- When possible, with smaller number of clusters, KR may be a good idea
+
+Issue is that in smaller samples, sampling distribution may not be normal
+The KR is an “approximation” method that accounts for small-sample bias 
+Can be used in Stata with dfmethod(kroger)
+Using this method will also invoke t-distribution
+The problem is that it can only be used with REML estimation
+
+
+## interactions?
+If focus is on cross-level interactions, use a 50/20 rule
+About 50 groups with about 20 individuals per group
+
+## sample size
+
+ When number of groups is less than 20, fixed parameter estimates and their SE’s become inaccurate 
+
+## SWIID aggregation
 
 Given that the SWIID is presented in a list of 100 different dataframes, the analysis will firstly be conducted on each dataframe, with the results stored separately.
 
+Each of these 100 dataframes will then be subjected to 100 simulations, yielding vectors of 10,000 estimates. The means and distributions of these vectors will yield the coefficient and standard error values, respectively.
+
+"We could now use Rubin’s (1987) rules to calculate the mean and standard error for each fixed effect estimate across these 100 sets of results (these rules are implemented in the package mitools (Lumley 2014) and others), but instead we will use simulation. Using sim from the arm package (Gelman and Su 2015), we generate the distribution of fixed-effects estimates in the results both for each dataframe and across the 100 dataframes."
 
 ```{r other text, warning=F, message=FALSE, echo=FALSE}
 # expected value of the ML variance estimator is not equal to the true variance σ², although it approaches the true variance at large sample sizes
@@ -70,19 +91,15 @@ Given that the SWIID is presented in a list of 100 different dataframes, the ana
 # REML preferable as its variance parameters are unbiasesd
 # 
 # however, ML better for carrying out deviance tests
+
+# The deviance for a linear mixed model is defined as follows:
+# 
+# deviance=−2∗log likelihood
+# 
+# The deviance is an index of model fit: a model with a higher deviance provides a poorer model fit to the data than a model with a lower deviance. 
 ```
 
 ```{r estimation preview1, warning=F, message=FALSE}
-# Estimate model
-# m1 <- icvs_joined %>% 
-#   map(~ lme4::lmer(num_victim_5yr ~ gini_2004_6_cent + gdppc_2004_6_cent + 
-#                      age_cent + employed + male + (1 | country),data = .x, REML=FALSE))
-
-
-m1_sample <- lme4::lmer(num_victim_5yr ~ gini_2004_6_cent + gdppc_2004_6_cent +
-                     age_cent + employed + male + (1 | country),data = join_sample, REML=FALSE)
-
-
 # Both packages use Lattice as the backend, but nlme has some nice features like groupedData() and lmList() that are lacking in lme4 (IMO). From a practical perspective, the two most important criteria seem, however, that
 
 # https://lme4.r-forge.r-project.org/book/
@@ -101,10 +118,6 @@ m1_sample <- lme4::lmer(num_victim_5yr ~ gini_2004_6_cent + gdppc_2004_6_cent +
 # brms: Bayesian Regression Models using 'Stan'
 # https://cran.r-project.org/web/packages/brms/index.html
 ```
-
-Each of these 100 dataframes will then be subjected to 100 simulations, yielding vectors of 10,000 estimates. The means and distributions of these vectors will yield the coefficient and standard error values, respectively.
-
-"We could now use Rubin’s (1987) rules to calculate the mean and standard error for each fixed effect estimate across these 100 sets of results (these rules are implemented in the package mitools (Lumley 2014) and others), but instead we will use simulation. Using sim from the arm package (Gelman and Su 2015), we generate the distribution of fixed-effects estimates in the results both for each dataframe and across the 100 dataframes."
 
 
 ## Main statistics
@@ -143,70 +156,72 @@ haven::write_dta(iv_2005,"C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/
 haven::write_dta(iv_2005_mod,"C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005_mod.dta")
 ```
 
-## iv_2005_mod analyses
+## Moderate (targeted) inclusion data
 
+Not looking for significance in the intercept, but rather significance in the variance of the intercept
+-	BUT: variance can’t be negative, so standard significance tests aren’t of any help (log likelihood)
 
 ```{stata iv_2005_mod empty model, collectcode = TRUE}
+
 use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005_mod.dta", clear
 
+* dv num_victim_5yr will be replaced by total_security
+* dv num_victim_5yr_winz will be replaced by security_winz
+
+*1. empty model
 mixed num_victim_5yr  || country:
 
 estat icc   *intraclass correlation
+*____________________________________________________________________
 ```
-
 
 ```{stata first iv_2005_mod model}
 use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005_mod.dta"
 
-*First model
+*2. First model
+xtmixed num_victim_5yr gini_2004_6_cent gdppc_2004_6_scale police_eff_cent income_cent age_cent employed male [pw=individual_weight] || country:, pwscale(size)
 
-xtmixed total_security num_victim_5yr gini_cent gdppc_2004_6_scale police_effective income_quartile age_cent employed male [pw=individual_weight] || country:, pwscale(size)
+*but actually
+*xtmixed total_security num_victim_5yr gini_2004_6_cent gdppc_2004_6_scale police_eff_cent income_cent age_cent employed male [pw=individual_weight] || country:, pwscale(size)
 
+*cook's D values
 mltcooksd, fixed random graph
 
-estat icc   *intraclass correlation
+*intraclass correlation
+estat icc
 
-estat ic       *BIC and AIC
+*BIC and AIC
+estat ic
+
 ```
 
 ```{stata plots iv_2005_mod, echo = 1}
 *use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005_mod.dta", clear
 
+*plots
 *scatter num_victim_5yr total_security, jitter(5)
 
 *graph export scatter_iv_2005_mod.svg, replace
+*___________________________________________________________________
 ```
 
 ```{stata winzorized model iv_2005_mod, collectcode = TRUE}
 use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005_mod.dta"
 
-*Winzorized model
-xtmixed num_victim_5yr_winz gini_wc gdppc_2004_6_ws age_cent employed male police_effective income_quartile [pw=individual_weight] || country:, pwscale(size)
+*3. Winzorized model (for reporting)
+xtmixed num_victim_5yr_winz gini_wc gdppc_2004_6_ws age_cent employed male police_eff_cent income_cent [pw=individual_weight] || country:, pwscale(size)
 
-*xtmixed num_victim_5yr_winz victim_nation_mean gini_wc gdppc_2004_6_ws age_cent employed male police_effective income_quartile [pw=individual_weight] || country:, pwscale(size)
+*but actually (with security variable)
+*xtmixed security_winz gini_wc gdppc_2004_6_ws age_cent employed male police_eff_cent income_cent [pw=individual_weight] || country:, pwscale(size)
 
-
-estat icc
-estat ic
-
-mltcooksd, fixed random graph
-```
-
-
-```{stata excluded iv_2005_mod model}
-use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005_mod.dta"
-
-set more off
-
-gen dropcook=1 if country == "Peru" | country == "Argentina" | country ==  "United States"
-
-*Winzorized model
-xtmixed num_victim_5yr_winz gini_wc gdppc_2004_6_ws age_cent employed male police_effective income_quartile [pw=individual_weight] || country: if dropcook !=1, pwscale(size)
+*security with nation mean
+*xtmixed security_winz victim_nation_winz gini_wc gdppc_2004_6_ws age_cent employed male police_eff_cent income_cent [pw=individual_weight] || country:, pwscale(size)
 
 estat icc
 estat ic
 
 mltcooksd, fixed random graph
+*___________________________________________________________________
 ```
 
 
@@ -229,15 +244,43 @@ haven::write_dta(iv_2005_mod,"C:/Users/dalla/Google Drive/data_files/icvs_pwt_sw
 ```{stata flag extreme lv2 model iv_2005_mod}
 use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005_mod.dta"
 
+* 4. winz model, but with extreme countries flagged
 set more off
 
-xtmixed num_victim_5yr_winz extreme gini_wc gdppc_2004_6_ws || country:
+xtmixed num_victim_5yr_winz extreme gini_wc gdppc_2004_6_ws age_cent employed male police_eff_cent income_cent [pw=individual_weight] || country:, pwscale(size)
+*___________________________________________________________________
+```
+
+
+```{stata excluded iv_2005_mod model}
+use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005_mod.dta"
+
+* 5. winzorized model, excluding extreme countires
+set more off
+
+gen dropcook=1 if country == "Peru" | country == "Argentina" | country ==  "United States"
+
+xtmixed num_victim_5yr_winz gini_wc gdppc_2004_6_ws age_cent employed male police_eff_cent income_cent [pw=individual_weight] || country: if dropcook !=1, pwscale(size)
+
+estat icc
+estat ic
+
+mltcooksd, fixed random graph
+*___________________________________________________________________
 ```
 
 ```{stata poisson}
 use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005_mod.dta"
 
-mepoisson total_security num_victim_5yr gini_cent gdppc_2004_6_scale police_effective income_quartile age_cent employed male [pw=individual_weight] || country:, pwscale(size)
+
+*6. poisson model - pwscale not allowed - (note: Grid search failed to find values that will yield a log likelihood value.) - initial values not feasible
+mepoisson num_victim_5yr gini_2004_6_cent gdppc_2004_6_scale police_effective income_quartile age_cent employed male [pw=individual_weight] || country:
+*___________________________________________________________________
+
+
+*7. poisson model without weights
+mepoisson num_victim_5yr gini_2004_6_cent gdppc_2004_6_scale police_effective income_quartile age_cent employed male || country:
+*___________________________________________________________________
 ```
 
 ### Exploratory
@@ -288,7 +331,7 @@ use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005.dta"
 
 *First model
 
-xtmixed num_victim_5yr gini_cent gdppc_2004_6_cent age_cent employed male [pw=individual_weight] || country:, pwscale(size)
+xtmixed num_victim_5yr gini_2004_6_cent gdppc_2004_6_cent age_cent employed male [pw=individual_weight] || country:, pwscale(size)
 
 mltcooksd, fixed random graph
 
@@ -386,19 +429,10 @@ Stata: Poisson mixed models can be run with the mepoisson command. A meqrpoisson
 
 # Negative binomial
 
-
-
 menbreg num_victim_5yr_winz gini_wc gdppc_2004_6_ws age_cent employed male [pw=individual_weight] || country:, pwscale(size)
 
 menbreg
 
-What can an empty model tell us?
--	Intraclass correlation
-
-
-
-Not looking for significance in the intercept, but rather significance in the variance of the intercept
--	BUT: variance can’t be negative, so standard significance tests aren’t of any help
 
 
 September 19, 2018

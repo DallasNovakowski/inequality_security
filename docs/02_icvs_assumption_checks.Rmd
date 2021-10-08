@@ -17,7 +17,6 @@ library(survey)
 # library(nloptr) # for bobyqa used in svy2lme
 
 library(WeMix)
-library(Statamarkdown)
 
 load("C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005.RData")
 
@@ -31,79 +30,28 @@ iv_2005_mod <- iv_2005_mod %>%
 
 <!--# useful tutorials at https://www.juliapilowsky.com/2018/10/19/a-practical-guide-to-mixed-models-in-r/ -->
 
-The purpose of this section is to outline the branches of how this data will be explored and modified depending on various assumption checks. This a priori examiniation is particularly important given the substantial degrees of freedom that comes with analyzing archival data, allowing a researcher to pick and choose those data and analyses that best suit their preferred story (simmons et al., 2011).
+The purpose of this section is to outline the branches of how this data will be explored and modified depending on various assumption checks. This a priori examination is particularly important when analyzing archival data, this data-dependent analysis, the so-called "garden of forking paths [@gelman2014] allows a researcher to pick and choose those data and analyses that best suit their preferred story [@simmons2011].
 
 The following describes two survey sweeps of the International Crime Victimization Survey conducted across 2004-6. At first, this data had `r sweep5_nrow` respondents and `r sweep5_countries` countries. After a exclusion process maximizing the number of countries and observations, there were 31 countries with 85,085 participants, with a minimum of 790 participants per country. An exclusion strategy maximizing the number of variables yields 27 countries, and 48,671 participants.
 
 The following and planned analyses will be carried out with `r sum(summary(iv_2005_mod$country)>0)` countries, and `r format(nrow(iv_2005_mod), big.mark = ",", scientific = FALSE)` participants.
 
-If the assumptions underlying a multilevel regression hold in this dataset, the analysis will be conducted using maximum likelihood estimates (MLE) in Stata (IC 14.2; REF), as there are a relatively small number of level-2 units in this data. Likewise, the use of full maximum lilkelihood will enable the use of statistical weights to increase the representativeness of the available data.
-
-## Analysis plan
+## Software
 
 I would prefer to use an r package for my analyses (lme4, EdSurvey, WeMix, BIFIEsurvey ). However, throughout this screening process, lme4 ran into convergence problems (particularly when incorporating survey weights). Likewise the other packages are so new and specific that they don't generate objects that can be used for analyses like cook's distance.
 
-By contrast, Stata is far more developed for multilevel analysis with survey weights. For instance, it provides model-wide Cook's D values for just level-2 units, whereas R can do it only after making a new dataset. If we are going to use a package that has poor integration with rmarkdown, we might as well use the program that best handles the statistics, and save ambitions for a reproducible manuscript for later projects.
+## Survey Weights
+
+In survey methods, weights are an important tool to make statistics more representative of their populations. Essentially, they increase the weight of individuals who are under-represented in the sample compared to their prevalence in the population. But, depending on the type of analysis we do, survey weights might not be possible.
+
+The use of survey weights has cascading effects: survey weights can only be used with maximum lilkelihood estimation (MLE). However, Restricted Maximum Likelihood Estimation (REML) is preferred for our a small number of level-2 units (28; MLE yields biased estimations of variance, especially under small samples). If we use survey weights, it will impact fundamental decisions such as the type of estimator used.
+
+<!-- If the assumptions underlying a multilevel regression hold in this dataset, the analysis will be conducted using maximum likelihood estimates (MLE) in Stata (IC 14.2; REF), as there are a relatively small number of level-2 units in this data. Likewise, the use of full maximum lilkelihood will enable the use of statistical weights to increase the representativeness of the available data. -->
+
+<!-- Stata is far more developed for multilevel analysis with survey weights. For instance, it provides model-wide Cook's D values for just level-2 units, whereas R can do it only after making a new dataset. If we are going to use a package that has poor integration with rmarkdown, we might as well use the program that best handles the statistics, and save ambitions for a reproducible manuscript for later projects. -->
 
 <!--# The relationship between country-level inequality and the consumption of security products will be tested using a multilevel linear regression. This analysis will be accomplished using a combination of three archival datasets. Firstly, indicators of security consumption have been accessed from the International Crime Victimization survey (ICVS; REF), which is an accumulation of standardized sample surveys to look at householders' experiences with crime, policing, crime prevention and feelings of unsafety. Although it does not consist of longitudinal observations, the ICVS has been distributed across five phases over fifteen years (1989, 1992, 1996, 2000, 2005), totaling 300,000 people and 78 different countries (Data Archiving and Networked Services, n.d.). For the purposes of this study, it is most notable that this survey contains items such as respondents' adopted measures to protect themselves against burglary. Secondly, nation-level inequality in disposable income was accessed through the Standardized World Income Inequality Database (SWIID; REF). The SWIID has been designed to maximize the comparability of income inequality data while maintaining the widest possible coverage across countries and over time. As a result, the gini coefficients are accompanied by standard errors to reflect uncertainty in the estimates. Lastly, countries' expenditure-side real GDP was retrieved from the Penn World Table, version 10.0 (PWT; REF). The selected GDP values are adjusted for Purchasing Power Parity, "to compare relative living standards across countries at a single point in time" (https://www.rug.nl/ggdc/productivity/pwt/?lang=en). Nations' GDP values were divided by their population sizes to yield a per-capita GDP value, which will be used for these analysis.Although the above datasets extend across multiple years, the current analysis will be limited to observations across 2004-2006. Imposing this restriction allows for a sufficient number of countries, combined with relative recency of data. After a conservative exclusion process for missing data, survey sweeps conducted across 2004-6 yielded 31 countries with 85,085 participants, with a minimum of 790 participants per country. An exclusion strategy maximizing the number of variables yields 27 countries, and 48,671 participants. -->
 
-# Assumption checks and and contingencies
-
-## Influential observations
-
--   **Check:** cook's D values exceeding the threshold 4/n; where n = \# of clusters.
--   **Treatment:** winzorize variables that demonstrate exhibit sufficient influence on model
--   **Robustness check:**
-
-a.  Retain the level-1 cases of extreme values, add a dummy variable at level-2 to control for their unit, rerun analysis (Van de Meer et al, 2010). Document whether any coefficients change.
-
-b.  Run analyses excluding cases that exceed the threshold 4/n; where n = \# of clusters. Following, evaluate cook's D values on this reduced dataset.
-
-c.  Eliminate any cases that exceed a cook's d of .5, and conduct a third analysis.
-
-*Then document whether any coefficients have gained/lost significance*
-
-## Linearity
-
--   **Check:** Scatterplots for nonlinear relationships
--   **Treatment:** If robust nonlinear relationship detected, add polynomials until adequate fit to linear function is obtained
-
-Nonlinearity does not seem to be a major issue in the data. There may be some pattern of as much as a third-order polynomial in the effects of gini on victimization, (second-order for GDP).
-
-Especially with a small sample at level-2, adding polynomials seems more likely to risk overfitting the data. I would only assess the fit of a polynomial model if I could then test it on another dataset, for cross-validation.
-
-## Normality in residuals
-
--   **Check**: QQplots (The Normal Probability Plot method.) for whether lie on normal distribution
-
-**NO treatment:** Although there are many possible transformations possible for this kind of data (square root, rankit/INT, log(x+1), boxcox(x+1)), nonnormal data, by itself, is not expected to adversely impact the proposed analysis. Lumley, Diehr, Emerson, & Chen (2002) provided simulation evidence that linear regressions conducted on large samples are robust to departures from normality. With at least 500 observations, they found that linear regression can be conducted with negligible impact on Type I errors.
-
-## Heteroscedasticity (Homogeneity of Variance)
-
--   **Check**: Plot residuals vs predicted values, for changes in residual variance across levels of predicted values
-
--   **Treatment:** Transformation of DV (e.g., box-cox, square root, log, rankit). Beyond this, the model already has robust standard errors
-
-> There is a two-parameter version of the Box-Cox transformation that allows a shift before transformation:\The usual Box-Cox transformation sets λ2=0. One common choice with the two-parameter version is λ1=0 and λ2=1 which has the neat property of mapping zero to zero. There is even an R function for this: log1p(). More generally, both parameters can be estimated. In R, the boxcox.fit() function in package geoR will fit the parameters.
-
-<!-- Inverse hyperbolic sine (IHS) transformation, mixture models (<https://robjhyndman.com/hyndsight/transformations/>) Other options: -->
-
-> For a heteroskedasticity robust F test we perform a Wald test using the waldtest function, which is also contained in the lmtest package. It can be used in a similar way as the anova function, i.e., it uses the output of the restricted and unrestricted model and the robust variance-covariance matrix as argument vcov. Based on the variance-covariance matrix of the unrestriced model we, again, calculate White standard errors.
-
-Wald test: a way to find out if explanatory variables in a model are significant.
-
-If the Wald test shows that the parameters for certain explanatory variables are zero, you can remove the variables from the model
-
-Weighted distance between the unrestricted estimate and its hypothesized value under the null hypothesis, where the weight is the precision of the estimate
-
-<!-- >knief2021  Most elegantly,heteroscedasticity can be modeled directly, for instance by using the "weights" argument in lme (see Pinheiro & Bates, 2000, p. 214), which also enables us to test directly whether allowing for heteroscedasticity increases the fit of the model significantly. Similarly, heteroscedasticity-consistent standard errors could be estimated (Hayes & Cai, 2007). For more advice on handling heteroscedasticity, see McGuinness (2002). -->
-
-## Multicolinnearity
-
--   **Check**: VIF/tolerances
--   **Fix** remove values \>= 5
-
-> we did not cover collinearity between predictors or the distribution of random effects, but others have dealt with these aspects before (Freckleton, 2011; Schielzeth et al., 2020).
 
 ```{r victimization transformation, warning=F, message=FALSE, echo=FALSE}
 # Square root method
@@ -179,23 +127,9 @@ summary(iv_2005_mod$total_security)
 normality_stats(iv_2005_mod$total_security)
 ```
 
-## On the distribution
-
-The population distribution for our dependent variables is not known in advance. All we can say is that we know it is a count variable. This uncertainty opens up the possibility of a model selection bias
-
-At first glance, victimization looks like a poisson process, but we have limited reason to believe that our outcome variables (e.g., security, number of victimizations) follow a strictly poisson process. Namely, violating the assumption that the occurence of one event does not affect occurrence of a subsequent event. I would guess that purchasing security or being victimized by a crime has *some* effect on later occurrences in either direction (e.g., having less money from the prior security purchase).
-
-One note is that victimizations seem to have inflated zeros - more indicative of negative binomial. Another is that both variables have larger variances than means. A question though - is the independence supposed to be observed within observations or between observations?
-
-All told, let's remember that the assumptions of normality apply to the distribution of residuals, so can only be interpreted in the model. Important to keep skewness of the DV on our radar though.
-
 This summing procedure gives us a max score of `r max(iv_2005_mod$total_security)` on security consumption, with substantial positive skew
 
-Starting with scatterplots. Nation Values with a cook's distance of 4 times the mean cook's distance values (for bivariate relationship) are flagged.
-
-## Influential observations
-
-```{r influence screen, warning=F, message=FALSE, echo=FALSE}
+```{r lv2 dat, echo=FALSE}
 gd <- iv_2005_mod %>% 
         filter(!is.na(num_victim_5yr)) %>%
         group_by(country) %>% 
@@ -220,6 +154,45 @@ gd <- iv_2005_mod %>%
 #                   )
 
 gd$country <- as.character(gd$country)
+```
+
+
+```{r descriptives, echo=F}
+summary(iv_2005_mod[,c("num_victim_5yr", "age_cent", "employed", "male")])
+
+iv_2005_mod[,vic_var_assault] <- lapply(iv_2005_mod[,vic_var_assault], factor)
+
+summary(iv_2005_mod[,vic_var_assault])
+
+iv_2005_mod[,prevention_min2][is.na(iv_2005_mod[,prevention_min2])] <- 0
+iv_2005_mod[,prevention_min2] <- lapply(iv_2005_mod[,prevention_min2], factor)
+
+summary(iv_2005_mod[,prevention_min2])
+
+summary(gd[,c("gini_2004_6", "gdppc_2004_6_cent", "gdppc_2004_6")])
+```
+
+
+## On the distribution
+
+The population distribution for our dependent variables is not known in advance. All we can say is that we know it is a count variable. This uncertainty opens up the possibility of a model selection bias.
+
+The distribution processes we'll consider here are [normal](#assuming-a-normal-distribution),  [poisson and negative binomial](#poisson-distribution), and a [three-level logistic regression](#three-level-logistic-regression).
+
+At first glance, victimization looks like a poisson process, but we have limited reason to believe that our outcome variables (e.g., security, number of victimizations) follow a strictly poisson process. Firstly, the count may violate the assumption of independent events; I would guess that purchasing security or being victimized by a crime has *some* effect on later occurrences in either direction (e.g., having less money from the prior security purchase).
+
+Secondly, poisson assumes unbounded counts, where the max value stretches out indefinitely (albeit with smaller and smaller frequency). Our count variables are the result of summing a finite number of binary responses.
+
+One note is that victimizations seem to have inflated zeros. Another is that both variables have larger variances than means - more indicative of negative binomial. A question though - is the independence supposed to be observed within observations or between observations?
+
+All told, let's remember that the assumptions of normality apply to the distribution of residuals, so can only be interpreted in the model. Important to keep skewness of the DV on our radar though.
+
+Starting with scatterplots. Nation Values with a cook's distance of 4 times the mean cook's distance values (for bivariate relationship) are flagged.
+
+## Plotting Influential observations
+
+```{r influence screen, warning=F, message=FALSE, echo=FALSE}
+
 
 # gd$country <- as.factor(gd$country)
 
@@ -268,15 +241,74 @@ Initially, a poisson process seems to better describe the distribution of this s
 
 For our purposes, it is important to note that we are dealing with a small sample size at the cluster/nation level.
 
+
+
+## Assumption checks and and contingencies
+
+### Influential observations
+
+-   **Check:** cook's D values exceeding the threshold 4/n; where n = \# of clusters.
+-   **Treatment:** winzorize variables that demonstrate exhibit sufficient influence on model
+-   **Robustness check:**
+
+a.  Retain the level-1 cases of extreme values, add a dummy variable at level-2 to control for their unit, rerun analysis (Van de Meer et al, 2010). Document whether any coefficients change.
+
+b.  Run analyses excluding cases that exceed the threshold 4/n; where n = \# of clusters. Following, evaluate cook's D values on this reduced dataset.
+
+c.  Eliminate any cases that exceed a cook's d of .5, and conduct a third analysis.
+
+*Then document whether any coefficients have gained/lost significance*
+
+### Linearity
+
+-   **Check:** Scatterplots for nonlinear relationships
+-   **Treatment:** If robust nonlinear relationship detected, add polynomials until adequate fit to linear function is obtained
+
+Nonlinearity does not seem to be a major issue in the data. There may be some pattern of as much as a third-order polynomial in the effects of gini on victimization, (second-order for GDP).
+
+Especially with a small sample at level-2, adding polynomials seems more likely to risk overfitting the data. I would only assess the fit of a polynomial model if I could then test it on another dataset, for cross-validation.
+
+### Normality in residuals
+
+-   **Check**: QQplots (The Normal Probability Plot method.) for whether lie on normal distribution
+
+**NO treatment:** Although there are many possible transformations possible for this kind of data (square root, rankit/INT, log(x+1), boxcox(x+1)), nonnormal data, by itself, is not expected to adversely impact the proposed analysis. Lumley, Diehr, Emerson, & Chen (2002) provided simulation evidence that linear regressions conducted on large samples are robust to departures from normality. With at least 500 observations, they found that linear regression can be conducted with negligible impact on Type I errors.
+
+### Heteroscedasticity (Homogeneity of Variance)
+
+-   **Check**: Plot residuals vs predicted values, for changes in residual variance across levels of predicted values
+
+-   **Treatment:** Transformation of DV (e.g., box-cox, square root, log, rankit). Beyond this, the model already has robust standard errors
+
+> There is a two-parameter version of the Box-Cox transformation that allows a shift before transformation:\The usual Box-Cox transformation sets λ2=0. One common choice with the two-parameter version is λ1=0 and λ2=1 which has the neat property of mapping zero to zero. There is even an R function for this: log1p(). More generally, both parameters can be estimated. In R, the boxcox.fit() function in package geoR will fit the parameters.
+
+<!-- Inverse hyperbolic sine (IHS) transformation, mixture models (<https://robjhyndman.com/hyndsight/transformations/>) Other options: -->
+
+> For a heteroskedasticity robust F test we perform a Wald test using the waldtest function, which is also contained in the lmtest package. It can be used in a similar way as the anova function, i.e., it uses the output of the restricted and unrestricted model and the robust variance-covariance matrix as argument vcov. Based on the variance-covariance matrix of the unrestriced model we, again, calculate White standard errors.
+
+Wald test: a way to find out if explanatory variables in a model are significant.
+
+If the Wald test shows that the parameters for certain explanatory variables are zero, you can remove the variables from the model
+
+Weighted distance between the unrestricted estimate and its hypothesized value under the null hypothesis, where the weight is the precision of the estimate
+
+<!-- >knief2021  Most elegantly,heteroscedasticity can be modeled directly, for instance by using the "weights" argument in lme (see Pinheiro & Bates, 2000, p. 214), which also enables us to test directly whether allowing for heteroscedasticity increases the fit of the model significantly. Similarly, heteroscedasticity-consistent standard errors could be estimated (Hayes & Cai, 2007). For more advice on handling heteroscedasticity, see McGuinness (2002). -->
+
+### Multicolinnearity
+
+-   **Check**: VIF/tolerances
+-   **Fix** remove values \>= 5
+
+> we did not cover collinearity between predictors or the distribution of random effects, but others have dealt with these aspects before (Freckleton, 2011; Schielzeth et al., 2020).
+
+
+
 ## Model-based exploration
 
-Assuming a normal distribution, there are obviously some heavy tails in this data.
+Assuming a normal distribution, there are likely some heavy tails in the residuals.
 
 ```{r estimation preview2, warning=T, message=FALSE}
 # Fixed effect variables in model
-summary(iv_2005_mod[,c("num_victim_5yr", "age_cent", "employed", "male")])
-
-summary(gd[,c("gini_2004_6", "gdppc_2004_6_cent", "gdppc_2004_6")])
 
 m1_null <- lme4::lmer(num_victim_5yr ~ (1 | country), data = iv_2005_mod, REML=FALSE)
 
@@ -304,7 +336,15 @@ moments::kurtosis(resid(m1_sample))
 
 Indeed, this model's residuals are definitely not normally-distributed, with a skewness of `r round(moments::skewness(resid(m1_sample)),2)`, and a kurtosis of `r round(moments::kurtosis(resid(m1_sample)),2)`. However, this is not yet the time to examine the residual plots - we need to explore and treat any potential influential observations that might be exacerbating these violations of normality.
 
-> Note that this is based on simple aggregates. It is not based on empirical Bayesian estimates Doesn't take sampling variation due to sampling of into account Therefore a rough guide, but only rough
+<!-- > Note that this is based on simple aggregates. It is not based on empirical Bayesian estimates Doesn't take sampling variation due to sampling of into account Therefore a rough guide, but only rough -->
+
+```{r VIF1, warning=F, message=FALSE}
+performance::check_collinearity(m1_sample)
+
+car::vif(m1_sample) # display VIF values
+```
+
+Multicollinearity seems okay
 
 ### Cook's distance ( R package influence.ME )
 
@@ -461,6 +501,10 @@ Winzorizing definitely seems to help the normality of the model. Again, it does 
 
 Likewise, there is some imbalance in the resid\~fitted plots, with more positive residuals accompanying smaller fitted values.
 
+The variance of residuals seems consistent across all levels - so no notable heteroscedasticity?
+
+In particular, the residuals don't appear to be symmetrically distributed (tending to cluster towards the middle of the plot). For low fitted values, residuals seem to be skewed higher, leveling off as the fitted values get larger
+
 # Poisson distribution
 
 Poisson is the go-to distribution for handling count data, which tends to exhibit a positive skew, and could provide an alternate way to model our data.
@@ -552,7 +596,11 @@ simulationOutput <- simulateResiduals(fittedModel = m_pois, plot = F)
 
 As said above, overdispersion describes excess variance, given the mean.
 
-\- **Check:** DHARMA:: testDispersion() - **Treatment:** negative binomial model - **Robustness check:**
+\- **Check:** DHARMA:: testDispersion()
+
+\- **Treatment:** negative binomial model
+
+\- **Robustness check:**
 
 ```{r dharma dispersion}
 testDispersion(simulationOutput)
@@ -568,13 +616,19 @@ blmeco::dispersion_glmer(m_pois)  # chec for dispersion, cutoff 1.4 https://stac
 Zero-inflation describes the extent to which more zeros are present in the data than what the distribution assumes
 
 -   **Check:** DHARMA:: testZeroInflation()
--   **Treatment:** zero-inflated model
+-   **Treatment:** zero-inflated model (glmmTMB)
 
 ```{r dharma zero inflation}
 testZeroInflation(simulationOutput)
 ```
 
 Simulation outliers (data points that are outside the range of simulated values) are highlighted as red stars. To provide a visual aid in detecting deviations from uniformity in y-direction, the plot function calculates an (optional default) quantile regression, which compares the empirical 0.25, 0.5 and 0.75 quantiles in y direction (red solid lines) with the theoretical 0.25, 0.5 and 0.75 quantiles (dashed black line), and provides a p-value for the deviation from the expected quantile.
+
+<!--# http://glmmadmb.r-forge.r-project.org/glmmADMB.html -->
+
+glmmADMB: hurdle models
+
+> In contrast to zero-inflated models, hurdle models treat zero-count and non-zero outcomes as two completely separate categories, rather than treating the zero-count outcomes as a mixture of structural and sampling zeros. he two parts of the model have to be fitted separately, however. First we fit a truncated distribution to the non-zero outcomes...Then we fit a model to the binary part of the data (zero vs. non-zero).
 
 ```{r dharma outliers}
 testOutliers(simulationOutput)
@@ -618,21 +672,23 @@ glmmTMB package with a Zero-inflated generalized Poisson
 
 GLMMadaptive: fits mixed effects models for grouped/clustered outcome variables
 
-**Vuong test**: a test of distinghuishability and fit for two models compares the zero-inflated model with an ordinary Poisson regression model
+**Vuong test**: a test of distinguishability and fit for two models compares the zero-inflated model with an ordinary Poisson regression model
 
-```{r vuong}
+```{r vuong, echo=FALSE}
 # https://stackoverflow.com/questions/51016328/mixed-effects-model-with-zero-inflated-data-error-message-using-zeroinfl-fro 
-# m_nbinom <- glmmTMB::glmmTMB(num_victim_5yr ~ gdppc_2004_6_scale  + av_gini + age_cent + employed + male + police_effective + income_quartile + (1 | country),zi = ~ gdppc_2004_6_scale  + av_gini + age_cent + employed + male, data = iv_2005_mod, family = poisson)
+# m_zip <- glmmTMB::glmmTMB(num_victim_5yr ~ gdppc_2004_6_scale  + av_gini + age_cent + employed + male + police_effective + income_quartile + (1 | country),zi = ~ gdppc_2004_6_scale  + av_gini + age_cent + employed + male, data = iv_2005_mod, family = poisson)
+
+
 # 
-# summary(m_nbinom)
+# summary(m_zip)
 
 # If you set zi ~ 1 then the ZIM is assumed to be independent of any predictors. 
 
 # Interpreting zero-inflation coefficients: every unit change in predictor increases/decreases the log odds of the being in the structural zero group (those who cannot have cancer) 
 
-# mnull <- update(m_nbinom)
+# mnull <- update(m_zip)
 # 
-# pchisq(2 * (logLik(m_nbinom) - logLik(mnull)), df = 3, lower.tail = FALSE)
+# pchisq(2 * (logLik(m_zip) - logLik(mnull)), df = 3, lower.tail = FALSE)
 # # 
 # p1 <- glm(count ~ child + camper, family = poisson, data = zinb)
 # 
@@ -702,39 +758,50 @@ GLMMadaptive: fits mixed effects models for grouped/clustered outcome variables
 # lattice::qqmath(m1_sample, id=0.05)
 ```
 
-# Correlated random effects
+# Three-level logistic regression (item response method)
 
-@mcneish2017
+Talking with Dr. Bierman, he suggested that a good alternative to normal/poisson methods would be a three-level multilevel logistic regression, with the constituent count variables as the level-1 factors. The strength of this method is that it essentially treats the participant-level (level 2) as a latent, normally distributed(?) propensity to score on the outcome variables.
 
-pwcorr rint resids
+It firstly requires us to make the dataset extra long, with the each of the DV's constituent binary variables getting a row for *each* participant. For example, if we are counting across seven variables for 10 partcipants, our long dataset would have 70 rows.
 
--   graph of correlation between within-level residuals and random effects
 
-twoway (scatter resids rint) (lfit resids rint)
+```{r extra long data for three level}
+library(tidyr)
 
-from <https://notstatschat.rbind.io/2019/04/19/progress-on-linear-mixed-models-for-surveys/>
+# The arguments to gather():
+# - data: Data object
+# - key: Name of new key column (made from names of data columns)
+# - value: Name of new value column
+# - ...: Names of source columns that contain values
+# - factor_key: Treat the new key column as a factor (instead of character vector)
+iv_long <- gather(iv_2005_mod, measure, victimized, cartheft_5yrs:assault_5yrs, factor_key=TRUE)
 
-```{r heteroscedasticity, warning=F, message=FALSE, echo=FALSE, fig.show="hold", out.width="50%"}
-# plot(m1_sample, resid(., type = "pearson") ~ fitted(.), abline = 0, main="Heteroscedasticity check - fitted values vs. residuals")
-# 
-# plot(m1_winz, resid(., type = "pearson") ~ fitted(.), abline = 0, main="Heteroscedasticity (Winzorized)")
+iv_long$victimized <- as.factor(iv_long$victimized)
+
+nrow(iv_long)
+
 ```
 
-The variance of residuals seems consistent across all levels - so no notable heteroscedasticity?
+Three-level logistic regression Level 1: measure level Level 2: individual Level 3: country
 
-In particular, the residuals don't appear to be symmetrically distributed (tending to cluster towards the middle of the plot). For low fitted values, residuals seem to be skewed higher, leveling off as the fitted values get larger
+Yes/no for six items Intercept would be a latent measure of propensity to say yes/no
 
-> In R the function coeftest from the lmtest package can be used in combination with the function vcovHC from the sandwich package to obtain heteroskedasticity robust standard errors and their corresponding t values.
+Individual characteristics predicts the individual intercept - treat it as though it has six indicators
 
-```{r VIF1, warning=F, message=FALSE}
-performance::check_collinearity(m1_sample)
+Like an item-response model
 
-car::vif(m1_sample) # display VIF values
+Can also do it in Mplus - wsmv estimator for yes/nos
+
+
+```{r extra long model}
+m_long <- lme4::glmer(victimized ~ (1 | pnum) + (1 | country), data = iv_long, family = binomial)
+# , control = glmerControl(optimizer = "bobyqa")
+# ,nAGQ = 10
+
+summary(m_long)
 ```
 
-@mcneish2017
-
-> [Design-based] methods estimate a general or generalized linear model and provide standard errors that are robust to misspecifications of the covariance matrix of the outcome variable. Common methods in this class include so-called heteroscedasticity-corrected covariance matrix estimators or sandwich estimators (Huber, 1967; White, 1980), and generalized estimating equations (GEEs; Liang and Zeger, 1986) DBMs are often employed when the marginal response is of interest rather than individual responses or how responses vary across clustering units.
+# Other approaches
 
 ## GEE: [Generalized linear models for dependent data](https://cehs-research.github.io/eBook_multilevel/gee-count-outcome-epilepsy.html)
 
@@ -758,7 +825,7 @@ car::vif(m1_sample) # display VIF values
 
 > sandwich estimators for standard errors, also called cluster-robust standard errors, make no assumptions about the distributional shape of the random coefficients. Verbeke and Lesaffre (1997) and Yan and Bentler (2002) proposed sandwich estimators to provide standard errors applicable for nonnormalily distributed random effects... However, sandwich estimators do require large enough numbers of units at the highest level; see Verbeke and Lesaffre 997), Maas and Hox (2004), and hthe further discussion in 12.2 \*
 
-[<https://www.r-econometrics.com/methods/hcrobusterrors/>https://stackoverflow.com/questions/48479984/r-mixed-model-with-heteroscedastic-data-only-lm-function-works](https://www.r-econometrics.com/methods/hcrobusterrors/){.uri}
+[\<https://www.r-econometrics.com/methods/hcrobusterrors/\>https://stackoverflow.com/questions/48479984/r-mixed-model-with-heteroscedastic-data-only-lm-function-works](https://www.r-econometrics.com/methods/hcrobusterrors/){.uri}
 
 > The sandwich package is not limited to lm/glm only but it is in principle object-oriented, see vignette("sandwich-OOP", package = "sandwich") (also published as <doi:10.18637/jss.v016.i09>.
 
@@ -766,13 +833,6 @@ car::vif(m1_sample) # display VIF values
 
 > However, for lme4 there is a relatively new package called merDeriv (<https://CRAN.R-project.org/package=merDeriv>) that supplies estfun and bread methods so that sandwich covariances can be computed for lmer output etc. There is also a working paper associated with that package: <https://arxiv.org/abs/1612.04911>
 
-Match Poisson Regresssion (GLM)
-
-restricted maximum likelihood (REML)
-
--   REML, by accounting for the loss in degrees of freedom from estimating the fixed effects, provides an unbiased estimate of variance components, while ML estimators for variance components are biased under assumptions of normality, since they use estimated fixed effects rather than the true values.
-
-# Other approaches
 
 ## Bootstrapping
 
@@ -780,13 +840,20 @@ restricted maximum likelihood (REML)
 
 **bootMer**
 
+## Other other methods
+
+**Match Poisson Regresssion (GLM)**
+
 **Semi-parametric multilevel modeling** (Tihomir Asparouhov)
+
+<!-- -   REML, by accounting for the loss in degrees of freedom from estimating the fixed effects, provides an unbiased estimate of variance components, while ML estimators for variance components are biased under assumptions of normality, since they use estimated fixed effects rather than the true values. -->
 
 **Penalized quasilikelihood (PQL)**
 
 flexible technique that can deal with non-normal data, unbalanced design, and crossed random effects. However, it produces biased estimates if your response variable fits a discrete count distribution, like Poisson or binomial, and the mean is less than 5 - or if your response variable is binary.
 
 what if the mean of your response variable is less than 5, or you have a binary response variable, and you can't use PQL? Here you're going to have to make another decision, because there are two alternatives you can use: the **Laplace approximation** and **Markov chain Monte Carlo algorithms (MCMC)**. The Laplace approximation can handle up to 3 random effects. Any more than that, and you'll have to use MCMC, which is a Bayesian method that can be somewhat confusing.
+
 <!--# https://www.juliapilowsky.com/2018/10/19/a-practical-guide-to-mixed-models-in-r/ -->
 
 **laplace** looks like follows
@@ -794,14 +861,11 @@ what if the mean of your response variable is less than 5, or you have a binary 
     glmer(repeatgr ~ Minority + ses + ses * Minority + (1 | schoolNR),
         data = bdf, family = binomial(link = "logit"))
 
-There is one more consideration, though, when using this method. It
-becomes inaccurate when used on overdispersed data - that is, when the
-combined residuals are much larger than the residual degrees of freedom.
+There is one more consideration, though, when using this method. It becomes inaccurate when used on overdispersed data - that is, when the combined residuals are much larger than the residual degrees of freedom.
 
 **MCMCglmm**, which can not only handle many random effects, but provides confidence intervals for the random effects, MCM is a Bayesian statistical method. All models make assumptions about the distribution of the variance in your data, but in a Bayesian method these assumptions are explicit, and we need to specify these assumed distributions. In Bayesian statistics, we call these priors.
 
-Just keep in mind that one **R structure** needs to be specified for each fixed effect and one **G structure** needs to be specified for each random effect. Also remember my caution about the lognormal distribution: these priors may not play nicely with data modeled with a log link, so do
-some research on what priors to use for data on a log scale.
+Just keep in mind that one **R structure** needs to be specified for each fixed effect and one **G structure** needs to be specified for each random effect. Also remember my caution about the lognormal distribution: these priors may not play nicely with data modeled with a log link, so do some research on what priors to use for data on a log scale.
 
 Looks like this:
 
@@ -810,6 +874,32 @@ Looks like this:
         G5 = list(V = 1, n = 1)))
     set.seed(45)
     MCMC <- MCMCglmm(fixed = profit ~ 1, random = ~year + farmer + place + gen + district, data = farmers, family = "categorical", prior = prior, verbose = FALSE)
+
+<!-- **Correlated random effects** -->
+
+<!-- @mcneish2017 -->
+
+<!-- pwcorr rint resids -->
+
+<!-- -   graph of correlation between within-level residuals and random effects -->
+
+<!-- twoway (scatter resids rint) (lfit resids rint) -->
+
+<!-- from <https://notstatschat.rbind.io/2019/04/19/progress-on-linear-mixed-models-for-surveys/> -->
+
+<!-- ```{r heteroscedasticity, warning=F, message=FALSE, echo=FALSE, fig.show="hold", out.width="50%"} -->
+<!-- # plot(m1_sample, resid(., type = "pearson") ~ fitted(.), abline = 0, main="Heteroscedasticity check - fitted values vs. residuals") -->
+<!-- #  -->
+<!-- # plot(m1_winz, resid(., type = "pearson") ~ fitted(.), abline = 0, main="Heteroscedasticity (Winzorized)") -->
+<!-- ``` -->
+
+
+<!-- > In R the function coeftest from the lmtest package can be used in combination with the function vcovHC from the sandwich package to obtain heteroskedasticity robust standard errors and their corresponding t values. -->
+
+
+@mcneish2017
+
+> [Design-based] methods estimate a general or generalized linear model and provide standard errors that are robust to misspecifications of the covariance matrix of the outcome variable. Common methods in this class include so-called heteroscedasticity-corrected covariance matrix estimators or sandwich estimators (Huber, 1967; White, 1980), and generalized estimating equations (GEEs; Liang and Zeger, 1986) DBMs are often employed when the marginal response is of interest rather than individual responses or how responses vary across clustering units.
 
 # Limitations
 
