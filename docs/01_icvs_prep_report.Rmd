@@ -47,7 +47,11 @@ cleaned_classes <- sapply(sapply(icvs_data, class),tail,1)
 
 
 utility_var<-c(names(icvs_data)[1:29])
-                                       
+
+icvs_data <- dplyr::mutate(icvs_data, pnum = row_number())
+
+utility_var <- append(utility_var,"pnum")
+                         
 household_var <-c(names(icvs_data)[30:33], c("bicycle_ownership", "number_of_bicycles", "household_size", "persons_over_16", "males_over_16", "town_size", "type_of_house","home_owner")) 
                        
 demo_var <- c(c("gender", "age", "immigrant_status"),names(icvs_data)[377:391], names(icvs_data)[398:405])
@@ -90,6 +94,7 @@ nrow(icvs_data)
 ncol(icvs_data)
 
 summary(icvs_data[,utility_var])
+
 ```
 
 As we can see, very large, 730 variables over 330,000 respondents
@@ -429,24 +434,25 @@ estonia missing motortheft
 probably drop assaults and sexual offences
 
 ```{r sum victim, message=F}
-vic_var_drop <- select(victim_2005,-c("assault_5yrs","sexoff_5yrs"))
+vic_var_drop <- names(select(victim_2005,-c("assault_5yrs","sexoff_5yrs")))
 
-vic_var_assault <- select(victim_2005,-c("sexoff_5yrs"))
+
+vic_var_assault <- names(select(victim_2005,-c("sexoff_5yrs")))
 
 # currently keeping
-summary(vic_var_drop)
+summary(victim_2005[,vic_var_drop])
 
-summary(vic_var_assault)
+vic_var_assault
 
 
 # filtering to remove missing variables for summing
 responders_2005 <- filter(responders_2005, (!is.na(cartheft_5yrs) & !is.na(bicyctheft_5yrs) & !is.na(burglar_5yrs) & !is.na(attempt_5yrs) & !is.na(robbery_5yrs) & !is.na(pers_theft_5yrs) & !is.na(motortheft_5yrs)))
 
-summary(responders_2005[,names(vic_var_drop)])
+summary(responders_2005[,vic_var_drop])
 nrow(responders_2005)
 
 # need to get rid of estonia for missingness
-responders_2005$num_victim_5yr <- rowSums(responders_2005[,names(vic_var_drop)])
+responders_2005$num_victim_5yr <- rowSums(responders_2005[,vic_var_drop])
 
 summary(responders_2005$num_victim_5yr)
 
@@ -698,16 +704,16 @@ sum(summary(iv_2005_mod$country)>0)
 
 
 ```{r victimization with assault}
-vic_var_assault <- select(victim_2005,-c("sexoff_5yrs"))
+vic_var_assault <- names(select(victim_2005,-c("sexoff_5yrs")))
 
-na_tally(iv_2005_mod,country,names(vic_var_assault)) %>%
+na_tally(iv_2005_mod,country,vic_var_assault) %>%
       dplyr::bind_rows(dplyr::summarise(.,
                       across(where(is.numeric), sum),
                       across(where(is.logical), sum),
                       across(where(is.character), ~"Total")))
 
 # need to get rid of estonia for missingness
-iv_2005_mod$num_victim_5yr_assault <- rowSums(iv_2005_mod[,names(vic_var_assault)])
+iv_2005_mod$num_victim_5yr_assault <- rowSums(iv_2005_mod[,vic_var_assault])
 
 summary(iv_2005_mod$num_victim_5yr_assault)
 
@@ -720,7 +726,6 @@ assault_data$victim_nation_assault_winz <- DescTools::Winsorize(assault_data$vic
 iv_2005_mod <- assault_data %>%
   left_join(iv_2005_mod, by = c("country"))
 
-rm(vic_var_assault, vic_var_drop)
 ```
 
 Two other datasets, filtered on more tangential variables (feeling safe after dark and perceived break-in threat). iv_2005_lib is created from the iv_2005_mod dataset, so has the fewest variables. iv_2005_lib1 is filtered from iv_2005, so has more clusters than lib, (and even mod)' tradeoff for lib1 is that it is has missing data for income and police effectiveness 
@@ -1030,8 +1035,10 @@ iv_2005_lib1 <- data_list_lib1 %>%
 ```
 
 
-```{r merging}
-save(iv_2005, iv_2005_lib, iv_2005_mod, sweep5_nrow, sweep5_countries, file = "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005.RData")
+
+
+```{r merging and saving}
+save(iv_2005, iv_2005_lib, iv_2005_mod, sweep5_nrow, sweep5_countries, vic_var_assault,prevention_min2, file = "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005.RData")
 
 rm(icvs_data, pwt, swiid, swiid_responders,swiid_spread, data_2005, victim_2005, vic_var_drop, iv_2005_lib, iv_2005_lib1, iv_2005_mod, responders_2005)
 
@@ -1048,6 +1055,7 @@ icvs_joined <- swiid_2004_6 %>%
 save(icvs_joined, file = "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/icvs_swiid_pwt_joined.RData")
 
 # join_sample <- icvs_joined[[1]]
+# rm(list = ls())
 ```
 
 
