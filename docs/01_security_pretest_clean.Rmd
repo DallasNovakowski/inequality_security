@@ -1,0 +1,185 @@
+---
+title: "01_security_pretest_clean"
+author: "Dallas Novakowski"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r import}
+library(tidyverse)
+library(readxl)
+
+
+# read timer data
+out <- read_csv("C:/Users/dalla/Google Drive/offline_data_files/security_game/pilot_page_times_10_30.csv")
+
+out2 <- read_csv("C:/Users/dalla/Google Drive/offline_data_files/security_game/pilot_page_times_11_01.csv")
+
+out <- merge(out,out2, all = TRUE)
+
+# read 
+test_data <- read_csv("C:/Users/dalla/Google Drive/offline_data_files/security_game/security_pretest_all_apps_wide-2021-10-30.csv")
+
+test_data2 <- read_csv("C:/Users/dalla/Google Drive/offline_data_files/security_game/security_pretest_all_apps_wide-2021-11-01.csv")
+
+test_data <- merge(test_data,test_data2, all = TRUE)
+
+names(out) <- gsub(x = names(out), pattern = "\\._", replacement = "_")
+
+names(out) <- gsub(x = names(out), pattern = "\\.", replacement = "_")
+
+names(test_data) <- gsub(x = names(test_data), pattern = "._", replacement = "_", fixed = TRUE)
+names(test_data) <- gsub(x = names(test_data), pattern = ".", replacement = "_", fixed = TRUE)
+
+out_wide <- pivot_wider(out, id_cols = participant_code, names_from = page_name, names_prefix ="time_", values_from = seconds_on_page)
+
+data <- test_data %>%
+   left_join(out_wide, by = c("participant_code")) %>%
+  select(-contains(c("prolific", "completion", "mturk")))
+
+
+save(data,file="C:/Users/dalla/Google Drive/project_files/inequality_security/data/pretest_pilot_data.RData")
+
+
+```
+
+
+```{r name cleaning}
+load("pretest_pilot_data.RData")
+
+
+# delete columns totally unrelated to pretest
+data <- data %>%
+  select(-starts_with(c("intro_notask", "slider_task", "merit", "security_game_1"))) %>%
+  select(-contains(c("payoff","mturk","id_in","player_role","bot","_ts_")))
+
+# select only relevant to pretest
+data <- data %>%
+  select(contains(c("comments","oTree_version","session_config","attention","prolific","time_","_age","gender","income","education","iu_", "dospert","security_game_pretest", "participant_code")))
+
+# clean names
+names(data) <- gsub(x = names(data), pattern = "questionnaires_1_player_", replacement = "", fixed = TRUE)
+names(data) <- gsub(x = names(data), pattern = "intro_1_player_", replacement = "", fixed = TRUE)
+names(data) <- gsub(x = names(data), pattern = "consent_1_player_", replacement = "", fixed = TRUE)
+names(data) <- gsub(x = names(data), pattern = "session_config_", replacement = "", fixed = TRUE)
+
+
+names(data) <- gsub(x = names(data), pattern = "attention_check_1_player_other", replacement = "attention_check_1_player_atn_other", fixed = TRUE)
+
+names(data) <- gsub(x = names(data), pattern = "attention_check_1_player_", replacement = "", fixed = TRUE)
+
+data <- data %>%
+  select(-contains(c("participation_fee","real_world_currency_per_point","attention_check_1_subsession_round_number","completionlink", "oTree_version_used","prolific_id")))
+
+data <- rename(data, comments = payment_info_1_player_comments)
+
+data$comments <- paste(data$comments, data$study_end_1_player_comments)
+
+data <- subset(data, select = -study_end_1_player_comments)
+  
+
+data <- data %>%
+  janitor::clean_names()      # clean names to be all lowercase, replacing spaces with "_"     
+
+names(data) <- gsub(x = names(data), pattern = "pre_test", replacement = "pretest", fixed = TRUE)
+names(data) <- gsub(x = names(data), pattern = "security_game_pretest", replacement = "sg", fixed = TRUE)
+names(data) <- gsub(x = names(data), pattern = "player_", replacement = "", fixed = TRUE)
+names(data) <- gsub(x = names(data), pattern ="subsession_", replacement = "", fixed = TRUE)
+
+```
+
+
+```{r aggregation}
+data <- data %>%
+  filter(!is.na(age))
+
+
+# make lists of useful variables
+time_vars <- colnames(data[grepl('time_', colnames(data))])
+time_vars <- Filter(function(x) !any(grepl("participant", x)), time_vars)
+dospert_vars <- colnames(data[grepl('dospert_', colnames(data))])
+iu_vars <- colnames(data[grepl('iu_', colnames(data))])
+consumed_vars <- colnames(data[grepl('security_consumed', colnames(data))])
+page_vars <- colnames(data[grepl('page_in_round', colnames(data))])
+
+# make totals of variables
+data$time_total <- rowSums(data[,time_vars], na.rm = TRUE) * NA ^ (rowSums(!is.na(data[,time_vars])) == 0)
+
+data$iu_total <- rowSums(data[,iu_vars], na.rm = TRUE) * NA ^ (rowSums(!is.na(data[,iu_vars])) == 0)
+
+data$dospert_total <- rowSums(data[,dospert_vars], na.rm = TRUE) * NA ^ (rowSums(!is.na(data[,dospert_vars])) == 0)
+
+save(data,file="pilot_data.RData")
+
+```
+
+
+```{r pages in round}
+unique(data$sg_2_page_in_round)
+
+summary(data$sg_2_security_consumed)
+```
+
+```{r within s}
+load("pilot_data.RData")
+
+
+# create long data for withing subjects analyses
+data_long <- data %>% pivot_longer(
+  consumed_vars, names_to = "round_num", values_to = "consumed"
+)
+
+# clean up round num variable
+data_long$round_num <- data_long$round_num %>%
+  sub("sg_", "",.) %>%
+  sub("_security_consumed", "",.) %>%
+  as.numeric()
+
+# create variable to log page displayed page for each observation
+data_long <- data_long %>%
+  dplyr::mutate(page = ifelse(round_num == 1,sg_1_page_in_round,
+                              ifelse(round_num == 2,sg_2_page_in_round,
+                                     ifelse(round_num == 3,sg_3_page_in_round,
+                                            ifelse(round_num == 4,sg_4_page_in_round,
+                                                   ifelse(round_num == 5,sg_5_page_in_round,
+                                                          ifelse(round_num == 6,sg_6_page_in_round,NA)))))))
+
+
+# basic scatter plot
+data_long %>%
+  ggplot(aes(x=round_num, y = consumed, colour = page)) + geom_jitter()+ geom_hline(yintercept=c(25), linetype='dashed', color=c('red'))
+
+#barplot
+ggplot(data_long, aes(fill=page, y=consumed, x=round_num)) + 
+    geom_bar(position="dodge", stat="identity") + geom_hline(yintercept=c(25), linetype='dashed', color=c('red'))
+
+# boxplots
+ggplot(data_long, aes(x=as.factor(round_num), y=consumed)) +
+  geom_boxplot() + geom_hline(yintercept=c(25), linetype='dashed', color=c('red'))
+
+ggplot(data_long, aes(x=as.factor(page), y=consumed)) +
+  geom_boxplot() + geom_hline(yintercept=c(25), linetype='dashed', color=c('red'))
+
+
+ggplot(data_long, aes(x=as.factor(round_num), y=consumed, color=page)) +
+  geom_boxplot() + geom_hline(yintercept=c(25), linetype='dashed', color=c('red'))
+
+#violin/boxplot
+# ggplot(data_long, aes(x=round_num, y=consumed, color=page)) +
+#   geom_violin(width=.4, alpha=.5) +
+#   geom_boxplot(width=.1, cex=.5)
+```
+
+```{r order analysis}
+# models for analyzing order effects
+m1_null <- lme4::lmer(consumed ~  (1 | participant_code), data = data_long, REML=FALSE)
+
+m1_order <- lme4::lmer(consumed ~ as.numeric(round_num) + (1 | participant_code), data = data_long, REML=TRUE)
+
+```
+
