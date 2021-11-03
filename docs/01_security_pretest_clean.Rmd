@@ -11,7 +11,6 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(readxl)
 library(here)
-opts_knit$set(root.dir = "here"())
 
 ```
 
@@ -45,7 +44,7 @@ data <- test_data %>%
   select(-contains(c("prolific", "completion", "mturk")))
 
 
-save(data,file="C:/Users/dalla/Google Drive/project_files/inequality_security/data/pretest_pilot_data.csv")
+save(data,file="C:/Users/dalla/Google Drive/project_files/inequality_security/data/pretest_pilot_data.RData")
 ```
 
 ```{r name cleaning}
@@ -126,8 +125,6 @@ summary(data$sg_2_security_consumed)
 ```
 
 ```{r within s}
-load("pilot_data.RData")
-
 
 # create long data for withing subjects analyses
 data_long <- data %>% pivot_longer(
