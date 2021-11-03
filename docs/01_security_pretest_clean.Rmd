@@ -7,14 +7,16 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(readxl)
+library(here)
+opts_knit$set(root.dir = "here"())
+
 ```
 
 
-```{r import}
-library(tidyverse)
-library(readxl)
-
-
+```{r import identified data, eval = FALSE}
 # read timer data
 out <- read_csv("C:/Users/dalla/Google Drive/offline_data_files/security_game/pilot_page_times_10_30.csv")
 
@@ -43,14 +45,12 @@ data <- test_data %>%
   select(-contains(c("prolific", "completion", "mturk")))
 
 
-save(data,file="C:/Users/dalla/Google Drive/project_files/inequality_security/data/pretest_pilot_data.RData")
-
-
+save(data,file="C:/Users/dalla/Google Drive/project_files/inequality_security/data/pretest_pilot_data.csv")
 ```
 
-
 ```{r name cleaning}
-load("pretest_pilot_data.RData")
+# here package being used because relative path is messing up (kicking me up to docs)
+load(here::here("data", "pretest_pilot_data.RData"))
 
 
 # delete columns totally unrelated to pretest
