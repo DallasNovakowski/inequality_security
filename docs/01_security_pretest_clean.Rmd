@@ -8,58 +8,86 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
+library(plyr)
 library(tidyverse)
 library(readxl)
 library(here)
 
+# raincloud plot
+library(readr)
+library(tidyr)
+library(ggplot2)
+library(Hmisc)
+library(RColorBrewer)
+library(reshape2)
+
+source("https://gist.githubusercontent.com/benmarwick/2a1bb0133ff568cbe28d/raw/fb53bd97121f7f9ce947837ef1a4c65a73bffb3f/geom_flat_violin.R")
 ```
 
 
-```{r import identified data, eval = FALSE}
-# read timer data
-out <- read_csv("C:/Users/dalla/Google Drive/offline_data_files/security_game/pilot_page_times_10_30.csv")
-
-out2 <- read_csv("C:/Users/dalla/Google Drive/offline_data_files/security_game/pilot_page_times_11_01.csv")
-
-out <- merge(out,out2, all = TRUE)
+```{r pilot data, eval = FALSE, warning=FALSE, echo=FALSE}
+# out <- read_csv("C:/Users/dalla/Google Drive/offline_data_files/security_game/pilot_page_times_10_30.csv")
+# 
+# out2 <- read_csv("C:/Users/dalla/Google Drive/offline_data_files/security_game/pilot_page_times_11_01.csv")
+# 
+# out <- merge(out,out2, all = TRUE)
 
 # read 
 test_data <- read_csv("C:/Users/dalla/Google Drive/offline_data_files/security_game/security_pretest_all_apps_wide-2021-10-30.csv")
 
 test_data2 <- read_csv("C:/Users/dalla/Google Drive/offline_data_files/security_game/security_pretest_all_apps_wide-2021-11-01.csv")
 
+# page_times <- read_csv("C:/Users/dalla/Google Drive/offline_data_files/security_game/security_pretest_PageTimes-2021-11-12(1).csv")
+
+
 test_data <- merge(test_data,test_data2, all = TRUE)
 
-names(out) <- gsub(x = names(out), pattern = "\\._", replacement = "_")
-
-names(out) <- gsub(x = names(out), pattern = "\\.", replacement = "_")
-
-names(test_data) <- gsub(x = names(test_data), pattern = "._", replacement = "_", fixed = TRUE)
-names(test_data) <- gsub(x = names(test_data), pattern = ".", replacement = "_", fixed = TRUE)
-
-out_wide <- pivot_wider(out, id_cols = participant_code, names_from = page_name, names_prefix ="time_", values_from = seconds_on_page)
-
-data <- test_data %>%
-   left_join(out_wide, by = c("participant_code")) %>%
-  select(-contains(c("prolific", "completion", "mturk")))
-
-
-save(data,file="C:/Users/dalla/Google Drive/project_files/inequality_security/data/pretest_pilot_data.RData")
 ```
 
-```{r name cleaning}
+
+```{r import identified data, eval = FALSE, echo=FALSE}
+# read timer data
+
+page_times <- read_csv("C:/Users/dalla/Google Drive/offline_data_files/security_game/security_pretest_processed_times-2021-11-12.csv")
+
+data <-  read_csv("C:/Users/dalla/Google Drive/offline_data_files/security_game/security_pretest_2021_11_21.csv")
+
+
+names(page_times) <- gsub(x = names(page_times), pattern = "\\._", replacement = "_")
+
+names(page_times) <- gsub(x = names(page_times), pattern = "\\.", replacement = "_")
+
+names(data) <- gsub(x = names(data), pattern = "._", replacement = "_", fixed = TRUE)
+names(data) <- gsub(x = names(data), pattern = ".", replacement = "_", fixed = TRUE)
+
+out_wide <- pivot_wider(page_times, id_cols = participant_code, names_from = page_name, names_prefix ="time_", values_from = seconds_on_page)
+
+data <- data %>%
+   left_join(out_wide, by = c("participant_code")) %>%
+  select(-contains(c("prolific", "completion", "mturk"))) %>%
+  filter(!is.na(participant_label))
+
+# save identified data
+save(data,file="C:/Users/dalla/Google Drive/offline_data_files/security_game/ident_pretest_data.RData")
+
+#de-identify
+data <- data %>%
+  select(-contains(c("participant_label")))
+
+save(data, file = here::here("data", "pretest_data.RData"))
+```
+
+
+```{r name cleaning, warning=FALSE, echo=FALSE}
 # here package being used because relative path is messing up (kicking me up to docs)
-load(here::here("data", "pretest_pilot_data.RData"))
+load(here::here("data", "pretest_data.RData"))
 
 
 # delete columns totally unrelated to pretest
 data <- data %>%
-  select(-starts_with(c("intro_notask", "slider_task", "merit", "security_game_1"))) %>%
-  select(-contains(c("payoff","mturk","id_in","player_role","bot","_ts_")))
+  select(-starts_with(c("intro_notask", "slider_task", "merit", "security_game_1","session"))) %>%
+  select(-contains(c("payoff","mturk","id_in","player_role","bot","_ts_", "index","current","time_started","visited","submit_missing", ".y", "round_number")))
 
-# select only relevant to pretest
-data <- data %>%
-  select(contains(c("comments","oTree_version","session_config","attention","prolific","time_","_age","gender","income","education","iu_", "dospert","security_game_pretest", "participant_code")))
 
 # clean names
 names(data) <- gsub(x = names(data), pattern = "questionnaires_1_player_", replacement = "", fixed = TRUE)
@@ -75,28 +103,71 @@ names(data) <- gsub(x = names(data), pattern = "attention_check_1_player_", repl
 data <- data %>%
   select(-contains(c("participation_fee","real_world_currency_per_point","attention_check_1_subsession_round_number","completionlink", "oTree_version_used","prolific_id")))
 
-data <- rename(data, comments = payment_info_1_player_comments)
-
 data$comments <- paste(data$comments, data$study_end_1_player_comments)
 
 data <- subset(data, select = -study_end_1_player_comments)
-  
+
+names(data) <- gsub(x = names(data), pattern = ".x", replacement = "", fixed = TRUE)
+
 
 data <- data %>%
   janitor::clean_names()      # clean names to be all lowercase, replacing spaces with "_"     
+
 
 names(data) <- gsub(x = names(data), pattern = "pre_test", replacement = "pretest", fixed = TRUE)
 names(data) <- gsub(x = names(data), pattern = "security_game_pretest", replacement = "sg", fixed = TRUE)
 names(data) <- gsub(x = names(data), pattern = "player_", replacement = "", fixed = TRUE)
 names(data) <- gsub(x = names(data), pattern ="subsession_", replacement = "", fixed = TRUE)
 
+pretest_initial_n <- nrow(data)
 ```
 
 
-```{r aggregation}
-data <- data %>%
-  filter(!is.na(age))
+```{r filtering, echo=FALSE}
+post_age_n  <- data %>%
+  filter(!is.na(age)) %>%
+  nrow()
 
+#after first attention check
+post_atn_n <- data %>%
+  filter(atn_other == "yes" | atn_other == "Yes") %>%
+  nrow()
+
+#after second attention check
+post_atn2_n <- data %>%
+  filter(atn_other2 == "yes" | atn_other2 == "Yes") %>%
+  nrow()
+
+#filtering for people who moderately understood comprehension check
+# data %>%
+#   filter(comp_check == "Deciding whether to try stealing from me" | comp_check == "Deciding whether to purchase a security product") %>%
+#   nrow()
+
+# strict interpretation of comprehension check 
+post_comp_n <-  data %>%
+  filter(comp_check == "Deciding whether to try stealing from me") %>%
+  nrow()
+
+```
+
+```{r actual screening}
+# actual screening, attention checks and moderate comprehension criteria
+data <-  data %>%
+  filter(!is.na(age) & !is.na(gender)) %>%
+  filter(comp_check == "Deciding whether to try stealing from me" | 
+           comp_check == "Deciding whether to purchase a security product") %>% 
+  filter(atn_other2 == "yes" | atn_other2 == "Yes") %>%
+  filter(atn_other == "yes" | atn_other == "Yes")
+
+summary(as.factor(data$gender))
+```
+
+
+A substantial portion of the sample is lost during data quality screening. From an initial n =`r pretest_initial_n`, removing missing age responses yields n = `r post_age_n`, one attention check retains n =`r post_atn_n`, and (before attention check screening) a strict interpretation of the comprehension check yields n = `r post_comp_n`.
+
+After all screening, and using a moderate threshold for comprehension checks, we are left with n=`r nrow(data)`
+
+```{r aggregation, echo=FALSE}
 
 # make lists of useful variables
 time_vars <- colnames(data[grepl('time_', colnames(data))])
@@ -113,19 +184,65 @@ data$iu_total <- rowSums(data[,iu_vars], na.rm = TRUE) * NA ^ (rowSums(!is.na(da
 
 data$dospert_total <- rowSums(data[,dospert_vars], na.rm = TRUE) * NA ^ (rowSums(!is.na(data[,dospert_vars])) == 0)
 
-save(data,file="pilot_data.RData")
+```
+
+
+# Time spent on pages
+
+How much time have participants spent on each task? Helps to tailor later studies.
+
+
+```{r time}
+time_data <- data[,time_vars] %>%
+   na.omit()
+
+
+boxplot(time_data)
+```
+
+We can see some outliers for time spent. At least for the purposes of estimating time spent, we should treat some outliers to prevent their outsized influence. By trimming them, we assume that these outliers are not "true" values, but rather reflect people drifting to another task.
+
+```{r time filter}
+time_data <- time_data %>%
+  filter(time_consent <= 100 & time_dospert <= 550 & time_at_bo <= 20)
+
+nrow(time_data)
 
 ```
 
 
-```{r pages in round}
-unique(data$sg_2_page_in_round)
+```{r curate time}
+time_means <- sapply(time_data, mean)
 
-summary(data$sg_2_security_consumed)
+time_means
+
+curate_time <- sum(time_means[c("time_consent","time_at_bo","time_demographics", "time_task_intro", "time_pretest50_02","time_iu","time_iu", "time_ac1","time_ac2","time_cc", "time_comments","time_consent")])
 ```
 
-```{r within s}
+After trimming some extreme observations, participants spent an average of `r round(sum(sapply(time_data, mean))/60,2)` minutes on the study. Our targeted configuration for our first inequality study, would take an estimated `r round(curate_time/60,2)` minutes.
 
+
+```{r time detritus, eval=FALSE, warning=FALSE, echo=FALSE}
+
+#time_pretest50_02 > 2 & time_pretest60_02 > 2 & time_pretest75_02 > 2 & time_pretest50_04 > 2 & time_pretest60_04 > 2 & time_pretest75_04 > 2
+
+
+time_quantiles <- sapply(time_data, quantile)
+```
+
+
+
+# Consumption exploration
+
+```{r pages in round, warning=FALSE, echo=FALSE}
+data <- data %>%
+  filter(!is.na(sg_2_security_consumed))
+
+```
+
+After attention checks, we are left with `r nrow(data)` participants.
+
+```{r within, warning=FALSE, echo=FALSE, message=FALSE, results='hide', include=FALSE}
 # create long data for withing subjects analyses
 data_long <- data %>% pivot_longer(
   consumed_vars, names_to = "round_num", values_to = "consumed"
@@ -147,32 +264,90 @@ data_long <- data_long %>%
                                                           ifelse(round_num == 6,sg_6_page_in_round,NA)))))))
 
 
-# basic scatter plot
-data_long %>%
-  ggplot(aes(x=round_num, y = consumed, colour = page)) + geom_jitter()+ geom_hline(yintercept=c(25), linetype='dashed', color=c('red'))
+data_long <- data_long %>%
+  dplyr::mutate(prob = ifelse(page == "PreTest50_02" | page == "PreTest50_04",  50,
+                              ifelse(page == "PreTest60_02" | page == "PreTest60_04",  60,
+                                     ifelse(page == "PreTest75_02" | page == "PreTest75_04",  75, NA
+  ))))
 
-#barplot
-ggplot(data_long, aes(fill=page, y=consumed, x=round_num)) + 
-    geom_bar(position="dodge", stat="identity") + geom_hline(yintercept=c(25), linetype='dashed', color=c('red'))
-
-# boxplots
-ggplot(data_long, aes(x=as.factor(round_num), y=consumed)) +
-  geom_boxplot() + geom_hline(yintercept=c(25), linetype='dashed', color=c('red'))
-
-ggplot(data_long, aes(x=as.factor(page), y=consumed)) +
-  geom_boxplot() + geom_hline(yintercept=c(25), linetype='dashed', color=c('red'))
+data_long <- data_long %>%
+  dplyr::mutate(cost = ifelse(page == "PreTest50_02" | page == "PreTest60_02"| page == "PreTest75_02",  02,
+                              ifelse(page == "PreTest50_04" | page == "PreTest60_04"| page == "PreTest75_04",04, NA)))
 
 
-ggplot(data_long, aes(x=as.factor(round_num), y=consumed, color=page)) +
-  geom_boxplot() + geom_hline(yintercept=c(25), linetype='dashed', color=c('red'))
+data_long$page <- data_long$page %>%
+  sub("PreTest", "",.)
 
-#violin/boxplot
-# ggplot(data_long, aes(x=round_num, y=consumed, color=page)) +
-#   geom_violin(width=.4, alpha=.5) +
-#   geom_boxplot(width=.1, cex=.5)
 ```
 
-```{r order analysis}
+
+```{r initial exploration, warning=FALSE, echo=FALSE}
+# data_5002 <- data_long %>% 
+#   filter(page == "PreTest50_02") 
+
+skew_groups <- by(data_long$consumed, data_long$page, moments::skewness)
+
+kurt_groups <- by(data_long$consumed, data_long$page, moments::kurtosis)
+
+sd_groups <- by(data_long$consumed, data_long$page, sd)
+
+mean_groups <- by(data_long$consumed, data_long$page, mean)
+
+save(skew_groups, kurt_groups,sd_groups, mean_groups, file = here::here("output", "pretest_output.RData"))
+```
+
+Note: for x_04 conditions, 25 constitutes the maximum possible value for consumption.
+
+```{r raincloud, warning=FALSE, echo=FALSE, message=FALSE}
+
+raincloud_theme = theme(
+text = element_text(size = 10),
+axis.title.x = element_text(size = 16),
+axis.title.y = element_text(size = 16),
+axis.text = element_text(size = 14),
+axis.text.x = element_text(angle = 45, vjust = 0.5),
+legend.title=element_text(size=16),
+legend.text=element_text(size=16),
+legend.position = "right",
+plot.title = element_text(lineheight=.8, face="bold", size = 16),
+panel.border = element_blank(),
+panel.grid.minor = element_blank(),
+panel.grid.major = element_blank(),
+axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'))
+
+
+g <- ggplot(data = data_long, aes(y = consumed, x = page, fill = page)) +
+  geom_flat_violin(position = position_nudge(x = .2, y = 0), alpha = .8) +
+  ggbeeswarm::geom_quasirandom(aes(y = consumed, color = page),
+    ## draw bigger points
+    # size = 1,
+    ## add some transparency
+    alpha = .5,
+    ## control range of the beeswarm
+    width = .2
+  )  +
+  
+# geom_point(aes(y = consumed, color = page), position = position_jitter(width = .15), size = .5, alpha = 0.8) +
+  geom_boxplot(width = .1, guides = FALSE, outlier.shape = NA, alpha = 0.5) +
+  expand_limits(x = 5.25) +
+  guides(fill = FALSE) +
+  guides(color = FALSE) +
+  scale_color_brewer(palette = "Spectral") +
+  scale_fill_brewer(palette = "Spectral") +
+# coord_flip() +
+  theme_bw() +
+  raincloud_theme
+
+g
+
+ggsave(here::here("figs", "securitypretest_rainclouds.png"))
+```
+
+
+For this project, we will be using values from the 50_02 condition, which corresponds to a baseline 50% chance of successful thefts, and each unit of security costing $0.02. This condition seems to produce the least skewed data, at `r round(skew_groups["50_02"],2)`
+
+```{r order analysis, warning=FALSE, echo=FALSE}
 # models for analyzing order effects
 m1_null <- lme4::lmer(consumed ~  (1 | participant_code), data = data_long, REML=FALSE)
 
