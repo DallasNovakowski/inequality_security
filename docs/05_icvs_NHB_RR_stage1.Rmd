@@ -31,18 +31,17 @@ authornote: |
 
 abstract: |
 
-  A growing body of evidence suggests that economic inequality causes humans to take more risks and engage in aggressive behaviours (Payne, et al., 2017). In a “winner-takes-all” environment, risky activities such as gambling, lying, and crime can be a person's only means of accessing contested resources and goals. 
+  A growing body of evidence suggests that economic inequality causes humans to take more risks and engage in aggressive behaviours (Payne, et al., 2017). In a ?winner-takes-all? environment, risky activities such as gambling, lying, and crime can be a person's only means of keeping up with competitors and accessing contested resources. 
   
   There is comparitively little research investigating whether people anticipate risk-taking and conflict from their neighbors in unequal environments. An informative context for examining the fear-provoking effect of inequality is the security market, which offers goods that protect customers from the actions of malicious agents. For instance, barred windows are purchased because they (purportedly) protect consumers from break-ins. Given the costly nature of these security products, security consumption can only be worthwhile if a consumer expects that other people have harmful intentions. 
   
-  The proposed research will examine whether inequality will increase consumers' willingness to purchase security products through two studies: 1) manipulations of inequality and distributional fairness in an economic game context, and 2) multilevel analysis of the International Crime Victimization Survey, a cross-national survey, totaling n = 52,909 respondents’ experiences with crime, policing, crime prevention, and feelings of unsafety. Together, this project seeks to test the fear-provoking mechanism of inequality, and assess whether a country's income inequality is associated with individual-level consumption of security goods.
+  The proposed research will examine whether inequality will increase consumers' willingness to purchase security products through two studies: 1) manipulations of inequality and distributional fairness in an economic game context, and 2) multilevel analysis of the International Crime Victimization Survey, a cross-national survey, totaling n = 52,909 respondents? experiences with crime, policing, crime prevention, and feelings of unsafety. Together, this project seeks to test the fear-provoking mechanism of inequality, and assess whether a country's income inequality is associated with individual-level consumption of security goods.
   
   
   <!-- https://tinyurl.com/ybremelq -->
   
 keywords          : "keywords"
 wordcount         : "X"
-
 
 floatsintext      : no
 figurelist        : no
@@ -76,7 +75,7 @@ knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 
 <!--# 1.Inequality 2.Inequality risk-taking 3.Inequality high stakes 4. High stakes can't afford to sit out 5. (compositional - poverty) 6.(Psychosocial - relative deprivation) 7. Psychosocial relative fitness and positional bias 8. Self-protrction and trust -->
 
-<!--# 1. security 2. security and trust 3. Inequality and trust 4. Inequality and risk 5. Inequality and security -->
+<!--# 1. security 2. security and trust 3. Inequality and trust 3.1. Inequality and risk 4. Inequality and security -->
 
 Seeking protection against rivals and enemies has consistently attracted humans' interest and resources. Despite worldwide crime rates generally decreasing [@unitednations2017], demand for security products, such as alarm systems, is growing (projected to increase 29% between 2021 and 2025; [@marketsandmarkets2021]. The choice to purchase security goods thus represents a substantial, and poorly understood, allocation of resources.
 
@@ -84,179 +83,71 @@ Seeking protection against rivals and enemies has consistently attracted humans'
 
 Products that (purportedly) improve security are one of the few goods that confer little intrinsic value to consumers. Whereas vacations are inherently satisfying, the costs of burglar alarms, sturdy locks, and security cameras are only worthwhile *if consumers expect that other agents will cause them harm*. People's choice to consume security products is therefore an economically and socially relevant reflection (or consequence) of distrust in day-to-day life [@schul2008; @hardin2006; @mcevily2012].
 
-Trust is important for navigating cooperative dilemmas. Whether in romantic relationships, business partnerships, or political alliances, individuals can encounter opportunities to secretly benefit themselves, at the cost of their partners. If partners can overcome the shared threats of opportunism and maintain trust, they can keep mutualistic relationships intact, and potentially improve access to other valuable partners [@frank1988] <!--# akerlof1983 -->.
+Some evidence suggests that people can be overly distrustful. @mcevily2012 found that in a behavioural distrust game, participants tended to spend too much money to prevent their partner from keeping large sums of shared wealth. Paradoxically, security consumption can even *increase* one's vulnerability to victimizations. Surveying South African suburbs and security practitioners, @marks2015 found that households surrounded with high walls have obstructed lines of sight to and from the property, reducing the effectiveness of police patrols and "natural surveillance" by neighbors.
 
-The pursuit of security can require substantial tradeoffs for consumers; every dollar spent on a heavy-duty deadbolt or theft insurance cannot be spent on other goods such as savings, recreation, or healthcare.
-
-A normative prescription for how much security people *should* consume is unclear; the "right" amount of security consumption can vary across individuals and circumstances (e.g., a rich vs. poor person purchasing security, or how someone weighs the likelihood of worst-case scenarios). Paradoxically, security consumption can sometimes *increase* one's vulnerability to victimizations. Surveying South African suburbs and security practitioners, @marks2015 found that households surrounded with high walls have obstructed lines of sight to and from the property, reducing the effectiveness of police patrols and "natural surveillance" by neighbors.
-
-Likewise, security measures are generally individual solutions to collective problems
-
-If someone locks their doors to their neighbors, should they be commended for their prudence or disparaged for their suspicion?
-
-the end result increases the vulnerability of the entire community, as the reduced visibility within the neighborhood allows for criminals to enter the neighborhood and properties without detection [@marks2015]
-
-The architecture of South African suburban life provides, as Bickford puts it, 'a hostile environment for the development of democratic imagination and participation' (2000: 356).
-
-an entire neighborhood builds high walls around their properties walls such costly fortifications can actually increase the vulnerability of one's home and one's community,
-
-Consider the case of building high walls around one's home.
-
-may nullify many economies of scale that are otherwise accessible in communal living.
-
-Like distrust, security consumption can easily be considered wasteful given its costs.
-
-Vilalta (2012) found that fear of crime when home along was negatively associated with having high walls, but had no significant relationship with other measures such as burglar alarms, special doors/ locks, reinforced windows, or watchdogs.
-
-its value is revealed in upon consideration of irreversible losses. If some amount of security consumption can reduce the likelihood of material destitution or even death, security can be worth the price for consumers to "stay in the game" and retain potential access to upside opportunities in the future.
-
-Consumers and markets alike are influenced by the pursuit of security. In the United States, insurance premiums totaled to \$1.2 trillion in 2017 [@insuranceinformationinstitute2020].
-
-The pursuit of security can require substantial tradeoffs for consumers; every dollar spent on a heavy-duty deadbolt or theft insurance cannot be spent on other goods such as savings, recreation, or healthcare.
-
-A significant
-
-Likewise, concerns over safety are associated with reduced use of public transportation (Delbosc & Currie, 2012; Loukaitou-Sideris, 1997).
-
-with minimal surveillance cost
-
-Encapsulated
-
-security can entrench inequalities
-
--   Every dollar spent on a heavy-duty deadbolt cannot be spent on other goods such as savings or healthcare. As such, security goods are only worthwhile if one expects that other people are malevolent.
-
--   However, this country has notable fissures in our national fabric, revealed through intergroup conflicts drawn on lines such as class, ethnicity, and religion. Such underlying tensions can quickly manifest in mistrust and segregation, eroding individuals' basic human rights. These social divisions can jeopardize commitments to practices that could improve long-term collective welfare, including environmental protection, international collaboration, and civic engagement.
-
--   The security industry provides a compelling intersection of social behaviour and an expanding market. This lens reveals numerous research questions that may can help uncover the etiology of security consumption, such as the roles of income inequality, household wealth, cultural norms, trust in police, personality traits, prejudice, and the consumption of fear-inducing news.
-
--   the consumption of security products can be an exclusionary practice. Individuals pay sizable prices to live in a gated community precisely because it offers control over who can enter. This control of space and resources designates certain individuals and groups as unwelcome and threatening. As such, security consumption can serve to fortify existing inequalities and demeaning practices.
-
--   Individuals in marginalized groups are far more likely to find themselves in dangerous areas while also having less money to spend on security. Correspondingly, marginalized groups may be more likely to seek out alternative security solutions. They might instead adopt activity constraints (e.g., not going out after dark), vigilance practices (e.g., developing insomnia), or a reliance on local gangs. Although marginalized groups may prove to be absent from much of the security market, they are likely still incurring substantial costs to ensure their safety. Understanding these security practices may help to further explain how financial, social, and health risk factors can compound a constellation of vulnerability.
-
-    There is a blurred line between prudence and paranoia. As history has proved, one of the largest threats to people is other humans. Simultaneously, a hallmark of human nature and our species' success is our cooperation with one another.
-
--   These expenditures have substantial impacts on budgets in households and nations alike, and may indicate an increasingly fearful and suspicious populace. Understanding when people seek to protect themselves from each other is therefore paramount to fostering human and social development.
-
-Given the costs and benefits of trust, and the growing security market, it is important to understand when and why people make costly commitments to protect themselves from their peers, partners, and neighbors.
-
-Although the field of study is relatively underdeveloped, a relationship between inequality and reduced social trust has been consistently observed in national and international studies [@knack1997], [@zak2001], [@berggren2006], [@leigh2006],[@bjørnskov2007], and [@wilkinson2010] [@elgar2010; @barone2016; @decourson2021a].
+There is a blurred line between prudence and paranoia. As history has proved, one of the largest threats to people is other humans; other humans (via murder) are only outranked by mosquitoes as the deadliest animal to modern Homo sapiens [@gates2014]. Likewise, social life carries the risk of property crimes and defection in collective action problems (e.g., commitments to monogamy, business contracts). Humans' sociality carries enormous benefits to individuals, including life-saving aid in times of need, high levels of skill specialization, and access to skills and knowledge gained by others [@henrich2001]. Given the substantial benefits and risks of social interaction, when will a person spend their limited time, money, and opportunities protecting themselves from other people?
 
 ## Inequality and Distrust
 
-This project seeks to test the hypothesis that inequality increases security consumption (and distrust) because people expect their partners to experience envy/inequality aversion/relative deprivation. This proposed mechanism, which we call envy anticipation, is specific to predicting reduced trust towards relatively less wealthy individuals. In this respect, it differs from existing inequality-trust hypotheses, which only predict reduced trust towards wealthy individuals [@fischer2006].
+Despite inequality increasing within countries [@saez2016], there is little research examining whether inequality causes people to *expect* desperation and risk-taking, and become distrustful of others. Although the field of study is relatively underdeveloped, a relationship between inequality and reduced social trust has been consistently observed in national and international studies [@knack1997], [@zak2001], [@berggren2006], [@leigh2006],[@bjørnskov2007], and [@wilkinson2010] [@elgar2010; @barone2016; @decourson2021].
 
-## Inequality and Risk-Taking
+Although scholarly work in the area remains in its early stages, multiple theoretical streams have emerged to explain how inequality reduces trust. These mechanisms range from from changes in intergroup contact, opportunity costs of vigilance, and incentives for antisocial behaviour [reviewed in @jordahl2007]. However, this project's theoretical approach is not concerned with changes in the immediate payoffs of antisocial behaviour, but rather with how inequality changes people's preferences over these incentives.
 
-A growing body of evidence suggests that economic inequality leads to increased risk-taking and conflict in humans [@krupp2018]. In unequal environments, individuals are more likely to resort to risky, hostile, and criminal activities in desperate attempts to compete for otherwise inaccessible positions and resources [@mishra2015]. The impact of inequality on individual decision-making likewise manifests through higher nation-level homicide rates [@daly2016], increased gambling [@payne2017], consumer debt [@christen2005], and reduced cooperation [@burton-chellew2013 ; @anderson2008]. Despite inequality increasing within countries [@saez2016], there is little research examining whether inequality causes people to *expect* desperation and risk-taking, and become distrustful of others.
+A simulation study shows that in unequal environments, individuals unable to meet their need thresholds will try to exploit cooperative groups, leading others to eventually avoid cooperation altogether [@decourson2021]. These results are consistent with risk-sensitivity theory [RST, @caraco1980], which suggests that organisms will take risks when more predictable strategies cannot meet the organism's goals (e.g., starvation thresholds). The results in @decourson2021 were obtained through assumptions of the cascading effects of poverty. Through so-called compositional effects of inequality, unequal environments increase rates of poverty, leading to risky (and sometimes antisocial) behaviours. Over time, individuals who are not desparate will then choose to forego the potential benefits of cooperation in order to avoid potential exploitation.
 
-Access to resources such as money, territory, status, or food tend to be contested. Even when these goods are divisible, they are often distributed unevenly between agents, with some parties getting more than their neighbors (REF). Inequality increases the stakes of competitions: losing to one's peers means lost access to institutional influence, life-saving medications, or the ability to feed one's family. In an unequal environment, falling behind can carry serious consequences, and humans are quick to respond to these conditions.
+## Inequality and security consumption: an Envy Anticipation Hypothesis
 
-According to risk-sensitivity theory [RST, @caraco1980], risk-taking can be an adaptive response to desperate circumstances. Originally conceived to explain the foraging behaviours of birds, RST predicts that organisms will take risks when more predictable strategies cannot meet the organism's goals (e.g., starvation thresholds). Accordingly, inequality fosters risk-taking by increasing the distance between individuals and their goals.
+This project seeks to test the hypothesis that inequality increases security consumption (and distrust) because people expect their partners to experience envy/inequality aversion/relative deprivation. This proposed mechanism, which we call envy anticipation, is specific to predicting reduced trust towards relatively less wealthy individuals among comparators.
 
-Two major streams of explanation have surfaced to explain how population-level inequality influences risk-taking in individuals. Firstly, inequality increases risk-taking through *absolute deprivation*. Unequal societies tend to have more poverty, and poor people are more likely to take risks to meet their basic needs [@pridemore2008]. Secondly, risk-taking can be a response to *relative deprivation*, where even well-off individuals can feel disadvantaged compared to others, then take risks in an attempt to keep up with peers/competitors [@mishra2017].
+### Inequality and risk
 
-## Distrust and security consumption
+A growing body of evidence suggests that economic inequality leads to increased risk-taking and conflict in humans [@krupp2018]. In unequal environments, individuals are more likely to resort to risky, hostile, and criminal activities in desperate attempts to compete for otherwise inaccessible positions and resources [@mishra2015]. The impact of inequality on individual decision-making likewise manifests through higher nation-level homicide rates [@daly2016], increased gambling [@payne2017], consumer debt [@christen2005], and reduced cooperation [@burton-chellew2013 ; @anderson2008].
 
-Why is trust useful? What risks does it carry?
+The relative state model [@mishra2017] posits that individuals take risks not only to escape material destitution, but also to keep up with competitors. As a result, risk-taking can be influenced by social comparisons. As wealth distributions become more skewed, so do comparison standards. Under conditions of inequality, individuals set more ambitious goals, and subsequently take more risks, as they try to close the gap between their current state and their aspiration levels [@payne2017]. Likewise, being worse off than others can lead to emotional responses of envy and personal relative deprivation, which can be linked to gambling as well as spiteful behaviours [@callan2008]. Likewise, inequality leads to feelings of envy and spiteful behaviours [@wobker2015].
 
--   maintaining cooperation in non-zero sum games
+Given the evidence for inequality's effect on feelings of disadvantage and risk-taking, we hypothesize that people expect envious and dissatisfied reactions from peers following cues of economic disparities. Effective social behaviour should acknowledge the power of emotions to mobilize behaviour. For instance, in the two-player ultimatum game, Proposers most often offer 50% of an endowment to their partner. About half of Responders reject proposals less than 20% of the total resource, causing both parties to get nothing [reviewed in @camerer2011].
 
--   addressing coordination problems
+Such generosity in the ultimatum game is in the proposer's approximate self-interest [FRANK?]. A payoff-maximizing Proposer might be tempted to offer the smallest nonzero sum possible, expecting the Responder to accept a profitable transaction. However, if the Responder is likely to reject profitable, but unequal offers, then a proposer's best chance to get any money is to offer an equal split of the funds. By failing to anticipate inequality aversion in their partner, actors would often have their offer rejected and obtain *worse* outcomes. Given that interpersonal security measures are specifically designed to deter antagonistic social partners, decision-makers must consider others' intentions when deciding whether to purchase security goods. Specifically, this project will examine whether the presence of economic inequality heightens participants' expectations of antagonism from their partners, and subsequently participants' willingness to engage in security consumption.
 
-## Protecting against Risky Behaviour: Distrust = The anticipation of conflict - Rationality in the face of desparation - **Desperate neighbors are a security hazard, envy/deprivation anticipation/forecast theory**
-
-biases expectations of others' behaviour.
-
-**homophily - social barriers** (McPherson, Smith-Lovin, and Cook 2001) and aversion to heterogeneity (Alesina and La Ferrara 2002). Spirit level
-
--   Individuals tend to assort on income level, having reduced contact with,
-
--   assortment on income level -\> reduced social contact -\> group identification and discrimination -\> reduced empathy -\> reduced trust
-
--   suggests trust would only be decreased between (wealth) groups
-
--   wouldn't account for the high levels of conflict within income groups
-
-**decourson & nettle: compositional**
-
--   reacting to acts of criminality - mediated through crime rates
-
-Researchers have suggested that inequality erodes trust by breaking down social capital (norms) and engendering greater psychological competitiveness [@decourson2021a; @barone2016a]. This project aims to examine on whether inequality causes people to *anticipate* envy and risk-taking from their peers, leading to distrustful behaviours.
-
-hypotheses
-
-maintaining hierarchy
-
--   only rich people would do it
-
-**breaking down social norms**
-
-people are less caring of one another, there is less mutuality in relationships, people have to fend for themselves and get what they can - so, inevitably, there is less trust.
-
-de Tocqueville pointed
-
-out, we are less likely to empathize with those not seen as equals; material differences serve to divide us socially.
-
-Scholarly work on the relationship between inequality and trust remains in its early stages, although a
-
-### Emotions as a credible threat
-
-Moral sentiments serve as a binding commitment that can deter opportunistic behaviour from social partners
-
-malicious envy
-
-a shrewd third party should acknowledge the power of emotions to mobilize behaviour
-
-rational calculations play an indirect role in governing behaviour - instead, rational calculations are considered an"input into the reward mechanism" [@frank1988, p. 53], which is argued to be a more powerful motivator of behaviour
-
-In the scope of distrust, individuals act to address feelings of fear or anxiety, where their aversion to these feelings effectively alters their preferences to available choice alternatives
-
-"by the same toke, someone who becomes enraged when dealt with unjustly does not need a formal contract to commit him to seek revenge. He will seek revenge because he wants to, even when , in purely material term, it does not pay. His geelings of anger will offset his material incentives." (p. 53)
-
-"the impulse to seek revenge is likewise counterproductive unless others have some way of anticipating that one has it" (p.54)
-
-Given the evidence for inequality's effect on individual risk-taking, we hypothesize that people use cues of economic disparities to infer that risky and hostile behaviours are more likely to occur. For instance, in the two-player ultimatum game, Proposers most often offer 50% of an endowment to their partner. About half of Responders reject proposals less than 20% of the total resource, causing both parties to get nothing [reviewed in @camerer2011].
-
-Beyond altruism and the proposer's taste for fairness, generosity in the ultimatum game is in the proposer's approximate self-interest [FRANK?]. A payoff-maximizing Proposer might be tempted to offer the smallest nonzero sum possible, expecting the Responder to accept a profitable transaction. However, if the Responder is likely to reject profitable, but unequal offers, then a proposer's best chance to get any money is to offer an equal split of the funds. By failing to anticipate inequality aversion in their partner, actors would often have their offer rejected and obtain *worse* outcomes.
-
-Given that interpersonal security measures are specifically designed to deter antagonistic social partners, decision-makers must consider others' intentions when deciding whether to purchase security goods. Specifically, this project will examine whether the presence of economic inequality heightens participants' expectations of antagonism from their partners, and subsequently participants' willingness to engage in security consumption.
-
-acquisitive vs. non-acquisitive crimes
-
--   scramble vs interference competition
-
-Thus, prospective consumers of security would do well to recognize the potentially corrosive effects of inequality on partners' intentions.
-
-the proposition follows that *1) when inequality increases (whether in income or wealth*)*, individuals will spend more on security goods*.
-
-Criminologists have found that perceived victimization risk leads to greater security behaviours [@kanan2002], while psychologists have documented the effects of inequality on crime and antisociality [@daly2016]. However, there has been little integration of these streams of research. This project offers a contribution by testing a hypothesis that intersects the disciplines of criminology, psychology, and marketing: that consumers' perceived victimization risk, and subsequent consumption of security products, will grow with increasing economic inequality.
-
-At its most comprehensive, security consumption could be considered as any prevention-focused activity, conducted by an agent seeking to minimize the expected costs from harms. Security consumption can be defined as an expenditure of resources in the consumer context that helps the agent to (a) recover from, (b) cope with, (c) avoid, and/or (d) deter hazards. However, this proposal will focus on the threats posed by other people, and consequently, the consumption of deterrence-focused goods. This emphasis on social sources of harm reveals how decision-makers must consider others' intentions when deciding whether to purchase security goods. Specifically, security behaviours are heavily influenced by the hypothetical imperative: *if I expect others to [try to steal]{.ul}, my best response is to [purchase security products]{.ul}*; [@hargreaves-heap2004].
-
-Life-altering hazards can come from a variety of sources (natural disasters, economic instability, pandemics). However, other humans (via murder) are only outranked by mosquitoes as the deadliest animal to modern Homo sapiens [@gates2014]. Likewise, social life carries the risk of property crimes and defection in collective action problems (e.g., commitments to monogamy, business contracts). Humans' sociality carries enormous benefits to individuals, including life-saving aid in times of need, high levels of skill specialization, and access to skills and knowledge gained by others [@henrich2001]. Given the substantial benefits and risks of social interaction, when will a person spend their limited time, money, and opportunities protecting themselves from other people?
-
-When faced with the problem of consuming security goods to protect against social threats, it is critical for decision-makers to understand the beliefs, preferences, and intentions of their social partners. Mistaking a partner's willingness to inflict harms can result in wasted resources in the presence of a benevolent or indifferent partner, or can lead to a vulnerability being exploited by a hostile agent. Similar to organism's abilities to detect and respond to predators and pathogens, humans are responsive to environmental cues when deciding whether a social interaction is likely to be harmful (e.g., reciprocity, reputation, group membership; [@schmid2021; @alves2018]
-
-Purchasing security products against social threat is a potent way of measuring distrust amongst individuals, "incur[ing] costs to mitigate their vulnerability." [@mcevily2012, p. 287]
-
-## Protecting from inequality-driven conflict
-
-***Push and pull hypothesis of inequality:*** Following unequal distribution of resources, disadvantaged individuals resort to risky behaviours to reduce the observed disparity, leading others (regardless of resource access) to seek protection against these risky and possibly antisocial actions.
-
-attempt to maintain their positions.
+This theory of envy anticipation makes similar directional predictions as some existing theories of distrust (e.g., theories on opportunity costs), but makes these predictions under more generalized circumstances. Even when individuals are not in absolute poverty, not offered larger material incentives for antisocial behaviour, or not facing different opportunity costs, we would still predict that inequality would foster distrust and security consumption.
 
 # Methods
+
+Methods and preregistration incoming
+
+## Experiments on economic inequality in the Security Game
+
+Interactive demos of experimental games can be accessed at <https://security-pretest.herokuapp.com/demo>, project folder with all raw code can be accessed at <https://github.com/DallasNovakowski/security_game>.
+
+### Proposed sample characteristics
+
+### experimental procedures
+
+#### The security game
+
+Economic games examining self-protection are not new. Most notably, @mcevily2012 devised a behavioural distrust game, whereby participants choose whether to incur a cost that guarantees that their partner splits a surplus income equally. Compared to the distrust game, the security game is explicitly probabilistic - partners have risky choice to take funds for themselves, and security expenditures reduce the probability of successful "attacks."
+
+A pretest of n=`r pretest_initial_n` participants was conducted to find which game configurations that had a favourable distribution, while avoiding ceiling/floor effects. This project will use values from the 50_02 condition, which corresponds to a baseline 50% chance of successful thefts, and each unit of security costing \$0.02. This condition seems to produce the least skewed data, at `r round(base_skew,2)`.
+
+![](C:/Users/dalla/Google%20Drive/project_files/inequality_security/figs/securitypretest_rainclouds.png){width="60%"}
+
+#### Inequality vs. unfairness - meritocracy and discrimination
+
+### Measurement and variables
+
+### Inclusion/exclusion criteria (e.g., outliers)
+
+### Proposed analysis pipeline, including all preprocessing steps, precise description of all planned analyses
+
+### Analysis procedure
+
+### Data analysis
 
 ## Multilevel Analysis of the International Crime Victimization Survey
 
 **The Methods section in Letters and Articles should ideally not exceed 3,000 words but may be longer if necessary**
 
-Atkinson and
-
-Brandolini (2001) discuss these and several related pitfalls in their excellent survey on the use of
-
-secondary data sets in studies of income inequality.
+Atkinson and Brandolini (2001) discuss these and several related pitfalls in their excellent survey on the use of secondary data sets in studies of income inequality.
 
 The relationship between country-level inequality and the consumption of security products will be tested using a multilevel linear regression. This analysis will be accomplished using a combination of three archival datasets.
 
@@ -336,35 +227,13 @@ xtmixed security_winz num_victim_5yr_winz gini_wc gdppc_2004_6\_ws age_cent empl
 
 **For frequentist analysis plans, the a priori power must be 0.95 or higher for all proposed hypothesis tests.**
 
+We used r package SuperPower for our power analyses
+
 In the case of highly uncertain effect sizes, a variable sample size and interim data analysis is permissible but with inspection points stated in advance,
 
 ### Full descriptions must be provided of any outcome-neutral criteria that must be met for successful testing of the stated hypotheses.
 
 Such quality checks might include the absence of floor or ceiling effects in data distributions, positive controls, or other quality checks that are orthogonal to the experimental hypotheses.
-
-### Analysis procedure
-
-### Data analysis
-
-## Experiments on economic inequality in the Security Game
-
-#### The security game
-
-Economic games examining self-protection are not new. Most notably, McEvily et al. (2012) devised a behavioural distrust game, whereby participants choose whether to incur a cost that guarantees that their partner splits a surplus income equally. Compared to the distrust game, the security game is explicitly probabilistic - partners have risky choice to take funds for themselves, and security expenditures reduce the probability of successful "attacks."
-
-### Inequality vs. unfairness - meritocracy and discrimination
-
-### Proposed sample characteristics
-
-### Inclusion/exclusion criteria (e.g., outliers)
-
-### Measurement and variables
-
-### experimental procedures
-
-### Proposed analysis pipeline, including all preprocessing steps, precise description of all planned analyses
-
-### Power analysis (Neyman=Pearson inference)
 
 ### Analysis procedure
 

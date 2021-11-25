@@ -1,9 +1,11 @@
 ---
 title: "ICVS exploration, assumption check, and contingency procedure"
+date: "`r Sys.Date()`"
 output: 
   html_document:
     number_sections: true
     toc: true
+    toc_float: true
 bibliography: references.bib
 ---
 
@@ -51,7 +53,6 @@ The use of survey weights has cascading effects: survey weights can only be used
 <!-- Stata is far more developed for multilevel analysis with survey weights. For instance, it provides model-wide Cook's D values for just level-2 units, whereas R can do it only after making a new dataset. If we are going to use a package that has poor integration with rmarkdown, we might as well use the program that best handles the statistics, and save ambitions for a reproducible manuscript for later projects. -->
 
 <!--# The relationship between country-level inequality and the consumption of security products will be tested using a multilevel linear regression. This analysis will be accomplished using a combination of three archival datasets. Firstly, indicators of security consumption have been accessed from the International Crime Victimization survey (ICVS; REF), which is an accumulation of standardized sample surveys to look at householders' experiences with crime, policing, crime prevention and feelings of unsafety. Although it does not consist of longitudinal observations, the ICVS has been distributed across five phases over fifteen years (1989, 1992, 1996, 2000, 2005), totaling 300,000 people and 78 different countries (Data Archiving and Networked Services, n.d.). For the purposes of this study, it is most notable that this survey contains items such as respondents' adopted measures to protect themselves against burglary. Secondly, nation-level inequality in disposable income was accessed through the Standardized World Income Inequality Database (SWIID; REF). The SWIID has been designed to maximize the comparability of income inequality data while maintaining the widest possible coverage across countries and over time. As a result, the gini coefficients are accompanied by standard errors to reflect uncertainty in the estimates. Lastly, countries' expenditure-side real GDP was retrieved from the Penn World Table, version 10.0 (PWT; REF). The selected GDP values are adjusted for Purchasing Power Parity, "to compare relative living standards across countries at a single point in time" (https://www.rug.nl/ggdc/productivity/pwt/?lang=en). Nations' GDP values were divided by their population sizes to yield a per-capita GDP value, which will be used for these analysis.Although the above datasets extend across multiple years, the current analysis will be limited to observations across 2004-2006. Imposing this restriction allows for a sufficient number of countries, combined with relative recency of data. After a conservative exclusion process for missing data, survey sweeps conducted across 2004-6 yielded 31 countries with 85,085 participants, with a minimum of 790 participants per country. An exclusion strategy maximizing the number of variables yields 27 countries, and 48,671 participants. -->
-
 
 ```{r victimization transformation, warning=F, message=FALSE, echo=FALSE}
 # Square root method
@@ -156,7 +157,6 @@ gd <- iv_2005_mod %>%
 gd$country <- as.character(gd$country)
 ```
 
-
 ```{r descriptives, echo=F}
 summary(iv_2005_mod[,c("num_victim_5yr", "age_cent", "employed", "male")])
 
@@ -172,12 +172,11 @@ summary(iv_2005_mod[,prevention_min2])
 summary(gd[,c("gini_2004_6", "gdppc_2004_6_cent", "gdppc_2004_6")])
 ```
 
-
 ## On the distribution
 
 The population distribution for our dependent variables is not known in advance. All we can say is that we know it is a count variable. This uncertainty opens up the possibility of a model selection bias.
 
-The distribution processes we'll consider here are [normal](#assuming-a-normal-distribution),  [poisson and negative binomial](#poisson-distribution), and a [three-level logistic regression](#three-level-logistic-regression).
+The distribution processes we'll consider here are [normal](#assuming-a-normal-distribution), [poisson and negative binomial](#poisson-distribution), and a [three-level logistic regression](#three-level-logistic-regression).
 
 At first glance, victimization looks like a poisson process, but we have limited reason to believe that our outcome variables (e.g., security, number of victimizations) follow a strictly poisson process. Firstly, the count may violate the assumption of independent events; I would guess that purchasing security or being victimized by a crime has *some* effect on later occurrences in either direction (e.g., having less money from the prior security purchase).
 
@@ -225,11 +224,153 @@ victim_gdp_full <- gd %>%
 gridExtra::grid.arrange(victim_age, victim_gini_full,victim_gdp_full, gini_gdp_full, nrow = 2, ncol=2)
 ```
 
-# Assuming a normal distribution
+# Multilevel binomial regression
+
+Initially, a poisson process seems to better describe the distribution of this study's dependent variable. However, the variables *num_victim_5yr* and *security_total* are bounded (i.e., they have true max values), whereas poisson and negative-binomial assume unbounded counts that can extend out indefinitely
+
+@britt2018 provides a summary of the binomial method in the context of counting criminal offences. The dependent variable in this context is the probability of 'success' over multiple trials (in this case, measures).
+
+traditional logistic regression model represents a binomial model with only a single trial (i.e., a Bernoulli
+
+trial)
+
+For instance, in the case of security consumption, the psychological and material impacts of buying a security product (e.g., feelings of safety, reduced budget), can plausibly impact a consumers' decision to purchase further security goods.
+
+# Multilevel ordinal logistic regression
+
+The high degree of skewness, and complete lack of symmetry in the DV distributions, poses some issues for modelling. A good example is out-of sample predictions, since we are using a count variable, negative predicted values are a real concern.
+
+Situations that completely rule out the use of linear methods are: edge effects in the data (i.e. many data points in the highest/lowest category)
+
+When selecting a distribution process, a categorical logistic is obviously more parsimonious. However, a binary or multinomial logistic process in this case misses some meaningful structure to the responses. Firstly, since our DVs are the summed total of binary variables, there is definitely a hierarchy to the values; 1 is larger than 0, and so on.
+
+Secondly, there is likely a meaningful difference between the values of 1, 2, and 3. The argument being that people can stumble into their first unit of security consumption, where they buy a house that happens to have special locks or grates on the window, but those second and third units are more likely to be a deliberate choice to consume security goods.\
+- Note: this may be a violation of the proportional odds assumption - "that the relationship between each pair of outcome groups has to be the same" - If this assumption is violated, different models are needed to describe the relationship between each pair of outcome groups. - Namely, we'd expect stronger effects at higher levels of the outcome
+
+## doing ordinal
+
+<https://kevinstadler.github.io/notes/bayesian-ordinal-regression-with-random-effects-using-brms/>
+
+```{r ord}
+library(ordinal)
+
+m_ord_null <- clmm(ordered(num_victim_5yr_winz) ~ 1 + (1|country), data = iv_2005_mod)
+
+# country not found
+# m_ord <- clmm(ordered(num_victim_5yr) ~ age_cent + gdppc_2004_6, random  = country, data = iv_2005_mod)
+          
+m_ord <- clmm(ordered(num_victim_5yr_winz) ~ gini_2004_6_cent + gdppc_2004_6_scale + age_cent + employed + male + police_effective + income_quartile + (1|country), data = iv_2005_mod)
+
+summary(m_ord)
+
+anova(m_ord_null, m_ord)
+
+# https://user2021.r-project.org/participation/technical_notes/t186/technote/
+# vizualization requires clmm2, specify Hess = TRUE to get summary
+
+# Warning: clmm2 may not have converged:
+#  optimizer 'ucminf' terminated with max|gradient|: 0.0442298313166208
+m_ord2 <- clmm2(ordered(num_victim_5yr) ~ gini_2004_6_cent + gdppc_2004_6_scale + age_cent + employed + male + police_effective + income_quartile, random = country, data = iv_2005_mod, Hess = TRUE)
+
+summary(m_ord2)
+```
+
+## other packages
+
+GLMMadaptive brms MCMC
+
+MASS::polr() (just fixed effect?) mixor (package 'mixor' is not available for this version of R)
+
+Different statistical packages support different link families, for example the ordinal package (which offers ordinal regression with one random effect) supports the cumulative links "logit", "probit", "cloglog", "loglog" and "cauchit"
+
+cumulative link models
+
+```{r GLMMadaptive}
+library(GLMMadaptive)
+
+cr_vals <- cr_setup(iv_2005_mod$num_victim_5yr_winz)
+
+cr_data <- iv_2005_mod[cr_vals$subs, ]
+cr_data$y_new <- cr_vals$y
+cr_data$cohort <- cr_vals$cohort
+
+fm <- mixed_model(y_new ~ cohort + gini_2004_6_cent + gdppc_2004_6_scale + age_cent + employed + male + police_effective + income_quartile, random = ~ 1 | country, 
+                  data = cr_data, family = binomial())
+
+summary(fm)
+```
+
+```{r brms}
+library(brms)
+# 4 chains, takes 3-4 days
+m_brm <- brms::brm(ordered(num_victim_5yr) ~ age_cent + gdppc_2004_6 + (1|country), data = iv_2005_mod, family = 'cumulative', prior = set_prior('normal(0, 3)'))
+```
+
+rdered logistic (or more accurately ordered logit) regression is an extension of logistic/logit regression: where in logistic regression you model one coefficient that captures the relative likelihood (in log-odds) of one outcome occurring over another (i.e. 2 outcomes captured by 1 coefficient), ordered logit regression models the relative likelihood of k different outcomes based on k-1 coefficients. The k-1 coefficients in the model capture the cumulative likelihood of responses falling into an expanding set of ordered response categories, e.g. in the case of 4 possible outcome categories (o1-o4) the three intercepts of the model, each of which will be at least as high as the preceding one, capture the baseline log-odds of observing:
+
+log(o1 vs. o2, o3, o4) log(o1, o2 vs. o3, o4) log(o1, o2, o3 vs. o4)
+
+The choice of link function is typically not critical and most methods assume the "logit" function (the log-odds transformation that forms the basis of ordered logit regression) by default, but a different choice can be informed by your knowledge of the data.
+
+```{r}
+# testing parallel regression assumption using Brant's test
+brant(m_ord)
+```
+
+## doing bayesian
+
+"All Bayesian models were created in Stan computational framework (<http://mc-stan.org/>) accessed with brms package (Bürkner, 2017). To improve convergence and guard against overfitting, we specified mildly informative conservative priors."
+
+Solid red points show fitted values: the mean of posterior distribution and 95% CI
+
+```{r brm2}
+# model specification
+mod = brm(real ~ corpus + (1|sound) + (1|id), data = df, family = 'bernoulli', prior = set_prior('normal(0, 3)'),
+iter = 1000, chains = 4, cores = 4)
+# model inspection
+summary(mod)
+plot(mod)
+pp_check(mod)
+# get fitted values
+newdata = data.frame(corpus = levels(df$corpus))
+fit = fitted(mod, newdata = newdata, re_formula = NA) * 100
+colnames(fit) = c('fit', 'se', 'lwr', 'upr')
+df_plot = cbind(newdata, fit) # and plot with ggplot
+# get contrasts
+fit1 = as.data.frame(fitted(mod, newdata = newdata, re_formula = NA, summary = FALSE))
+colnames(fit1) = newdata$corpus
+ut_vs_rest = fit1$ut - (fit1$belin + fit1$cordaro + fit1$hawk + fit1$lima + fit1$maurage + fit1$simon) / 6
+quantile(ut_vs_rest, probs = c(.5, .025, .975))
+hawk_vs_rest = fit1$hawk - (fit1$belin + fit1$cordaro + fit1$lima + fit1$maurage + fit1$simon) / 5
+quantile(hawk_vs_rest, probs = c(.5, .025, .975))
+ut_vs_hawk = fit1$ut - fit1$hawk
+quantile(ut_vs_hawk, probs = c(.5, .025, .975))
+```
+
+# questions
+
+What is MCMC? ● What is a prior and why should I use one? ● Does my model make sense? (convergence, posterior prediction) ● Fitted values (brms::fitted.brmsfit) vs. posterior prediction (brms::predict.brmsfit) ● Shrinkage (e.g. brms::horseshoe) ● How can I extract and customize STAN code (brms::stancode)?
+
+```{r MCMCglmm}
+m1<-MCMCglmm(cbind(tarsus, back) ~ trait:sex + trait:hatchdate - 1, random = ~ us(trait):animal + us(trait):fosternest, rcov = ~ us(trait):units, prior = prior, family = rep("gaussian", 2), nitt = 60000, burnin = 10000, thin=25, data = BTdata, pedigree=BTped)
+```
+
+## assumptions
+
+<https://medium.com/evangelinelee/ordinal-logistic-regression-on-world-happiness-report-221372709095>
+
+    The dependent variable are ordered.
+    One or more of the independent variables are either continuous, categorical or ordinal.
+    No multi-collinearity.
+    Proportional odds
+
+
+
+    Now we should conduct the Brant Test to test the last assumption about proportional odds. This assumption basically means that the relationship between each pair of outcome groups has to be the same. If the relationship between all pairs of groups is the same, then there is only one set of coefficient, which means that there is only one model. If this assumption is violated, different models are needed to describe the relationship between each pair of outcome groups.
+
+# Assuming a normal distribution {#assuming-a-normal-distribution}
 
 The case for using a normal distribution:
-
-Initially, a poisson process seems to better describe the distribution of this study's dependent variable. However, the variables *num_victim_5yr* and *security_total* each likely violate the assumption of event independence, where one event does not affect the likelihood of a subsequent event. For instance, in the case of security consumption, the psychological and material impacts of buying a security product (e.g., feelings of safety, reduced budget), can plausibly impact a consumers' decision to purchase further security goods.
 
 @knief2021 found a Gaussian error distribution to be far more robust to violations of its assumptions than Poisson and Binomial distributions. Given the potential for heavy bias in poisson and negative binomial models, a gaussian error structure's comparative robustness appears to make a (violated) assumption of normality be the safer choice compared to a possibly misattributed poisson distribution.
 
@@ -240,8 +381,6 @@ Initially, a poisson process seems to better describe the distribution of this s
 > "p-values from Gaussian models are highly robust to even extreme violation of the normality assumption and can be trusted, except when involving X and Y distributions with extreme outliers (p. ??). Likewise, "for N = 1000, power was essentially unaffected by the distribution of Y and X."
 
 For our purposes, it is important to note that we are dealing with a small sample size at the cluster/nation level.
-
-
 
 ## Assumption checks and and contingencies
 
@@ -300,8 +439,6 @@ Weighted distance between the unrestricted estimate and its hypothesized value u
 -   **Fix** remove values \>= 5
 
 > we did not cover collinearity between predictors or the distribution of random effects, but others have dealt with these aspects before (Freckleton, 2011; Schielzeth et al., 2020).
-
-
 
 ## Model-based exploration
 
@@ -505,7 +642,7 @@ The variance of residuals seems consistent across all levels - so no notable het
 
 In particular, the residuals don't appear to be symmetrically distributed (tending to cluster towards the middle of the plot). For low fitted values, residuals seem to be skewed higher, leveling off as the fitted values get larger
 
-# Poisson distribution
+# Poisson distribution {#poisson-distribution}
 
 Poisson is the go-to distribution for handling count data, which tends to exhibit a positive skew, and could provide an alternate way to model our data.
 
@@ -764,7 +901,6 @@ Talking with Dr. Bierman, he suggested that a good alternative to normal/poisson
 
 It firstly requires us to make the dataset extra long, with the each of the DV's constituent binary variables getting a row for *each* participant. For example, if we are counting across seven variables for 10 partcipants, our long dataset would have 70 rows.
 
-
 ```{r extra long data for three level}
 library(tidyr)
 
@@ -791,7 +927,6 @@ Individual characteristics predicts the individual intercept - treat it as thoug
 Like an item-response model
 
 Can also do it in Mplus - wsmv estimator for yes/nos
-
 
 ```{r extra long model}
 m_long <- lme4::glmer(victimized ~ (1 | pnum) + (1 | country), data = iv_long, family = binomial)
@@ -832,7 +967,6 @@ summary(m_long)
 > <!--# There are suitable methods for a wide variety of packages/models but not for nlme or lme4. The reason is that it's not so obvious for which mixed-effects models the usual sandwich trick actually works. (Disclaimer: But I'm no expert in mixed-effects modeling.)  -->
 
 > However, for lme4 there is a relatively new package called merDeriv (<https://CRAN.R-project.org/package=merDeriv>) that supplies estfun and bread methods so that sandwich covariances can be computed for lmer output etc. There is also a working paper associated with that package: <https://arxiv.org/abs/1612.04911>
-
 
 ## Bootstrapping
 
@@ -888,14 +1022,16 @@ Looks like this:
 <!-- from <https://notstatschat.rbind.io/2019/04/19/progress-on-linear-mixed-models-for-surveys/> -->
 
 <!-- ```{r heteroscedasticity, warning=F, message=FALSE, echo=FALSE, fig.show="hold", out.width="50%"} -->
+
 <!-- # plot(m1_sample, resid(., type = "pearson") ~ fitted(.), abline = 0, main="Heteroscedasticity check - fitted values vs. residuals") -->
+
 <!-- #  -->
+
 <!-- # plot(m1_winz, resid(., type = "pearson") ~ fitted(.), abline = 0, main="Heteroscedasticity (Winzorized)") -->
+
 <!-- ``` -->
 
-
 <!-- > In R the function coeftest from the lmtest package can be used in combination with the function vcovHC from the sandwich package to obtain heteroskedasticity robust standard errors and their corresponding t values. -->
-
 
 @mcneish2017
 
