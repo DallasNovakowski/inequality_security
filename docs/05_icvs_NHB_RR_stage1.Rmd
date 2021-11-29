@@ -43,7 +43,7 @@ abstract: |
 keywords          : "keywords"
 wordcount         : "X"
 
-floatsintext      : no
+floatsintext      : yes
 figurelist        : no
 tablelist         : no
 footnotelist      : no
@@ -61,6 +61,10 @@ bibliography: references.bib
 library("papaja")
 r_refs("r-references.bib")
 
+#trackdown::download_file(file="docs/05_icvs_NHB_RR_stage1.Rmd")
+
+load("C:/Users/dalla/Google Drive/project_files/inequality_security/output/pretest_output.RData")
+
 load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/iv_2005.RData")
 
 ```
@@ -77,9 +81,27 @@ knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 
 <!--# 1. security 2. security and trust 3. Inequality and trust 3.1. Inequality and risk 4. Inequality and security -->
 
-Seeking protection against rivals and enemies has consistently attracted humans' interest and resources. Despite worldwide crime rates generally decreasing [@unitednations2017], demand for security products, such as alarm systems, is growing (projected to increase 29% between 2021 and 2025; [@marketsandmarkets2021]. The choice to purchase security goods thus represents a substantial, and poorly understood, allocation of resources.
+A growing body of evidence suggests that economic inequality leads to increased risk-taking and conflict in humans [@krupp2018]. In unequal environments, individuals are more likely to resort to risky, hostile, and criminal activities in desperate attempts to compete for otherwise inaccessible positions and resources [@mishra2015]. The impact of inequality on individual decision-making likewise manifests through higher nation-level homicide rates [@daly2016], increased gambling [@payne2017], consumer debt [@christen2005], and reduced cooperation [@burton-chellew2013 ; @anderson2008]. Despite inequality increasing within countries [@saez2016], there is little research examining whether inequality causes people to *expect* desperation and risk-taking, and become distrustful of others.
 
-## Security and (dis)trust
+## Inequality and risk-taking
+
+Access to resources such as money, territory, status, or food tend to be contested. Even when these goods are divisible, they are often distributed unevenly between agents, with some parties getting more than their neighbors (REF). Inequality increases the stakes of competitions: losing to one's peers means lost access to institutional influence, life-saving medications, or the ability to feed one's family. In an unequal environment, falling behind can carry serious consequences, and humans are quick to respond to these conditions.
+
+According to risk-sensitivity theory [RST, @caraco1980], risk-taking can be an adaptive response to desperate circumstances. Originally conceived to explain the foraging behaviours of birds, RST predicts that organisms will take risks when more predictable strategies cannot meet the organism's goals (e.g., starvation thresholds). Accordingly, inequality fosters risk-taking by increasing the distance between individuals and their goals.
+
+Two major streams of explanation have surfaced to explain how population-level inequality influences risk-taking in individuals. Firstly, inequality increases risk-taking through *absolute deprivation*. Unequal societies tend to have more poverty, and poor people are more likely to take risks to meet their basic needs [@pridemore2008]. Secondly, risk-taking can be a response to *relative deprivation*, where even well-off individuals can feel disadvantaged compared to others, then take risks in an attempt to keep up with peers/competitors [@mishra2017].
+
+The relative state model [@mishra2017] posits that individuals take risks not only to escape material destitution, but also to keep up with competitors. As a result, risk-taking can be influenced by social comparisons. As wealth distributions become more skewed, so do comparison standards. Under conditions of inequality, individuals set more ambitious goals, and subsequently take more risks, as they try to close the gap between their current state and their aspiration levels [@payne2017]. Likewise, being worse off than others can lead to emotional responses of envy and personal relative deprivation, which can be linked to gambling as well as spiteful behaviours [@callan2008]. Likewise, inequality leads to feelings of envy and spiteful behaviours [@wobker2015].
+
+## Inequality and Distrust
+
+Despite inequality increasing within countries [@saez2016], there is little research examining whether inequality causes people to *expect* desperation and risk-taking, and become distrustful of others. Although the field of study is relatively underdeveloped, a relationship between inequality and reduced social trust has been consistently observed in national and international studies [@knack1997], [@zak2001], [@berggren2006], [@leigh2006],[@bjørnskov2007], and [@wilkinson2010] [@elgar2010; @barone2016; @decourson2021].
+
+Although scholarly work in the area remains in its early stages, multiple theoretical streams have emerged to explain how inequality reduces trust. These mechanisms range from changes in intergroup contact, opportunity costs of vigilance, and incentives for antisocial behaviour [reviewed in @jordahl2007]. However, this project's theoretical approach is not concerned with changes in the immediate payoffs of antisocial behaviour, but rather with how inequality changes people's preferences over these incentives.
+
+A simulation study shows that in unequal environments, individuals unable to meet their need thresholds will try to exploit cooperative groups, leading others to eventually avoid cooperation altogether [@decourson2021]. These results are consistent with risk-sensitivity theory [RST, @caraco1980], which suggests that organisms will take risks when more predictable strategies cannot meet the organism's goals (e.g., starvation thresholds). The results in @decourson2021 were obtained through assumptions of the cascading effects of poverty. Through so-called compositional effects of inequality, unequal environments increase rates of poverty, leading to risky (and sometimes antisocial) behaviours. Over time, individuals who are not desperate will then choose to forego the potential benefits of cooperation in order to avoid potential exploitation.
+
+## Risk, Distrust, and Security Consumption
 
 Products that (purportedly) improve security are one of the few goods that confer little intrinsic value to consumers. Whereas vacations are inherently satisfying, the costs of burglar alarms, sturdy locks, and security cameras are only worthwhile *if consumers expect that other agents will cause them harm*. People's choice to consume security products is therefore an economically and socially relevant reflection (or consequence) of distrust in day-to-day life [@schul2008; @hardin2006; @mcevily2012].
 
@@ -87,23 +109,9 @@ Some evidence suggests that people can be overly distrustful. @mcevily2012 found
 
 There is a blurred line between prudence and paranoia. As history has proved, one of the largest threats to people is other humans; other humans (via murder) are only outranked by mosquitoes as the deadliest animal to modern Homo sapiens [@gates2014]. Likewise, social life carries the risk of property crimes and defection in collective action problems (e.g., commitments to monogamy, business contracts). Humans' sociality carries enormous benefits to individuals, including life-saving aid in times of need, high levels of skill specialization, and access to skills and knowledge gained by others [@henrich2001]. Given the substantial benefits and risks of social interaction, when will a person spend their limited time, money, and opportunities protecting themselves from other people?
 
-## Inequality and Distrust
-
-Despite inequality increasing within countries [@saez2016], there is little research examining whether inequality causes people to *expect* desperation and risk-taking, and become distrustful of others. Although the field of study is relatively underdeveloped, a relationship between inequality and reduced social trust has been consistently observed in national and international studies [@knack1997], [@zak2001], [@berggren2006], [@leigh2006],[@bjørnskov2007], and [@wilkinson2010] [@elgar2010; @barone2016; @decourson2021].
-
-Although scholarly work in the area remains in its early stages, multiple theoretical streams have emerged to explain how inequality reduces trust. These mechanisms range from from changes in intergroup contact, opportunity costs of vigilance, and incentives for antisocial behaviour [reviewed in @jordahl2007]. However, this project's theoretical approach is not concerned with changes in the immediate payoffs of antisocial behaviour, but rather with how inequality changes people's preferences over these incentives.
-
-A simulation study shows that in unequal environments, individuals unable to meet their need thresholds will try to exploit cooperative groups, leading others to eventually avoid cooperation altogether [@decourson2021]. These results are consistent with risk-sensitivity theory [RST, @caraco1980], which suggests that organisms will take risks when more predictable strategies cannot meet the organism's goals (e.g., starvation thresholds). The results in @decourson2021 were obtained through assumptions of the cascading effects of poverty. Through so-called compositional effects of inequality, unequal environments increase rates of poverty, leading to risky (and sometimes antisocial) behaviours. Over time, individuals who are not desparate will then choose to forego the potential benefits of cooperation in order to avoid potential exploitation.
-
 ## Inequality and security consumption: an Envy Anticipation Hypothesis
 
 This project seeks to test the hypothesis that inequality increases security consumption (and distrust) because people expect their partners to experience envy/inequality aversion/relative deprivation. This proposed mechanism, which we call envy anticipation, is specific to predicting reduced trust towards relatively less wealthy individuals among comparators.
-
-### Inequality and risk
-
-A growing body of evidence suggests that economic inequality leads to increased risk-taking and conflict in humans [@krupp2018]. In unequal environments, individuals are more likely to resort to risky, hostile, and criminal activities in desperate attempts to compete for otherwise inaccessible positions and resources [@mishra2015]. The impact of inequality on individual decision-making likewise manifests through higher nation-level homicide rates [@daly2016], increased gambling [@payne2017], consumer debt [@christen2005], and reduced cooperation [@burton-chellew2013 ; @anderson2008].
-
-The relative state model [@mishra2017] posits that individuals take risks not only to escape material destitution, but also to keep up with competitors. As a result, risk-taking can be influenced by social comparisons. As wealth distributions become more skewed, so do comparison standards. Under conditions of inequality, individuals set more ambitious goals, and subsequently take more risks, as they try to close the gap between their current state and their aspiration levels [@payne2017]. Likewise, being worse off than others can lead to emotional responses of envy and personal relative deprivation, which can be linked to gambling as well as spiteful behaviours [@callan2008]. Likewise, inequality leads to feelings of envy and spiteful behaviours [@wobker2015].
 
 Given the evidence for inequality's effect on feelings of disadvantage and risk-taking, we hypothesize that people expect envious and dissatisfied reactions from peers following cues of economic disparities. Effective social behaviour should acknowledge the power of emotions to mobilize behaviour. For instance, in the two-player ultimatum game, Proposers most often offer 50% of an endowment to their partner. About half of Responders reject proposals less than 20% of the total resource, causing both parties to get nothing [reviewed in @camerer2011].
 
@@ -113,29 +121,158 @@ This theory of envy anticipation makes similar directional predictions as some e
 
 # Methods
 
-Methods and preregistration incoming
+<!-- **The Methods section in Letters and Articles should ideally not exceed 3,000 words but may be longer if necessary** -->
+
+The proposed multimethod research uses both economic experiments and multilevel analyses of the International Crime Victimization Survey (ICVS International Working Group et al., 2005) to test whether inequality increases consumer spending on products that protect customers against their neighbors.
 
 ## Experiments on economic inequality in the Security Game
 
-Interactive demos of experimental games can be accessed at <https://security-pretest.herokuapp.com/demo>, project folder with all raw code can be accessed at <https://github.com/DallasNovakowski/security_game>.
-
 ### Proposed sample characteristics
+
+Participants will be recruited through the crowdsourcing platform Prolific Academic. Sampled participants will be filtered for fluency in English, balanced for an equal gender representation, and only eligible if they have not completed an earlier experiment in this series.
 
 ### experimental procedures
 
+The Prolific-recruited participants will complete the studies on oTree [@chen2016], an open-source platform for conducting single- and multiplayer experiments and surveys. oTree studies are written largely in html, python, and javascript, which can be saved and shared in their raw code form, allowing for easy sharing, reproduction, and modification of protocols. Interactive demos of experimental games can be accessed at [(https://security-pretest.herokuapp.com/demo](https://security-pretest.herokuapp.com/demo){.uri}), and raw code can be accessed at [\<https://github.com/DallasNovakowski/security_game\>](https://github.com/DallasNovakowski/security_game){.uri}.
+
 #### The security game
+
+The experiments will be conducted in the context of two-player economic game, called the security game [@tambe2011]. In this modification of the security game, participants will be paired with an anonymous partner, with each being given an endowment of funds. Then, participants will be told that their partner will have the choice to attempt to steal money from them (with failed thievery attempts instead losing the attacker money). After learning this information, participants can spend some of their money on security products, with each unit of security visibly reducing the probability of a successful thievery attempt.
 
 Economic games examining self-protection are not new. Most notably, @mcevily2012 devised a behavioural distrust game, whereby participants choose whether to incur a cost that guarantees that their partner splits a surplus income equally. Compared to the distrust game, the security game is explicitly probabilistic - partners have risky choice to take funds for themselves, and security expenditures reduce the probability of successful "attacks."
 
-A pretest of n=`r pretest_initial_n` participants was conducted to find which game configurations that had a favourable distribution, while avoiding ceiling/floor effects. This project will use values from the 50_02 condition, which corresponds to a baseline 50% chance of successful thefts, and each unit of security costing \$0.02. This condition seems to produce the least skewed data, at `r round(base_skew,2)`.
+#### Pre-test
 
-![](C:/Users/dalla/Google%20Drive/project_files/inequality_security/figs/securitypretest_rainclouds.png){width="60%"}
+A pretest of n=`r screened_n` participants found no significant effects of baseline likelihood of successful thefts, nor security price on spending (*p*s = `r pretest_model$coefficients["as.numeric(prob)","Pr(>|t|)"]` and `r pretest_model$coefficients["cost","Pr(>|t|)"]`, respectively; Figure \@ref(fig:pretest-splitplot)). This project will use a baseline 50% chance of successful thefts, and each unit of security costing \$0.02. This condition also seems to produce the least skewed data, at `r round(base_skew,2)` (compared to e.g., `r round(skew_groups["75_02"],2)` when probability is 75% and price $0.02).
 
-#### Inequality vs. unfairness - meritocracy and discrimination
+
+
+
+<!-- participants has already been conducted to find which values of base successful thefts and security prices yielded a favourable distribution in security consumption, while avoiding ceiling/floor effects. After examining the data (Figure \@ref(fig:pretest-splitplot)), baseline probabilities of successful thefts and security price had  -->
+
+
+
+check out Figure \@ref(fig:design) and Figure \@ref(fig:powerplot) and also Figure 
+
+
+(ref:pretest-splitplot) Means and distributions for pretest
+
+
+```{r pretest-splitplot, echo=FALSE, out.width='100%', fig.cap="(ref:pretest-splitplot)"}
+knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/inequality_security/figs/spending_pretest_splitplot.png")
+```
+
+
+<!-- ![](C:/Users/dalla/Google Drive/project_files/inequality_security/figs/spending_pretest_splitplot.png) -->
+\newpage
+
+
+Using mean (*M*=`r base_mean`) and standard deviation values (*SD*=`r base_sd`) from the pretest, a priori power analysis has been conducted using r package SuperPower, with `r nsims` simulations. To achieve 95% power with a partial $\eta^2$  = .01, studies must have a minimum of `r cell_n_01` participants per cell, or a study-wide total of n=`r format(cell_n_01*4,big.mark = ",", scientific = FALSE)`
+
+All power analyses for `emmeans`-objects are based on the F- and t-values from the analyses of the dataset simulated by ANOVA_exact() assuming two-sided testing.
+
+
+check out Figure \@ref(fig:design) and Figure \@ref(fig:powerplot)
+
+
+(ref:design) Study design for a priori power analysis.
+
+```{r design, echo=FALSE, out.width='100%', fig.cap="(ref:design)"}
+knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/inequality_security/figs/power_design_plot.png")
+```
+
+<!-- ![](C:/Users/dalla/Google Drive/project_files/inequality_security/figs/power_design_plot.png) -->
+
+(ref:powerplot) Per-condition sample size thresholds for 95% power in main and interactive effects
+
+
+```{r powerplot, echo=FALSE, out.width='100%', fig.cap='(ref:powerplot)'}
+knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/inequality_security/figs/01powerplot.png")
+```
+
+
+<!-- ![](C:/Users/dalla/Google Drive/project_files/inequality_security/figs/01powerplot.png) -->
+
+also check out cool tables \@ref(tab:anovaexact) and \@ref(tab:pairwiseexact)
+
+```{r anovaexact}
+security_01_exact$main_results$power <- round(security_01_exact$main_results$power,2)
+
+security_01_exact$main_results$non_centrality <- round(security_01_exact$main_results$non_centrality,2)
+
+
+knitr::kable(round(security_01_exact$main_results,4), caption = 'Power of main and interaction effects', booktabs = TRUE)
+
+```
+
+
+```{r pairwiseexact}
+
+row.names(security_01_exact$pc_results) <- gsub(x = row.names(security_01_exact$pc_results), pattern = "yes", replacement = "1")
+
+row.names(security_01_exact$pc_results) <- gsub(x = row.names(security_01_exact$pc_results), pattern = "no", replacement = "0")
+
+row.names(security_01_exact$pc_results) <- gsub(x = row.names(security_01_exact$pc_results), pattern = "inequality", replacement = "ineq")
+
+row.names(security_01_exact$pc_results) <- gsub(x = row.names(security_01_exact$pc_results), pattern = "income_visible", replacement = "vis")
+
+row.names(security_01_exact$pc_results) <- gsub(x = row.names(security_01_exact$pc_results), pattern = "p_", replacement = "")
+
+
+knitr::kable(round(security_01_exact$pc_results,2), caption = 'Power of main and interaction effects', booktabs = TRUE)
+
+```
+
+
+The security game experiments will take place in three studies.
+
+#### Visibility
+
+Firstly, a 2x2 experiment will manipulate high versus low inequality, and visible versus invisible incomes. This experiment has notable strengths in controlling the participant's income across levels of inequality (as the partner's money is the only income that changes), and isolating fear of envious social comparisons as the mechanism (by testing a condition where one's income is **invisible to others**).
+
+**H1.1:** Presence of income inequality leads to greater consumption of security good
+
+**H1.2:** The effect of income inequality on security consumption will be mediated by perceived likelihood of partner attacking
+
+**H1.3:** The effect of income inequality on **a)** perceived likelihood of partner attack, and **b)** security consumption will be largest when participants believe that their partners are aware of both players' incomes (i.e., when incomes are transparent/visible; Figure 1)
+
+**H1.4:** The indirect effects of inequality on security consumption, through perceived likelihood of partner attack, will be largest when participants believe that their partners are aware of both players' incomes (i.e., when incomes are transparent/visible)
+
+#### Meritocracy
+
+The latter two experiments will test whether distributional fairness moderates the effect of inequality on security consumption. The second experiment again varies inequality (hi/none), but also manipulates whether one's income is allocated **randomly or based on task performance**.
+
+**H2.1:** Income inequality leads to greater consumption of security products
+
+**H2.2:** Income inequalityleads to increasedperceived partner likelihood of attacking.
+
+**H2.3:** the effects of inequality on **a)** security consumption and **b)** perceptions of partner's likelihood to attack will be negatively moderated by meritocratic distributions of wealth.
+
+**H2.4:** the **a)** main effect of inequality, and **b)** moderating effect of meritocratic distribution on security consumption will be mediated by perceived likelihood of partner attack.
+
+**E2.1:** As exploratory analyses, I will also examine the main and interactive effects of inequality and meritocracy on **a)** perceived deservingness, in addition to perceived partner **b)** dissatisfaction, **c)** benign envy, and **d)** malicious envy.
+
+#### Group membership
+
+The third experiment will keep a constant presence of inequality, but manipulate whether the partner is a member of an ingroup or outgroup, and whether the incomes are distributed randomly, by an **ingroup third-party**.
+
+**H3.1:** agentic wealth distribution leads to greater consumption of security products
+
+**H3.2:** agentic wealth distribution leads to greaterperceived partner likelihood of attack.
+
+**H3.3:** agentic wealth distribution will lead to perceptions of greater unfairness
+
+**H3.4:** the effects of agentic distributions of wealth on **a)** partner likelihood to attack, and **b**)security consumption will be positively moderated by having an outgroup partner.
+
+**E3.1:** exploratory analyses will examine the main effect of having an outgroup partner on **a)** partner likelihood to attack, and **b**)security consumption.
+
+**E3.2:** exploratory analyses will also be conducted on the **a)** main and **b)** interactive effects of agentic wealth distributions and having an outgroup partner onperceived partner dissatisfaction.
 
 ### Measurement and variables
 
 ### Inclusion/exclusion criteria (e.g., outliers)
+
+After data collection, participants will excluded from analyses should they fail any of 2 attention checks, or a comprehension check. Participants will also be excluded if they have missing data for any of the measures.
 
 ### Proposed analysis pipeline, including all preprocessing steps, precise description of all planned analyses
 
@@ -145,7 +282,9 @@ A pretest of n=`r pretest_initial_n` participants was conducted to find which ga
 
 ## Multilevel Analysis of the International Crime Victimization Survey
 
-**The Methods section in Letters and Articles should ideally not exceed 3,000 words but may be longer if necessary**
+The highly-controlled nature of the above experiments allow for precise tests of the hypothesized inequality-security consumption relationship, with substantial internal validity. Although they offer real consequences for participants' choices, economic games are highly artificial by design. Insights generated in the security game may not be generalizable to consumer's daily consumption context. To provide a test with greater external validity, this project uses a multi-method approach, supplementing experimental results with the analysis of data in the publicly-available International Crime Victimization Survey.
+
+The International Crime Victimization Survey is a cross-national collaboration to survey victimization experiences and correlates. To date, data has been collected from 300,000 respondents over 67 countries, affording an opportunity to comprehensively analyze both nation- and individual-level correlates of security consumption. In particular, these analyses will focus on the effects of income inequality and nation-level covariates (e.g., GDP, crime rates), in addition to individual differences (e.g., household size, income). Taken together, this project will provide tests of the hypothesis with an excellent balance between internal and external validity.
 
 Atkinson and Brandolini (2001) discuss these and several related pitfalls in their excellent survey on the use of secondary data sets in studies of income inequality.
 
@@ -227,7 +366,8 @@ xtmixed security_winz num_victim_5yr_winz gini_wc gdppc_2004_6\_ws age_cent empl
 
 **For frequentist analysis plans, the a priori power must be 0.95 or higher for all proposed hypothesis tests.**
 
-We used r package SuperPower for our power analyses
+
+However, a preliminary Monte Carlo simulation using the r package superpower
 
 In the case of highly uncertain effect sizes, a variable sample size and interim data analysis is permissible but with inspection points stated in advance,
 
@@ -258,3 +398,5 @@ We used `r cite_r("r-references.bib")` for all our analyses.
 :::
 
 \endgroup
+
+[a]So many possible options for the flow of arguments/ideas. It is hard to say if there is a "best" arrangement, but one that I think might work well is: 1. Inequality 2. Inequality and risk 3. Inequality and distrust 4. Risk, distrust and security consumption 5. Inequality and security consumption
