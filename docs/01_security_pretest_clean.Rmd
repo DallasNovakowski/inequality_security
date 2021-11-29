@@ -21,6 +21,7 @@ library(Hmisc)
 library(RColorBrewer)
 library(reshape2)
 
+#for raincloud plots
 source("https://gist.githubusercontent.com/benmarwick/2a1bb0133ff568cbe28d/raw/fb53bd97121f7f9ce947837ef1a4c65a73bffb3f/geom_flat_violin.R")
 ```
 
@@ -207,7 +208,6 @@ time_data <- time_data %>%
   filter(time_consent <= 100 & time_dospert <= 550 & time_at_bo <= 20)
 
 nrow(time_data)
-
 ```
 
 
@@ -237,6 +237,8 @@ time_quantiles <- sapply(time_data, quantile)
 ```{r pages in round, warning=FALSE, echo=FALSE}
 data <- data %>%
   filter(!is.na(sg_2_security_consumed))
+
+screened_n <- nrow(data)
 
 ```
 
@@ -293,7 +295,35 @@ sd_groups <- by(data_long$consumed, data_long$page, sd)
 
 mean_groups <- by(data_long$consumed, data_long$page, mean)
 
-save(skew_groups, kurt_groups,sd_groups, mean_groups, file = here::here("output", "pretest_output.RData"))
+base_mean <- mean_groups["50_02"]
+
+base_sd <- sd_groups["50_02"]
+
+base_skew <- skew_groups["50_02"]
+
+overall_skew <- moments::skewness(data_long$security_spending)
+
+
+cgwtools::resave(skew_groups, pretest_initial_n, screened_n, kurt_groups,sd_groups, mean_groups, base_skew,base_sd,base_mean, overall_skew, file = here::here("output", "pretest_output.RData"))
+  
+# save(skew_groups, pretest_initial_n, screened_n, kurt_groups,sd_groups, mean_groups, base_skew,base_sd,base_mean, file = here::here("output", "pretest_output.RData"))
+
+
+data_long$page <- data_long$page %>%
+  sub("_0", "%_",.)
+
+data_long$page <- paste(data_long$page,"¢", sep="", collapse=NULL)
+
+data_long <- data_long %>%
+  mutate(prop_consumed = ifelse(cost == 4,consumed/25, 
+                                ifelse(cost == 2,consumed/50,NA)))
+                                
+
+data_long <- data_long %>%
+  mutate(security_spending = ifelse(cost == 4,consumed*.04, 
+                                ifelse(cost == 2,consumed*.02,NA)))
+                                
+
 ```
 
 Note: for x_04 conditions, 25 constitutes the maximum possible value for consumption.
@@ -312,13 +342,27 @@ legend.position = "right",
 plot.title = element_text(lineheight=.8, face="bold", size = 16),
 panel.border = element_blank(),
 panel.grid.minor = element_blank(),
-panel.grid.major = element_blank(),
 axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
 axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'))
 
 
+    # stat_summary(fun = "mean",
+    #            geom = "crossbar", 
+    #            width = 0.2,
+    #            colour = "grey",
+    #            position = position_nudge(x = .2, y = 0))
+
+
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+
 g <- ggplot(data = data_long, aes(y = consumed, x = page, fill = page)) +
   geom_flat_violin(position = position_nudge(x = .2, y = 0), alpha = .8) +
+    stat_summary(fun.data = "mean_cl_boot", geom = "pointrange",
+               colour = "black",
+               position = position_nudge(x = .27, y = 0),
+               alpha = .5) +
+  
   ggbeeswarm::geom_quasirandom(aes(y = consumed, color = page),
     ## draw bigger points
     # size = 1,
@@ -327,14 +371,17 @@ g <- ggplot(data = data_long, aes(y = consumed, x = page, fill = page)) +
     ## control range of the beeswarm
     width = .2
   )  +
+  # 
+  # scale_color_brewer(palette = "Spectral") +
+  # scale_fill_brewer(palette = "Spectral") +
   
 # geom_point(aes(y = consumed, color = page), position = position_jitter(width = .15), size = .5, alpha = 0.8) +
   geom_boxplot(width = .1, guides = FALSE, outlier.shape = NA, alpha = 0.5) +
   expand_limits(x = 5.25) +
   guides(fill = FALSE) +
   guides(color = FALSE) +
-  scale_color_brewer(palette = "Spectral") +
-  scale_fill_brewer(palette = "Spectral") +
+  scale_fill_manual(values=cbPalette)+
+  scale_colour_manual(values=cbPalette) +
 # coord_flip() +
   theme_bw() +
   raincloud_theme
@@ -345,13 +392,202 @@ ggsave(here::here("figs", "securitypretest_rainclouds.png"))
 ```
 
 
+```{r splitdefine}
+GeomSplitViolin <- ggproto(
+  "GeomSplitViolin", 
+  GeomViolin, 
+  draw_group = function(self, data, ..., draw_quantiles = NULL) {
+    data <- transform(data, 
+                      xminv = x - violinwidth * (x - xmin), 
+                      xmaxv = x + violinwidth * (xmax - x))
+    grp <- data[1,'group']
+    newdata <- plyr::arrange(
+      transform(data, x = if(grp%%2==1) xminv else xmaxv), 
+      if(grp%%2==1) y else -y
+    )
+    newdata <- rbind(newdata[1, ], newdata, newdata[nrow(newdata), ], newdata[1, ])
+    newdata[c(1,nrow(newdata)-1,nrow(newdata)), 'x'] <- round(newdata[1, 'x']) 
+    if (length(draw_quantiles) > 0 & !scales::zero_range(range(data$y))) {
+      stopifnot(all(draw_quantiles >= 0), all(draw_quantiles <= 1))
+      quantiles <- ggplot2:::create_quantile_segment_frame(data, draw_quantiles)
+      aesthetics <- data[rep(1, nrow(quantiles)), setdiff(names(data), c("x", "y")), drop = FALSE]
+      aesthetics$alpha <- rep(1, nrow(quantiles))
+      both <- cbind(quantiles, aesthetics)
+      quantile_grob <- GeomPath$draw_panel(both, ...)
+      ggplot2:::ggname("geom_split_violin", 
+                       grid::grobTree(GeomPolygon$draw_panel(newdata, ...), quantile_grob))
+    } else {
+      ggplot2:::ggname("geom_split_violin", GeomPolygon$draw_panel(newdata, ...))
+    }
+  }
+)
+
+geom_split_violin <- function (mapping = NULL, 
+                               data = NULL, 
+                               stat = "ydensity", 
+                                 position = "identity", ..., 
+                               draw_quantiles = NULL, 
+                               trim = TRUE, 
+                               scale = "area", 
+                               na.rm = FALSE, 
+                               show.legend = NA, 
+                               inherit.aes = TRUE) {
+  layer(data = data, 
+        mapping = mapping, 
+        stat = stat, 
+        geom = GeomSplitViolin, 
+        position = position, 
+        show.legend = show.legend, 
+        inherit.aes = inherit.aes, 
+        params = list(trim = trim, 
+                      scale = scale, 
+                      draw_quantiles = draw_quantiles, 
+                      na.rm = na.rm, ...)
+        )
+}
+```
+
+
+```{r spending}
+# split violin - adapted from https://debruine.github.io/post/plot-comparison/
+
+spending_summary_data <- data_long %>%
+  group_by(prob, cost) %>%
+  summarise(
+    mean = mean(security_spending),
+    min = mean(security_spending) - qnorm(0.975)*sd(security_spending)/sqrt(n()),
+    max = mean(security_spending) + qnorm(0.975)*sd(security_spending)/sqrt(n())
+  )
+
+
+spending_pretest_splitplot <- data_long %>%
+  ggplot(aes(y = security_spending, x = as.factor(prob), fill = as.factor(cost))) +
+  geom_split_violin(color="black", trim=TRUE, alpha = 0.5,
+                    width = 1, 
+                    # position = position_nudge(x = -.005)
+                    ) +
+  geom_pointrange(
+    data = spending_summary_data,
+    aes(as.factor(prob), mean, ymin=min, ymax=max),
+    color = "black", 
+     alpha = 0.5,
+    shape = 20, # 95,
+    position = position_dodge(width = 0.25),
+    show.legend=FALSE) +
+    # geom_boxplot(color = "black", 
+    #            width = 0.1, 
+    #            alpha = .1,
+    #            position = position_dodge(width=0.5)) +
+  ylab("$ spent on security") +
+  xlab("Starting probability of successful thefts") +
+  labs(fill = "Security price (¢)")+
+  ylim(0,1) + 
+  scale_fill_manual(values=cbPalette)+
+  scale_colour_manual(values=cbPalette)+ 
+  scale_x_discrete(labels=c("50" = "50%", "60" = "60%",
+                              "75" = "75%")) +
+    theme_bw() +
+  raincloud_theme
+
+spending_pretest_splitplot
+
+ggsave(here::here("figs", "spending_pretest_splitplot.png"), height = 3)
+
+
+```
+
+```{r, eval = F}
+# data_long$spent2 <- paste0(data_long$security_spending, "2") # create a second almost identical variable
+# 
+# ggplot(data_long,aes(security_spending, value)) +
+#   geom_beeswarm(aes(spent2),priority='random',cex=2.5) +
+# 
+# 
+# spent_rain <- ggplot(data = data_long, aes(y = security_spending, x = as.factor(prob), fill = as.factor(cost))) +
+#   geom_flat_violin(alpha = .8) +
+#     geom_boxplot(width = .1, guides = FALSE, outlier.shape = NA, alpha = 0.5) +
+#     geom_pointrange(
+#     data = spending_summary_data,
+#     aes(as.factor(prob), mean, ymin=min, ymax=max),
+#     color = "black", 
+#      alpha = 0.5,
+#     shape = 20, # 95,
+#     position = position_dodge(width = 0.25)) +
+#   
+#   
+#   guides(fill = FALSE) +
+#   guides(color = FALSE) +
+#   scale_fill_manual(values=cbPalette)+
+#   scale_colour_manual(values=cbPalette) +
+# # coord_flip() +
+#   theme_bw() +
+#   raincloud_theme
+# 
+# 
+# spent_rain
+
+```
+
+
+
+```{r burgerplot, eval = F}
+# GeomBurger <- ggproto(
+#   "GeomBurger", 
+#   GeomViolin, 
+#   draw_group = function(self, data, ..., draw_quantiles = NULL) {
+#     data <- transform(data, 
+#                       xminv = x - violinwidth * (x - xmin), 
+#                       xmaxv = x + violinwidth * (xmax - x))
+#     grp <- data[1,'group']
+#     newdata <- plyr::arrange(
+#       transform(data, x = if(grp%%2==1) xminv else xmaxv), 
+#       if(grp%%2==1) y else -y
+#     )
+#     newdata <- rbind(newdata[1, ], newdata, newdata[nrow(newdata), ], newdata[1, ])
+#     newdata[c(1,nrow(newdata)-1,nrow(newdata)), 'x'] <- round(newdata[1, 'x']) 
+#   }
+# )
+# 
+# geom_burger <- function (mapping = NULL, 
+#                                data = NULL, 
+#                                stat = "ydensity", 
+#                                  position = "identity", ..., 
+#                                draw_quantiles = NULL, 
+#                                trim = TRUE, 
+#                                scale = "area", 
+#                                na.rm = FALSE, 
+#                                show.legend = NA, 
+#                                inherit.aes = TRUE) {
+#   layer(data = data, 
+#         mapping = mapping, 
+#         stat = stat, 
+#         geom = GeomBurger, 
+#         position = position, 
+#         show.legend = show.legend, 
+#         inherit.aes = inherit.aes, 
+#         params = list(trim = trim, 
+#                       scale = scale, 
+#                       draw_quantiles = draw_quantiles, 
+#                       na.rm = na.rm, ...)
+#         )
+# }
+  
+```
+
+
+
 For this project, we will be using values from the 50_02 condition, which corresponds to a baseline 50% chance of successful thefts, and each unit of security costing $0.02. This condition seems to produce the least skewed data, at `r round(skew_groups["50_02"],2)`
 
 ```{r order analysis, warning=FALSE, echo=FALSE}
 # models for analyzing order effects
-m1_null <- lme4::lmer(consumed ~  (1 | participant_code), data = data_long, REML=FALSE)
+m1_null <- lme4::lmer(security_spending ~  (1 | participant_code), data = data_long, REML=FALSE)
 
-m1_order <- lme4::lmer(consumed ~ as.numeric(round_num) + (1 | participant_code), data = data_long, REML=TRUE)
+m1_order <- lmerTest::lmer(security_spending ~ as.numeric(round_num) + as.numeric(prob) + cost + (1 | participant_code), data = data_long, REML=TRUE)
 
+pretest_model <- summary(m1_order)
+
+pretest_model
+
+cgwtools::resave(pretest_model, file = here::here("output", "pretest_output.RData"))
 ```
 

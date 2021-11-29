@@ -13,12 +13,6 @@ set.seed(1234)
 
 load(here::here("output", "pretest_output.RData"))
 
-base_mean <- mean_groups["50_02"]
-
-base_sd <- sd_groups["50_02"]
-
-base_skew <- skew_groups["50_02"]
-
 
 Superpower_options("plot" = FALSE, "verbose" = FALSE) 
 ```
@@ -28,7 +22,7 @@ After the pretest, we found substantial variation within conditions. From data v
 
 
 
-![](C:/Users/dalla/Google Drive/project_files/inequality_security/figs/securitypretest_rainclouds.png){width=60%}
+![](C:/Users/dalla/Google Drive/project_files/inequality_security/figs/spending_pretest_splitplot.png){width=60%}
 
 For this project, we will be using values from the 50_02 condition, which corresponds to a baseline 50% chance of successful thefts, and each unit of security costing $0.02. This condition seems to produce the least skewed data, at `r round(base_skew,2)`.
 
@@ -42,6 +36,8 @@ A major benefit of having run a pilot study is getting information on mean and s
 ```{r power 05, warning = FALSE}
 nsims <- 2000
 
+cgwtools::resave(nsims, file = here::here("output", "pretest_output.RData"))
+
 # detecting .05 partial η2, with 95% power
 security_05_design <- ANOVA_design(design = "2b*2b",
                    n = 63, 
@@ -50,6 +46,9 @@ security_05_design <- ANOVA_design(design = "2b*2b",
                    # r = 0.8, 
                    labelnames = c("inequality", "yes", "no", "income_visible", "yes", "no"),
                    plot = TRUE)
+
+
+ggplot2::ggsave(here::here("figs", "power_design_plot.png"), height = 3, width =5)
 ```
 
 
@@ -97,7 +96,7 @@ Also following from the no-way interaction, each coefficient has the same effect
 
 # detecting .01 partial η2, with 95% power
 security_01_design <- ANOVA_design(design = "2b*2b",
-                   n = 320, 
+                   n = 339, 
                    mu = c(37.1, base_mean, base_mean, base_mean), 
                    sd = base_sd, 
                    # r = 0.8, 
@@ -108,8 +107,17 @@ security_01_design <- ANOVA_design(design = "2b*2b",
 ```{r powerplot 01, warning=FALSE, echo=FALSE}
 security_01_powerplot <- plot_power(security_01_design, min_n = 20, max_n = 500, desired_power = 95)
 
+cell_n_01 <- security_01_powerplot$anova_n$n[1]
+
+cgwtools::resave(cell_n_01, file = here::here("output", "pretest_output.RData"))
+
+
 security_01_powerplot$plot_ANOVA
 # security_01_powerplot$anova_n$n[3]
+
+
+
+ggplot2::ggsave(here::here("figs", "01powerplot.png"), height = 3, width =5)
 ```
 
 
@@ -126,8 +134,11 @@ security_01_powerplot$plot_ANOVA
 security_01_exact <- ANOVA_exact(security_01_design, 
                                   alpha = 0.05)
 
-knitr::kable(security_01_exact$main_results)
 
+cgwtools::resave(security_01_exact, file = here::here("output", "pretest_output.RData"))
+
+
+knitr::kable(security_01_exact$main_results)
 ```
 
 
@@ -168,6 +179,5 @@ security_02_exact <- ANOVA_exact(security_02_design,
                                   alpha = 0.05)
 
 knitr::kable(security_02_exact$main_results)
-
 ```
 
