@@ -30,7 +30,6 @@ authornote: |
 #  Enter author note here.
 
 abstract: |
-
   A growing body of evidence suggests that economic inequality causes humans to take more risks and engage in aggressive behaviours. In a 'winner-takes-all' environment, risky activities such as gambling, lying, and crime can be a person's only means of keeping up with competitors and accessing contested resources. 
   
   There is comparitively little research investigating whether people anticipate risk-taking and conflict from their neighbors in unequal environments. An informative context for examining the fear-provoking effect of inequality is the security market, which offers goods that protect customers from the actions of malicious agents. For instance, barred windows are purchased because they (purportedly) protect consumers from break-ins. Given the costly nature of these security products, security consumption can only be worthwhile if a consumer expects that other people have harmful intentions. 
@@ -60,14 +59,12 @@ bibliography: references.bib
 
 ```{r setup, include = FALSE}
 library("papaja")
+library(tidyverse)
+library(kableExtra)
 r_refs("r-references.bib")
-
 #trackdown::download_file(file="docs/05_icvs_NHB_RR_stage1.Rmd")
-
 load("C:/Users/dalla/Google Drive/project_files/inequality_security/output/pretest_output.RData")
-
 load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/iv_2005.RData")
-
 ```
 
 ```{r analysis-preferences}
@@ -132,17 +129,20 @@ The proposed multimethod research uses both economic experiments (Study 1) and m
 
 ## Ethics information
 
-All procedures for this project have been approved by the University of Calgary Conjoint Faculties Research Ethics Board (REB 20-1860).
+All procedures for this project have been approved by the University of Calgary Conjoint Faculties Research Ethics Board (REB 20-1860). For the experimental studies, informed consent was obtained for all participants, who were compensated $1.45 CAD per 7-minute session ($12.48 CAD/hour).
 
-## Experimental studies in Inequality
+For multilevel analyses, the International Crime Victimization Survey is a publicly-available archival dataset. As such, informed consent was obtained, and compensation disbursed, by the original researchers.
 
-### *Pilot data (if applicable)*
+## Study 1 - Experimental studies in Inequality
 
-A pretest of n=`r screened_n` crowdsourced (Prolific) participants found no significant effects of baseline likelihood of successful thefts, nor security price on spending (*p*s = `r pretest_model$coefficients["as.numeric(prob)","Pr(>|t|)"]` and `r pretest_model$coefficients["cost","Pr(>|t|)"]`, respectively; Figure \@ref(fig:pretest-splitplot)). This project will use a baseline 50% chance of successful thefts, and each unit of security costing \$0.02. This condition also seems to produce the least skewed data, at `r round(base_skew,2)` (e.g., compared to skew = `r round(skew_groups["75_02"],2)` when probability is 75% and price \$0.02).
+### Pilot data (Study 1)
+
+A pretest of n=`r screened_n` crowdsourced (Prolific) participants found no significant effects of baseline likelihood of successful thefts, nor security price on spending (*p*s = `r pretest_model$coefficients["as.numeric(prob)","Pr(>|t|)"]` and `r pretest_model$coefficients["cost","Pr(>|t|)"]`, respectively; Figure \@ref(fig:pretest-splitplot)). This project will use a baseline 50% chance of successful thefts, and each unit of security costing \$0.02. This condition also seems to produce the least skewed data, at `r round(base_skew,2)` (e.g., compared to skew = `r round(skew_groups["75_02"],2)` when probability is 75% and price \$0.02). The pretest had two attention checks and one comprehension check. 
 
 <!-- participants has already been conducted to find which values of base successful thefts and security prices yielded a favourable distribution in security consumption, while avoiding ceiling/floor effects. After examining the data (Figure @ref(fig:pretest-splitplot)), baseline probabilities of successful thefts and security price had  -->
 
-(ref:pretest-splitplot) Means (95% CI) and distributions for pretest.
+(ref:pretest-splitplot) Means (95% CI) and distributions for pretest. n=`r screened_n`, within-subjects
+
 
 ```{r pretest-splitplot, echo=FALSE, out.width='100%', fig.cap="(ref:pretest-splitplot)"}
 knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/inequality_security/figs/spending_pretest_splitplot.png")
@@ -152,142 +152,56 @@ knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/inequality_se
 
 \newpage
 
-### Proposed sample characteristics (Sampling plan)
+### Proposed sample characteristics (Sampling plan; Study 1)
 
 Participants will be recruited through the crowdsourcing platform Prolific Academic. Sampled participants will be filtered for fluency in English, balanced for an equal gender representation, and only eligible if they have not completed an earlier experiment in this series.
 
-### experimental procedures (Design)
-
-The Prolific-recruited participants will complete the studies on oTree [@chen2016], an open-source platform for conducting single- and multiplayer experiments and surveys. oTree studies are written largely in html, python, and javascript, which can be saved and shared in their raw code form, allowing for easy sharing, reproduction, and modification of protocols. 
-
-The experiments will be conducted in the context of two-player economic game, called the security game [@tambe2011]. In this modification of the security game, participants will be paired with an anonymous partner, with each being given an endowment of funds. Then, participants will be told that their partner will have the choice to attempt to steal money from them (with failed thievery attempts instead losing the attacker money). After learning this information, participants can spend some of their money on security products, with each unit of security visibly reducing the probability of a successful thievery attempt.
-
-Economic games examining self-protection are not new. Most notably, @mcevily2012 devised a behavioural distrust game, whereby participants choose whether to incur a cost that guarantees that their partner splits a surplus income equally. Compared to the distrust game, the security game is explicitly probabilistic - partners have a risky choice to take funds for themselves, and security expenditures reduce the probability of successful "attacks."
-
-### Measurement and variables
-
-Throughout all of the proposed experiments, security spending will serve as the dependent variable. Participants will be asked to choose how many units of a security product they wish to consume, ranging from 0 to 50. Security spending will be computed by multiplying the number of security units consumed by the good's per-unit cost of each unit of security, in this case, \$0.02.
-
-### Inclusion/exclusion criteria (e.g., outliers)
-
-The pretest had two attention checks and one comprehension check. For the remaining studies, participants will be screened based on two attention checks and two items testing their task comprehension. After data collection, participants will be excluded from analyses unless they pass both attention checks, and both comprehension check items (we implement a relaxed comprehension check because only 67% of pretest participants correctly answered the single comprehension check). Participants will also be excluded if they have missing data for any of the measures.
-
-?OUTLIERS?
+•	Regardless of sampling method, you must list all criteria for data inclusion and/or data exclusion and how this affects your sampling strategy. This includes a full description of proposed sample characteristics. Procedures for objectively defining exclusion criteria due to technical errors or for any other reasons must be specified, including details of how and under what conditions data would be replaced. These details must be summarized in the mandatory Design table (Table 1).
 
 
+```{r design table}
 
-### Study 1a: Visibility
+design_columns <- c("Question",	"Hypothesis",	"Sampling plan", "Analysis Plan",	"Interpretation given to different outcomes")
 
-Firstly, a 2x2 experiment will manipulate high versus low inequality, and visible versus invisible incomes. This experiment has notable strengths in controlling the participant's income across levels of inequality (as the partner's money is the only income that changes), and isolating fear of envious social comparisons as the mechanism (by testing a condition where one's income is **invisible to others**).
+Question <- c("does inequality increase security consumption?","does meritocratic distributions of income reduce inequality's effect on security consumption?", "Under conditions of inequality, do agentic distributions of wealth and ingroup status interact to increase security consumption")
+Hypothesis <- c("what","why", NA)
+Sampling <- c("what","why", NA)
+Analysis<- c("what","why",NA)
+Interpretation <- c("what","why",NA)
 
-#### Hypotheses (Study 1a)
+design <- data.frame(Question, Hypothesis, Sampling, Analysis, Interpretation)
 
-The overarching hypothesis for Study 1a is a "no-way interaction:" that the effect of inequality will be nullified when incomes are invisible. The hypothesis of a no-way interaction suggests firstly that sample sizes must twice the size of an equivalent study just testing a simple effect; secondly, our core hypothesis rests on all three coefficients being significant [d]in the following model:
+knitr::kable(design, caption = 'Design table', booktabs = TRUE, col.names = design_columns) %>%
+  kable_styling(full_width = FALSE) %>%
+  column_spec(1,width = "2in") %>%
+  column_spec(2,width = "1in") %>%
+  column_spec(3,width = "1in") %>%
+  column_spec(4,width = "1in") %>%
+  column_spec(5,width = "1in")
 
-```{r vis-define-model, eval = FALSE, echo=FALSE}
-m_vis <- lm(security_spending ~ inequality*visibility, data = ineq_vis_data)
+
+# apa_table(design
+#   , caption = "Design table"
+#   , note = "This table was created with apa_table()."
+#   , escape = TRUE
+# ) %>%
+#   kable_styling(full_width = FALSE) %>%
+#   column_spec(1,width = "2in") %>%
+#   column_spec(2,width = "1in") %>%
+#   column_spec(3,width = "1in") %>%
+#   column_spec(4,width = "1in") %>%
+#   column_spec(5,width = "1in")
 ```
 
-For a visual breakdown of hypotheses, see Figures \@ref(fig:concept-modmed) and \@ref(fig:detail-modmed)
 
-**H1a.1:** (No-way interaction): In the **a)** *significant* two-way model `m_vis`, coefficients for **b)** income inequality, **c)** income visibility, and **d)** the inequality\*visibility interaction each will have a significantly positive effect on security spending.
-
-```{r vis-aov, echo=TRUE, eval=FALSE}
-aov_vis <- aov(security_spending ~ as.factor(inequality)*as.factor(visibility), 
-               data = ineq_vis_data, type="III")
+```{css}
+.table tr:nth-child(even) { background: #eee; }
 ```
 
-**H1a.2:** (Planned pairwise comparisons), the hi-inequality/visible income condition will have higher rates of security consumption than all other conditions (i.e., **a)** hi-inequality/invisible income, **b)** no-inequality/visible income, & **c)** no-inequality/invisible income).
-
-```{r vis-tukey, echo=TRUE, eval=FALSE}
-stats::TukeyHSD(aov_vis)
-```
-
-**H1a.3:** (Mediation step 1) In the model `m_vis_med1`, coefficients for **a)** income inequality, **b)** income visibility, and **c)** the inequality\*visibility interaction each will have a significant positive effect on participants' perceived likelihood of their partner attacking.
-
-```{r vis-mediat-predict, eval=FALSE, echo=TRUE}
-#predicting mediator
-m_vis_med1 <- lm(likely_attack ~ inequality*visibility, data = ineq_vis_data)
-```
-
-**H1a.4:** (Mediation step 2) In the model `m_vis_likely_security`, participants' perceived likelihood of their partner attacking will have a significantl positive effect on security spending.
-
-```{r vis-likely-security, eval=FALSE, echo=TRUE}
-# test for relationship between p. attack likelihood and security spending
-m_vis_likely_security <- lm(security_spending ~ likely_attack, data = ineq_vis_data)
-```
-
-<!-- **H1.3:** The effect of income inequality on **a)** perceived likelihood of partner attack, and **b)** security spending will be largest when participants believe that their partners are aware of both players' incomes (i.e., when incomes are transparent/visible;  -->
-
-**H1a.5:** (Moderated mediation) The indirect effects of inequality on security consumption, through perceived likelihood of partner attack, will be largest when participants believe that their partners are aware of both players' incomes (i.e., when incomes are transparent/visible). In the model `vis_modmed_test`, the indirect effect/ACME (Average Causal Mediation Effect [total effect - direct effect]) will be significantly larger when incomes are visible (visibility=1) than when they are invisible(visibility=0)
-
-```{r vis-mediat-dv, eval=FALSE, echo=TRUE}
-# model with mediator: likely_attack (or perceived likelihood of partner attacking)
-m_vis_med2 <- lm(security_spending ~ inequality*visibility + likely_attack, 
-                 data = ineq_vis_data)
-```
-
-```{r vis-mod-med, eval=FALSE, echo = TRUE}
-# see https://ademos.people.uic.edu/Chapter15.html#41_create_the_necessary_regression_models
-
-library(mediation)
-mediate <- mediation::mediate
-
-# ACME: Average Causal Mediation Effect [total effect - direct effect]
-# ADE: Average Direct Effect [total effect - indirect effect]
-# Total Effect: Direct (ADE) + Indirect (ACME)
-# Prop. Mediated: Conceptually ACME / Total effect 
-#(This tells us how much of the total effect our indirect effect is ?explaining?)
-
-# specify mediation at high visibility
-m_vis_modmed_hivis <- mediate(m_vis_med1, m_vis_med2,    
-                           covariates = list(visibility = 1), boot = TRUE,   
-                           boot.ci.type = "bca", sims = 2000, treat="inequality",
-                           mediator="likely_attack")
-
-plot(m_vis_modmed_hivis, xlim = 0:1)
-
-summary(m_vis_modmed_hivis) 
-
-# Specify mediation at low visibility
-m_vis_modmed_lowvis <- mediate(m_vis_med1, m_vis_med2,    
-                           covariates = list(visibility = 0), boot = TRUE,   
-                           boot.ci.type = "bca", sims = 2000, treat="inequality",
-                           mediator="likely_attack")
-
-plot(m_vis_modmed_lowvis, xlim = 0:1)
-
-summary(m_vis_modmed_lowvis) 
-```
-
-```{r vis-modmed-test, eval=FALSE, echo = TRUE}
-modmed_testvis <- mediate(m_vis_modmed_hivis, m_vis_modmed_lowvis, boot = TRUE,  
-                            boot.ci.type = "bca", sims = 2000, treat="inequality",
-                          mediator="likely_attack")   
-#We don't specify anything about the moderator in this code yet
-
-vis_modmed_test <- test.modmed(modmed_testvis, covariates.1 = list(visibility = 0),   
-            covariates.2 = list(visibility = 1), sims = 2000)
-#Here we specify both levels of the moderator that we want to test
-
-vis_modmed_test
-```
-
-(ref:modmed) Hypothesized pattern of moderated mediation
-
-```{r concept-modmed, echo=FALSE, out.width='100%', fig.cap="(ref:modmed)"}
-knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/inequality_security/figs/ineqsec_concepmodmed.jpg")
-```
-
-##### Moderated mediation (Study 1a)
-
-```{r detail-modmed, echo=FALSE, out.width='100%', fig.cap="(ref:modmed)"}
-knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/inequality_security/figs/ineqsec_modmed_detail.jpg")
-```
 
 #### A priori power analysis (Study 1a)
 
-Using mean and standard deviation values of security consumption (*M*=`r base_mean`, *SD*=`r base_sd`) from the pretest, an a priori power analysis has been conducted using r package SuperPower, with `r nsims` simulations. Given the unknown size of the hypothesized effect, this study will target an effect size of partial $\eta^2$ = .01. To achieve 95% power, studies must have a minimum of `r cell_n_01` participants per cell, or a study-wide total of n=`r format(cell_n_01*4,big.mark = ",", scientific = FALSE)`. This large sample size is necessary given the hypothesis of a "no-way" interaction, where only one condition is significantly different from the remainder. In this case, the simple effect of inequality is nullified, and at the model-level, the interaction effect and both main effects are significant. Simonsohn (2014) discusses how, in such a case, samples require at least twice as many subjects per cell as a study that simply aims to show the simple effect.
+Using mean and standard deviation values of security consumption (*M*=`r base_mean`, *SD*=`r base_sd`) from the pretest, an a priori power analysis has been conducted using r package SuperPower (REF), with `r nsims` simulations. Given the unknown size of the hypothesized effect, this study will target an effect size of partial $\eta^2$ = .01. To achieve 95% power, studies must have a minimum of `r cell_n_01` participants per cell, or a study-wide total of n=`r format(cell_n_01*4,big.mark = ",", scientific = FALSE)`. This large sample size is necessary given the possibility of a "no-way" interaction, where only one condition is significantly different from the remainder. In this case, the simple effect of inequality is nullified depending on the moderator. Simonsohn (2014) discusses how, in such a case, samples require at least twice as many subjects per cell as a study that simply aims to show the simple effect.
 
 (ref:design) Study design for a priori power analysis. Note: max possible value is 1.00
 
@@ -309,31 +223,75 @@ also check out cool tables \@ref(tab:anovaexact) and \@ref(tab:pairwiseexact)
 
 ```{r anovaexact}
 security_01_exact$main_results$power <- round(security_01_exact$main_results$power,2)
-
 security_01_exact$main_results$non_centrality <- round(security_01_exact$main_results$non_centrality,2)
-
 knitr::kable(round(security_01_exact$main_results,4), caption = 'Power of main and interaction effects', booktabs = TRUE)
-
 ```
 
 ```{r pairwiseexact}
-
 row.names(security_01_exact$pc_results) <- gsub(x = row.names(security_01_exact$pc_results), pattern = "yes", replacement = "1")
-
 row.names(security_01_exact$pc_results) <- gsub(x = row.names(security_01_exact$pc_results), pattern = "no", replacement = "0")
-
 row.names(security_01_exact$pc_results) <- gsub(x = row.names(security_01_exact$pc_results), pattern = "inequality", replacement = "ineq")
-
 row.names(security_01_exact$pc_results) <- gsub(x = row.names(security_01_exact$pc_results), pattern = "income_visible", replacement = "vis")
-
 row.names(security_01_exact$pc_results) <- gsub(x = row.names(security_01_exact$pc_results), pattern = "p_", replacement = "")
-
 knitr::kable(round(security_01_exact$pc_results,2), caption = 'Power of main and interaction effects', booktabs = TRUE)
 ```
 
-The security game experiments will take place in three studies.
 
-#### Proposed analysis pipeline, including all preprocessing steps, precise description of all planned analyses (Study 1a)
+
+### Experimental procedures (Design; Study 1a)
+
+The Prolific-recruited participants will complete the studies on oTree [@chen2016], an open-source platform for conducting single- and multiplayer experiments and surveys. oTree studies are written largely in html, python, and javascript, which can be saved and shared in their raw code form, allowing for easy sharing, reproduction, and modification of protocols. 
+
+The experiments will be conducted in the context of two-player economic game, called the security game [@tambe2011]. In this modification of the security game, participants will be paired with an anonymous partner, with each being given an endowment of funds. Then, participants will be told that their partner will have the choice to attempt to steal money from them (with failed thievery attempts instead losing the attacker money). After learning this information, participants can spend some of their money on security products, with each unit of security visibly reducing the probability of a successful thievery attempt.
+
+The security game experiments will take place in three studies; in each study, participants will be randomly assigned to one of the between-subjects conditions
+
+
+Economic games examining self-protection are not new. Most notably, @mcevily2012 devised a behavioural distrust game, whereby participants choose whether to incur a cost that guarantees that their partner splits a surplus income equally. Compared to the distrust game, the security game is explicitly probabilistic - partners have a risky choice to take funds for themselves, and security expenditures reduce the probability of successful "attacks."
+
+### Measurement and variables (Study 1a)
+
+Throughout all of the proposed experiments, security spending will serve as the dependent variable. Participants will be asked to choose how many units of a security product they wish to consume, ranging from 0 to 50. Security spending will be computed by multiplying the number of security units consumed by the good's per-unit cost of each unit of security, in this case, \$0.02.
+
+### Inclusion/exclusion criteria (e.g., outliers; Study 1)
+
+Participants will be screened based on two attention checks and two items testing their task comprehension. After data collection, participants will be excluded from analyses unless they pass both attention checks, and both comprehension check items (we implement a relaxed comprehension check because only 67% of pretest participants correctly answered the single comprehension check). Participants will also be excluded if they have missing data for any of the measures.
+
+?OUTLIERS?
+
+
+
+### Study 1a: Visibility
+
+Firstly, a 2x2 experiment will manipulate high versus low inequality, and visible versus invisible incomes. This experiment has notable strengths in controlling the participant's income across levels of inequality (as the partner's money is the only income that changes), and isolating fear of envious social comparisons as the mechanism (by testing a condition where one's income is **invisible to others**).
+
+#### Hypotheses (Study 1a)
+
+The overarching hypothesis for Study 1a is a "no-way interaction:" that the effect of inequality will be nullified when incomes are invisible. The hypothesis of a no-way interaction suggests firstly that sample sizes must twice the size of an equivalent study just testing a simple effect; secondly, our core hypothesis rests on all three coefficients being significant [d]in the following model:
+
+```{r vis-define-model, eval = FALSE, echo=FALSE}
+m_vis <- lm(security_spending ~ inequality*visibility, data = ineq_vis_data)
+```
+
+For a visual breakdown of hypotheses, see Figures \@ref(fig:concept-modmed) and \@ref(fig:detail-modmed)
+
+##### Moderated mediation (Study 1a)
+
+```{r detail-modmed, echo=FALSE, out.width='100%', fig.cap="(ref:modmed)"}
+knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/inequality_security/figs/ineqsec_modmed_detail.jpg")
+```
+
+
+
+#### (Analysis plan - Study 1a)
+
+Data collection and analysis will not be performed blind to the conditions of the experiments.
+
+pre-processing steps
+
+Proposed analysis pipeline, precise description of all planned analyses 
+
+Where analysis decisions are contingent on the outcome of prior analyses, these contingencies must be specified and adhered to. 
 
 Below is the code for testing ANOVA assumptions
 
@@ -376,13 +334,13 @@ What role does fairness play in envy anticipation and the formation of (dis)trus
 
 A growing body of evidence suggests that the roots of fairness lie in the avoidance of favoritism (Choshen-Hillel, Shaw, & Caruso, 2018; Shaw, 2013, 2017; Shaw et al., 2014; Shaw & Olson, 2012). As such, any mechanism allowing for impartial distribution of resources (e.g., a coin flip), ostensibly satisfies the need to justify a privileged position, and may reduce the felt need to consume security products.
 
-When evaluating (and attempting to produce) fair distributions, the best rule is one followed by everyone. At least among western industrialized societies, fairness norms appear to be heavily influenced by meritocratic concerns. In a sample of Norwegian children, Alm?s, Cappelen, S?rensen, and Tungodden (2010) found that younger participants were strict egalitarians (averse to any inequality). Conversely, as they entered adolescence, participants increasingly accepted inequality that originated in differences in production. While inequality may be an important antecedent to conflict, Study 1b will test whether a meritocratic distribution of wealth will attenuate inequality?\<U+0092\>s effect on security consumption.
+When evaluating (and attempting to produce) fair distributions, the best rule is one followed by everyone. At least among western industrialized societies, fairness norms appear to be heavily influenced by meritocratic concerns. In a sample of Norwegian children, Alm?s, Cappelen, S?rensen, and Tungodden (2010) found that younger participants were strict egalitarians (averse to any inequality). Conversely, as they entered adolescence, participants increasingly accepted inequality that originated in differences in production. While inequality may be an important antecedent to conflict, Study 1b will test whether a meritocratic distribution of wealth will attenuate inequality's effect on security consumption.
 
 The presence of multiple potential norms for guiding resource allocation inevitably leads to disagreements over what constitutes a fair allocation. Such potential for norm conflict is seen in cross-cultural variations in Proposer and Responder behaviours in the Ultimatum Game (Henrich et al., 2005); participants frequently exhibited seemingly aberrant patterns, such as offering more than 50% of the wealth, or rejecting offers above 50%. Particularly amongst societies with little market participation, groups appear to adhere to locally-developed (and globally-varying) norms of fairness.
 
-Together, these results suggest that perceived deservingness or fairness may play a crucial role in individuals\<U+0092\> willingness to consume security goods. Importantly,
+Together, these results suggest that perceived deservingness or fairness may play a crucial role in individuals' willingness to consume security goods. Importantly,
 
-Behavioural economists have found that participants who earned an advantaged position (versus random assignment) are less generous (Hoffman, McCabe, Shachat, & Smith, 1994). Similarly, van de Ven et al. (2010) found that those who are better off in the presence of inequality are more likely to engage in helping behaviours when they believe that their partner is frustrated by the disparity and harboring antagonistic motivations (i.e., \<U+0093\>malicious envy\<U+0094\> Crusius & Lange, 2014). By contrast, \<U+0093\>winners\<U+0094\> are actually less likely to help if they believe that the observed disparity has motivated their partner to improve themselves (i.e., the partner experiences \<U+0093\>benign envy\<U+0094\>).
+Behavioural economists have found that participants who earned an advantaged position (versus random assignment) are less generous (Hoffman, McCabe, Shachat, & Smith, 1994). Similarly, van de Ven et al. (2010) found that those who are better off in the presence of inequality are more likely to engage in helping behaviours when they believe that their partner is frustrated by the disparity and harboring antagonistic motivations (i.e., "malicious envy" Crusius & Lange, 2014). By contrast, "winners" are actually less likely to help if they believe that the observed disparity has motivated their partner to improve themselves (i.e., the partner experiences "benign envy").
 
 The next two experiments will test whether distributional fairness moderates the effect of inequality on security consumption. Experiment 2 again varies inequality (hi/none), but also manipulates whether one's income is allocated **randomly or based on task performance**.
 
@@ -396,93 +354,11 @@ Study 1b will test the hypothesis that a meritocratic distribution of wealth wil
 m_merit <- lm(security_spending ~ inequality*merit, data = ineq_merit_data)
 ```
 
-**H1b.1:** (No-way interaction): In the **a)** *significant* two-way model `m_merit`, coefficients for **b)** income inequality, **c)** merit-based allocation, and **d)** the inequality\*merit interaction each will have a significantly positive effect on security spending.
-
-```{r merit-aov, echo=TRUE, eval=FALSE}
-aov_merit <- aov(security_spending ~ as.factor(inequality)*as.factor(merit), 
-               data = ineq_merit_data, type="III")
-```
-
-**H1b.2:** (Planned pairwise comparisons), the hi-inequality/random income condition will have higher rates of security consumption than all other conditions (i.e., **a)** hi-inequality/merit income, **b)** no-inequality/random income, & **c)** no-inequality/merit income).
-
-```{r merit-tukey, echo=TRUE, eval=FALSE}
-stats::TukeyHSD(aov_merit)
-```
-
-**H1b.3:** (Mediation step 1) In the model `m_vis_med1`, coefficients for **a)** income inequality, **b)** merit-based allocation, and **c)** the inequality\*merit interaction each will have a significant positive effect on participants' perceived likelihood of their partner attacking.
-
-```{r merit-mediat-predict, eval=FALSE, echo=TRUE}
-#predicting mediator
-m_merit_med1 <- lm(likely_attack ~ inequality*merit, data = ineq_merit_data)
-```
-
-**H1b.4:** (Mediation step 2) In the model `m_merit_likely_security`, participants' perceived likelihood of their partner attacking will have a significantly positive effect on security spending.
-
-```{r merit-likely-security, eval=FALSE, echo=TRUE}
-# test for relationship between p. attack likelihood and security spending
-m_merit_likely_security <- lm(security_spending ~ likely_attack, data = ineq_merit_data)
-```
-
-**H1b.5:** (Moderated mediation) The indirect effects of inequality on security consumption, through perceived likelihood of partner attack, will be largest when positions are allocated randomly (versus when roles are allocated based on merit). In the model `merit_modmed_test`, the indirect effect/ACME (Average Causal Mediation Effect [total effect - direct effect]) will be significantly larger when roles are random (merit=0) than when allocated based on merit (merit=1)
-
-```{r merit-mediat-dv, eval=FALSE, echo=TRUE}
-# model with mediator: likely_attack (or perceived likelihood of partner attacking)
-m_merit_med2 <- lm(security_spending ~ inequality*merit + likely_attack, 
-                 data = ineq_merit_data)
-```
-
-```{r merit-mod-med, eval=FALSE, echo = TRUE}
-# see https://ademos.people.uic.edu/Chapter15.html#41_create_the_necessary_regression_models
-library(mediation)
-mediate <- mediation::mediate
-
-# ACME: Average Causal Mediation Effect [total effect - direct effect]
-# ADE: Average Direct Effect [total effect - indirect effect]
-# Total Effect: Direct (ADE) + Indirect (ACME)
-# Prop. Mediated: Conceptually ACME / Total effect 
-#(This tells us how much of the total effect our indirect effect is ?explaining?)
-
-# specify mediation at high visibility
-m_merit_modmed_himerit <- mediate(m_merit_med1, m_merit_med2,    
-                           covariates = list(merit = 1), boot = TRUE,   
-                           boot.ci.type = "bca", sims = 2000, treat="inequality",
-                           mediator="likely_attack")
-
-plot(m_merit_modmed_himerit, xlim = 0:1)
-
-summary(m_merit_modmed_himerit) 
-
-# Specify mediation at low visibility
-m_merit_modmed_lowmerit <- mediate(m_merit_med1, m_merit_med2,    
-                           covariates = list(merit = 0), boot = TRUE,   
-                           boot.ci.type = "bca", sims = 2000, treat="inequality",
-                           mediator="likely_attack")
-
-plot(m_merit_modmed_lowmerit, xlim = 0:1)
-
-summary(m_merit_modmed_lowmerit) 
-```
-
-```{r merit-modmed-test, eval=FALSE, echo = TRUE}
-modmed_testmerit <- mediate(m_merit_modmed_himerit, m_merit_modmed_lowmerit, 
-                            boot = TRUE,  boot.ci.type = "bca", sims = 2000, 
-                            treat="inequality", mediator="likely_attack")   
-
-#We don't specify anything about the moderator in this code yet
-merit_modmed_test <- test.modmed(modmed_testmerit, covariates.1 = list(merit = 0),   
-            covariates.2 = list(merit = 1), sims = 2000)
-#Here we specify both levels of the moderator that we want to test
-
-merit_modmed_test
-```
-
-**E1b.1:** As exploratory analyses, this project will also examine the main and interactive effects of inequality and meritocracy on **a)** perceived deservingness, in addition to perceived partner **b)** dissatisfaction, **c)** benign envy, and **d)** malicious envy.
-
 ### Study 1c: Group membership
 
 As described in the literature review to Study 1b, fairness appears to have its roots in avoiding partiality. In particular, acts of partiality often signify the formation of alliances, which inherently exclude others (DeScioli & Kurzban, 2009). Since substantial interpersonal and intergroup conflict is rooted in the perception of unfairness and discrimination (Tajfel & Turner, 1979), it is thus important to understand how fairness influences willingness to consume security goods. To this end, Study 1c will examine whether, under a state of inequality, group membership and agentic distributions of wealth have main and interacting effects on security consumption.
 
-Meritocracy, a commonly-invoked norm of fairness in westernized and industrialized cultures, may play an important role in influencing individuals\<U+0092\>? perceived need to consume security goods. Namely, those who are wealthy may feel less threatened by their neighbors because they earned their resources \<U+0093\>fair and square,\<U+0094\> according to a shared set of rules. However, in social settings, truly objective assessments of merit are often unavailable or are underused. A strength of Study 1b is that the compensation scheme of the Slider Task is transparent; so long as the participants do not suspect deception by the experimenter, participants have no reason to believe that their payoff is attributable to anything other than their efforts. However, since Study 1b directly compares meritocratic versus random allocation of resources, it does not answer the more fundamental question: do people consume more security goods when inequality is clearly unfair?
+Meritocracy, a commonly-invoked norm of fairness in westernized and industrialized cultures, may play an important role in influencing individuals'? perceived need to consume security goods. Namely, those who are wealthy may feel less threatened by their neighbors because they earned their resources "fair and square," according to a shared set of rules. However, in social settings, truly objective assessments of merit are often unavailable or are underused. A strength of Study 1b is that the compensation scheme of the Slider Task is transparent; so long as the participants do not suspect deception by the experimenter, participants have no reason to believe that their payoff is attributable to anything other than their efforts. However, since Study 1b directly compares meritocratic versus random allocation of resources, it does not answer the more fundamental question: do people consume more security goods when inequality is clearly unfair?
 
 #### Hypotheses
 
@@ -496,11 +372,8 @@ The third experiment will keep a constant presence of inequality, but manipulate
 
 **H1c.4:** the effects of agentic distributions of wealth on **a)** partner likelihood to attack, and **b**)security consumption will be positively moderated by having an outgroup partner.
 
-**E1c.1:** exploratory analyses will examine the main effect of having an outgroup partner on **a)** partner likelihood to attack, and **b**)security consumption.
 
-**E1c.2:** exploratory analyses will also be conducted on the **a)** main and **b)** interactive effects of agentic wealth distributions and having an outgroup partner on perceived partner dissatisfaction.
-
-## Multilevel Analysis of the International Crime Victimization Survey
+## Study 2 -Multilevel Analysis of the International Crime Victimization Survey
 
 The highly-controlled nature of the above experiments allow for precise tests of the hypothesized inequality-security consumption relationship, with substantial internal validity. Although they offer real consequences for participants' choices, economic games are highly artificial by design. Insights generated in the security game may not be generalizable to consumers? daily consumption context. To provide a test with greater external validity, this project uses a multi-method approach, supplementing experimental results with the analysis of data in the publicly-available International Crime Victimization Survey.
 
@@ -516,25 +389,13 @@ Second, nation-level inequality in disposable income was accessed through the St
 
 Lastly, countries' expenditure-side real GDP was retrieved from the Penn World Table, version 10.0 (PWT). The selected GDP values are adjusted for Purchasing Power Parity, "to compare relative living standards across countries at a single point in time" [@feenstra2015]. Nations' GDP values were divided by their population sizes to yield a per-capita GDP value, which will be used for these analyses.
 
-### Proposed sample characteristics
+### Study 2 - Proposed sample characteristics (Sampling plan)
 
 Although the above datasets extend across multiple years, the current analysis will be limited to observations across 2004-2006. Imposing this restriction yields a sufficient initial number of cases `r format(sweep5_nrow, big.mark = ",", scientific = FALSE)` and countries `r sweep5_countries`, combined with relative recency of data.
 
-### Inclusion/exclusion criteria (e.g., outliers)
+### Study 2 - experimental procedures (Design)
 
-Since the ICVS, SWIID, and PWT are publicly available, preprocessing and inclusion/exclusion steps have already been implemented, and are available in the sourced and attached code. Some notable preprocessing steps are as follows:
-
-1.  merged ICVS responses from United Kingdom, England & Wales, Northern Ireland, and Scotland into a single cluster of "United Kingdom," as SWIID and PWT values are not available for these portions of the UK.
-
-2.  Excluded participants who refused response on any measures
-
-3.  Excluded four countries that had missing responses on key predictor and outcome measures: Switzerland, Hong Kong, Estonia, and Japan
-
-4.  Averaged gini and gdp values across 2004-2006 into a single index
-
-After a conservative exclusion process for missing data, survey sweeps conducted across 2004-6 yielded `r sum(summary(iv_2005$country)>0)` countries and a total `r format(nrow(iv_2005), big.mark = ",", scientific = FALSE)` participants, with a minimum of `r min(summary(iv_2005$country)[summary(iv_2005$country)!= 0])` participants per country. An exclusion strategy maximizing the number of variables yields `r sum(summary(iv_2005_mod$country)>0)` countries, and `r format(nrow(iv_2005_mod), big.mark = ",", scientific = FALSE)` participants.
-
-### Measurement and variables
+### Study 2 - Measurement and Variables
 
 Security consumption has been operationalized as a count variable, summing respondents' self-reported ownership of five different preventative measures: a burglar alarm, special door locks, special grills, a high perimeter fence, and caretaker security. This count variable excludes several prevention variables due to missing data, such as owning a watch dog, having surveillance arrangements with neighbors, and purchasing insurance against criminal activities.
 
@@ -558,7 +419,26 @@ asutralia missing sexual offences
 
 probably drop assaults and sexual offences
 
-### experimental procedures
+
+
+### Measurement and Variables (Study 2)
+
+
+
+### Inclusion/exclusion criteria (e.g., outliers; Study 2)
+
+Since the ICVS, SWIID, and PWT are publicly available, preprocessing and inclusion/exclusion steps have already been implemented, and are available in the sourced and attached code. Some notable preprocessing steps are as follows:
+
+1.  merged ICVS responses from United Kingdom, England & Wales, Northern Ireland, and Scotland into a single cluster of "United Kingdom," as SWIID and PWT values are not available for these portions of the UK.
+
+2.  Excluded participants who refused response on any measures
+
+3.  Excluded four countries that had missing responses on key predictor and outcome measures: Switzerland, Hong Kong, Estonia, and Japan
+
+4.  Averaged gini and gdp values across 2004-2006 into a single index
+
+After a conservative exclusion process for missing data, survey sweeps conducted across 2004-6 yielded `r sum(summary(iv_2005$country)>0)` countries and a total `r format(nrow(iv_2005), big.mark = ",", scientific = FALSE)` participants, with a minimum of `r min(summary(iv_2005$country)[summary(iv_2005$country)!= 0])` participants per country. An exclusion strategy maximizing the number of variables yields `r sum(summary(iv_2005_mod$country)>0)` countries, and `r format(nrow(iv_2005_mod), big.mark = ",", scientific = FALSE)` participants.
+
 
 ### Proposed analysis pipeline, including all preprocessing steps, precise description of all planned analyses
 
@@ -600,7 +480,8 @@ Such quality checks might include the absence of floor or ceiling effects in dat
 
 ## Timeline for completion of the study and proposed resubmission date if Stage 1 review is successful
 
-We used `r cite_r("r-references.bib")` for all our analyses.
+
+\newpage
 
 # Data availability statement
 
@@ -625,15 +506,187 @@ Interactive demos of experimental games can be accessed at [(https://security-pr
 
 \endgroup
 
-## Acknowledgements
+We used `r cite_r("r-references.bib")` for all our analyses.
 
-## Author contributions
 
-## Competing interests
+# Acknowledgements
 
-## Figures & Figure captions
+The funders had no role in study design, data collection and analysis, decision to publish or preparation of the manuscript.
 
-## Tables (A Design Table is mandatory)
+# Author contributions
 
-**Supplementary information**
+All authors edited the manuscript and approved the final version. D.N. designed the studies and wrote the manuscript, in consultation with M.M.. D.N. collected, processed, and analysed the data. The study designs were based on theory developed by D.N.
 
+# Competing interests
+
+The authors declare no competing interests.
+
+# Figures & Figure captions
+
+# Tables (A Design Table is mandatory)
+
+\newpage
+
+# Supplementary information
+
+## Pilot results
+
+Participants found no significant effects of baseline likelihood of successful thefts, nor security price on spending (*p*s = `r pretest_model$coefficients["as.numeric(prob)","Pr(>|t|)"]` and `r pretest_model$coefficients["cost","Pr(>|t|)"]`,
+
+•	If you report analyses of pilot data using NHST (either in the main text or in Supplementary Information), you must report statistics in full:
+statistic(degrees of freedom) = value, p = value, effect size statistic = value, % Confidence Intervals = values
+
+## Study 1a
+
+
+**H1a.1:** (No-way interaction): In the **a)** *significant* two-way model `m_vis`, coefficients for **b)** income inequality, **c)** income visibility, and **d)** the inequality\*visibility interaction each will have a significantly positive effect on security spending.
+
+```{r vis-aov, echo=TRUE, eval=FALSE}
+aov_vis <- aov(security_spending ~ as.factor(inequality)*as.factor(visibility), 
+               data = ineq_vis_data, type="III")
+```
+
+**H1a.2:** (Planned pairwise comparisons), the hi-inequality/visible income condition will have higher rates of security consumption than all other conditions (i.e., **a)** hi-inequality/invisible income, **b)** no-inequality/visible income, & **c)** no-inequality/invisible income).
+
+```{r vis-tukey, echo=TRUE, eval=FALSE}
+stats::TukeyHSD(aov_vis)
+```
+
+**H1a.3:** (Mediation step 1) In the model `m_vis_med1`, coefficients for **a)** income inequality, **b)** income visibility, and **c)** the inequality\*visibility interaction each will have a significant positive effect on participants' perceived likelihood of their partner attacking.
+
+```{r vis-mediat-predict, eval=FALSE, echo=TRUE}
+#predicting mediator
+m_vis_med1 <- lm(likely_attack ~ inequality*visibility, data = ineq_vis_data)
+```
+
+**H1a.4:** (Mediation step 2) In the model `m_vis_likely_security`, participants' perceived likelihood of their partner attacking will have a significantl positive effect on security spending.
+
+```{r vis-likely-security, eval=FALSE, echo=TRUE}
+# test for relationship between p. attack likelihood and security spending
+m_vis_likely_security <- lm(security_spending ~ likely_attack, data = ineq_vis_data)
+```
+
+<!-- **H1.3:** The effect of income inequality on **a)** perceived likelihood of partner attack, and **b)** security spending will be largest when participants believe that their partners are aware of both players' incomes (i.e., when incomes are transparent/visible;  -->
+
+**H1a.5:** (Moderated mediation) The indirect effects of inequality on security consumption, through perceived likelihood of partner attack, will be largest when participants believe that their partners are aware of both players' incomes (i.e., when incomes are transparent/visible). In the model `vis_modmed_test`, the indirect effect/ACME (Average Causal Mediation Effect [total effect - direct effect]) will be significantly larger when incomes are visible (visibility=1) than when they are invisible(visibility=0)
+
+```{r vis-mediat-dv, eval=FALSE, echo=TRUE}
+# model with mediator: likely_attack (or perceived likelihood of partner attacking)
+m_vis_med2 <- lm(security_spending ~ inequality*visibility + likely_attack, 
+                 data = ineq_vis_data)
+```
+
+```{r vis-mod-med, eval=FALSE, echo = TRUE}
+# see https://ademos.people.uic.edu/Chapter15.html#41_create_the_necessary_regression_models
+library(mediation)
+mediate <- mediation::mediate
+# ACME: Average Causal Mediation Effect [total effect - direct effect]
+# ADE: Average Direct Effect [total effect - indirect effect]
+# Total Effect: Direct (ADE) + Indirect (ACME)
+# Prop. Mediated: Conceptually ACME / Total effect 
+#(This tells us how much of the total effect our indirect effect is ?explaining?)
+# specify mediation at high visibility
+m_vis_modmed_hivis <- mediate(m_vis_med1, m_vis_med2,    
+                           covariates = list(visibility = 1), boot = TRUE,   
+                           boot.ci.type = "bca", sims = 2000, treat="inequality",
+                           mediator="likely_attack")
+plot(m_vis_modmed_hivis, xlim = 0:1)
+summary(m_vis_modmed_hivis) 
+# Specify mediation at low visibility
+m_vis_modmed_lowvis <- mediate(m_vis_med1, m_vis_med2,    
+                           covariates = list(visibility = 0), boot = TRUE,   
+                           boot.ci.type = "bca", sims = 2000, treat="inequality",
+                           mediator="likely_attack")
+plot(m_vis_modmed_lowvis, xlim = 0:1)
+summary(m_vis_modmed_lowvis) 
+```
+
+```{r vis-modmed-test, eval=FALSE, echo = TRUE}
+modmed_testvis <- mediate(m_vis_modmed_hivis, m_vis_modmed_lowvis, boot = TRUE,  
+                            boot.ci.type = "bca", sims = 2000, treat="inequality",
+                          mediator="likely_attack")   
+#We don't specify anything about the moderator in this code yet
+vis_modmed_test <- test.modmed(modmed_testvis, covariates.1 = list(visibility = 0),   
+            covariates.2 = list(visibility = 1), sims = 2000)
+#Here we specify both levels of the moderator that we want to test
+vis_modmed_test
+```
+
+(ref:modmed) Hypothesized pattern of moderated mediation
+
+```{r concept-modmed, echo=FALSE, out.width='100%', fig.cap="(ref:modmed)"}
+knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/inequality_security/figs/ineqsec_concepmodmed.jpg")
+```
+
+## Study 1b
+
+**H1b.1:** (No-way interaction): In the **a)** *significant* two-way model `m_merit`, coefficients for **b)** income inequality, **c)** merit-based allocation, and **d)** the inequality\*merit interaction each will have a significantly positive effect on security spending.
+
+```{r merit-aov, echo=TRUE, eval=FALSE}
+aov_merit <- aov(security_spending ~ as.factor(inequality)*as.factor(merit), 
+               data = ineq_merit_data, type="III")
+```
+
+**H1b.2:** (Planned pairwise comparisons), the hi-inequality/random income condition will have higher rates of security consumption than all other conditions (i.e., **a)** hi-inequality/merit income, **b)** no-inequality/random income, & **c)** no-inequality/merit income).
+
+```{r merit-tukey, echo=TRUE, eval=FALSE}
+stats::TukeyHSD(aov_merit)
+```
+
+**H1b.3:** (Mediation step 1) In the model `m_vis_med1`, coefficients for **a)** income inequality, **b)** merit-based allocation, and **c)** the inequality\*merit interaction each will have a significant positive effect on participants' perceived likelihood of their partner attacking.
+
+```{r merit-mediat-predict, eval=FALSE, echo=TRUE}
+#predicting mediator
+m_merit_med1 <- lm(likely_attack ~ inequality*merit, data = ineq_merit_data)
+```
+
+**H1b.4:** (Mediation step 2) In the model `m_merit_likely_security`, participants' perceived likelihood of their partner attacking will have a significantly positive effect on security spending.
+
+```{r merit-likely-security, eval=FALSE, echo=TRUE}
+# test for relationship between p. attack likelihood and security spending
+m_merit_likely_security <- lm(security_spending ~ likely_attack, data = ineq_merit_data)
+```
+
+**H1b.5:** (Moderated mediation) The indirect effects of inequality on security consumption, through perceived likelihood of partner attack, will be largest when positions are allocated randomly (versus when roles are allocated based on merit). In the model `merit_modmed_test`, the indirect effect/ACME (Average Causal Mediation Effect [total effect - direct effect]) will be significantly larger when roles are random (merit=0) than when allocated based on merit (merit=1)
+
+```{r merit-mediat-dv, eval=FALSE, echo=TRUE}
+# model with mediator: likely_attack (or perceived likelihood of partner attacking)
+m_merit_med2 <- lm(security_spending ~ inequality*merit + likely_attack, 
+                 data = ineq_merit_data)
+```
+
+```{r merit-mod-med, eval=FALSE, echo = TRUE}
+# see https://ademos.people.uic.edu/Chapter15.html#41_create_the_necessary_regression_models
+library(mediation)
+mediate <- mediation::mediate
+# ACME: Average Causal Mediation Effect [total effect - direct effect]
+# ADE: Average Direct Effect [total effect - indirect effect]
+# Total Effect: Direct (ADE) + Indirect (ACME)
+# Prop. Mediated: Conceptually ACME / Total effect 
+#(This tells us how much of the total effect our indirect effect is ?explaining?)
+# specify mediation at high visibility
+m_merit_modmed_himerit <- mediate(m_merit_med1, m_merit_med2,    
+                           covariates = list(merit = 1), boot = TRUE,   
+                           boot.ci.type = "bca", sims = 2000, treat="inequality",
+                           mediator="likely_attack")
+plot(m_merit_modmed_himerit, xlim = 0:1)
+summary(m_merit_modmed_himerit) 
+# Specify mediation at low visibility
+m_merit_modmed_lowmerit <- mediate(m_merit_med1, m_merit_med2,    
+                           covariates = list(merit = 0), boot = TRUE,   
+                           boot.ci.type = "bca", sims = 2000, treat="inequality",
+                           mediator="likely_attack")
+plot(m_merit_modmed_lowmerit, xlim = 0:1)
+summary(m_merit_modmed_lowmerit) 
+```
+
+```{r merit-modmed-test, eval=FALSE, echo = TRUE}
+modmed_testmerit <- mediate(m_merit_modmed_himerit, m_merit_modmed_lowmerit, 
+                            boot = TRUE,  boot.ci.type = "bca", sims = 2000, 
+                            treat="inequality", mediator="likely_attack")   
+#We don't specify anything about the moderator in this code yet
+merit_modmed_test <- test.modmed(modmed_testmerit, covariates.1 = list(merit = 0),   
+            covariates.2 = list(merit = 1), sims = 2000)
+#Here we specify both levels of the moderator that we want to test
+merit_modmed_test
+```
