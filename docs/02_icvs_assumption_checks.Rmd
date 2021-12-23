@@ -20,7 +20,7 @@ library(survey)
 
 library(WeMix)
 
-load("C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005.RData")
+load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/iv_2005.RData")
 
 source("C:/Users/dalla/Google Drive/project_files/icvs_inequality/scripts/icvs_scripts.r", local = knitr::knit_global())
 
@@ -118,7 +118,12 @@ security_boxcox<- geoR::boxcoxfit(iv_2005_mod$total_security, lambda=0, lambda2 
 
 ```{r total security, warning=F, message=FALSE, echo=FALSE, fig.show="hold", out.width="50%"}
 hist_plot(iv_2005_mod, total_security, "Histogram of Total Security")
-hist_plot(iv_2005_mod, num_victim_5yr, "Histogram of victimizations over past 5 years")
+ggsave(here::here("figures", "security_hist.png"),
+       height = 3)
+
+hist_plot(iv_2005_mod, num_victim_5yr_assault, "Histogram of victimizations over past 5 years")
+ggsave(here::here("figures", "victim_hist.png"),
+       height = 3)
 
 ```
 
@@ -131,17 +136,17 @@ normality_stats(iv_2005_mod$total_security)
 This summing procedure gives us a max score of `r max(iv_2005_mod$total_security)` on security consumption, with substantial positive skew
 
 ```{r lv2 dat, echo=FALSE}
-gd <- iv_2005_mod %>% 
-        filter(!is.na(num_victim_5yr)) %>%
-        group_by(country) %>% 
-        summarise(gdppc_2004_6 = mean(gdppc_2004_6),
-                  gdppc_2004_6_winz = mean(gdppc_2004_6_winz),
-                  gdppc_2004_6_cent = mean(gdppc_2004_6_cent),
-                  num_victim_5yr  = mean(num_victim_5yr),
-                  num_victim_5yr_winz = mean(num_victim_5yr_winz),
-                  gini_2004_6  = mean(av_gini),
-                  gini_winz = mean(gini_2004_6_winz)
-                  )
+# gd <- iv_2005_mod %>% 
+#         filter(!is.na(num_victim_5yr)) %>%
+#         group_by(country) %>% 
+#         summarise(gdppc_2004_6 = mean(gdppc_2004_6),
+#                   gdppc_2004_6_winz = mean(gdppc_2004_6_winz),
+#                   gdppc_2004_6_cent = mean(gdppc_2004_6_cent),
+#                   num_victim_5yr  = mean(num_victim_5yr),
+#                   num_victim_5yr_winz = mean(num_victim_5yr_winz),
+#                   gini_2004_6  = mean(av_gini),
+#                   gini_winz = mean(gini_2004_6_winz)
+#                   )
 
 # gd <- iv_2005_mod %>% 
 #         filter(!is.na(num_victim_5yr)) %>%
@@ -265,6 +270,9 @@ summary(m_ord)
 
 anova(m_ord_null, m_ord)
 
+mw_ord <- clmm(ordered(num_victim_5yr_winz) ~ gini_2004_6_cent + gdppc_2004_6_scale + age_cent + employed + male + police_effective + income_quartile + (1|country), data = iv_2005_mod, weights = individual_weight)
+
+
 # https://user2021.r-project.org/participation/technical_notes/t186/technote/
 # vizualization requires clmm2, specify Hess = TRUE to get summary
 
@@ -275,6 +283,48 @@ m_ord2 <- clmm2(ordered(num_victim_5yr) ~ gini_2004_6_cent + gdppc_2004_6_scale 
 summary(m_ord2)
 ```
 
+## Ordinal with all SWIID dataframes
+
+```{r SWIID_100 prep}
+load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/swiid9_0.rda")
+
+unique(swiid[[1]]$country)
+
+swiid_responders <-  swiid %>%
+  map(. %>% filter(.,country %in% names(summary(iv_2005_mod$country)[0!= summary(iv_2005_mod$country)]) )) %>%
+  map(. %>% select(country,year,gini_disp))
+
+
+unique(swiid_responders[[1]]$country)
+
+swiid_responders[[1]]
+```
+
+```{r PWT_100}
+pwt <- readxl::read_excel("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/pwt100.xlsx", sheet = "Data")
+
+# changed from rgdpe
+pwt100_gdppc <- pwt %>% 
+  transmute(country = country,
+            year = year,
+            gdppc = cgdpe/pop) %>%
+  filter(!is.na(gdppc))
+
+pwt_responders <-  pwt100_gdppc %>%
+  filter(country%in% names(summary(iv_2005_mod$country)[0!= summary(iv_2005_mod$country)]) )
+```
+
+```{r merge icvs and PWT}
+pwt_spread <- spread(pwt_responders, year,gdppc) 
+
+colnames(pwt_spread)[2:6] = c("gdppc_2003", "gdppc_2004", "gdppc_2005", "gdppc_2006", "gdppc_2007") 
+
+pwt_2004_6 <- pwt_spread %>%
+  dplyr::rowwise() %>%
+  dplyr::mutate(gdppc_2004_6 = mean(c(gdppc_2004, gdppc_2005, gdppc_2006)))
+```
+
+
 ## other packages
 
 GLMMadaptive brms MCMC
@@ -284,6 +334,8 @@ MASS::polr() (just fixed effect?) mixor (package 'mixor' is not available for th
 Different statistical packages support different link families, for example the ordinal package (which offers ordinal regression with one random effect) supports the cumulative links "logit", "probit", "cloglog", "loglog" and "cauchit"
 
 cumulative link models
+
+
 
 ```{r GLMMadaptive}
 library(GLMMadaptive)
@@ -641,6 +693,26 @@ Likewise, there is some imbalance in the resid\~fitted plots, with more positive
 The variance of residuals seems consistent across all levels - so no notable heteroscedasticity?
 
 In particular, the residuals don't appear to be symmetrically distributed (tending to cluster towards the middle of the plot). For low fitted values, residuals seem to be skewed higher, leveling off as the fitted values get larger
+
+Analyses on archival data provides many degrees of freedom, not just in the processing of data, but in model construction as well.
+
+1.  run many clusters
+2.  run few clusters - few variables
+
+iv_2005
+
+xtmixed total_security num_victim_5yr gini_cent gdppc_2004_6\_scale age_cent employed male [pw=individual_weight] \|\| country:, pwscale(size)
+
+3.  few clusters - many variables
+4.  few clusters - many variables - winzorized **Report this one**
+5.  few clusters - many variables - flagged
+6.  many clusters - winzorized
+
+xtmixed security_winz num_victim_5yr_winz gini_wc gdppc_2004_6\_ws age_cent employed male [pw=individual_weight] \|\| country:, pwscale(size)
+
+7.  many clusters - flagged
+8.  Many clusters - with national victimization
+9.  few clusters- with
 
 # Poisson distribution {#poisson-distribution}
 
