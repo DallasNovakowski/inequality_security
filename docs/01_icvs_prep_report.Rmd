@@ -111,50 +111,52 @@ length(summary(icvs_data$country))
 
 <br>
 
-We see above, that there are 79 countries in total across the entire
-ICVS.
+We see above, that there are 79 countries in total across the entire ICVS.
 
-The ICVS provides more specific regional data compared to the LIS or
-World Bank, distinguishing data collection across England and Wales,
-Ireland, Northern Ireland, and Scotland (in addition to the United
-Kingdom).
+The ICVS provides more specific regional data compared to the LIS or World Bank, distinguishing data collection across England and Wales, Ireland, Northern Ireland, and Scotland (in addition to the United Kingdom).
 
 ```{r adjusted countries}
 summary(icvs_data$country)[c("United Kingdom","England & Wales", "Northern Ireland", "Scotland", "Ireland")]
 ```
 
-It would be preferable to retain data granularity across the United
-Kingdom. Firstly, it would keep the number of clusters closer 30
-countries, and secondly, the regions likely have important economic and
-cultural differences. For instance, Northern Ireland has a smaller gini
-compared to the broader UK (.33 vs. .39 in 2013;
-<https://www.nicva.org/resource/economic-inequality-in-northern-ireland>).
 
-Unfortunately, smaller regions seem less likely to systematically
-collect data. For instance, some critical variables such as income
-inequality are not available either in the LIS, World Bank, nor
-government-level data in countries such as Northern Ireland or Scotland.
-Since this study seeks to integrate individual and nation-level
-observations, members of the United Kingdom were combined under the
-single country of the UK.
+I reached out to John van Kesteren - one of the chief researchers involved in the ICVS:
 
-Scotland's gini - HBAI dataset, DWP (oecd-modified).
-(<https://www.gov.scot/publications/poverty-income-inequality-scotland-2013-14/pages/23/>)
+> In the beginning of the project, Northern Ireland, Scotland and England & Wales were separate units and in the database as separate surveys. In 2005, the surveys were financed by the EU and one survey the UK therefore (including NI and Sco). The UK ordered (and paid for) separate surveys for NI and Sco. I Manipulated the weights. For the EU report we used UK. for historical data I merged Engl&Wal, Sco and NI, that was done using weights. For the later report we used Engl&Wal, Sco and NI as separate units again as we had always done. To get Engl&Wal we deleted the Sco and NI data from the UK sample. I decided to duplicate the data. If you use country variable 1005b, year variable i002 and weight variable w005b. You will find data for UK as a whole and separate results for Engl&Wal, NI and Sco allthough these were not separate surveys. You decide which to use, they should not be reported together. 
 
-2004/05 30 2005/06 31 2006/07 32
+Since the UK vs. constituent countries are duplicated, we obviously can't keep both. It would be preferable to retain data granularity across the United Kingdom. Firstly, it would keep the number of clusters closer 30 countries, and secondly, the regions likely have important economic and cultural differences. For instance, Northern Ireland has a smaller gini compared to the broader UK (.33 vs. .39 in 2013; <https://www.nicva.org/resource/economic-inequality-in-northern-ireland>).
 
-```{r adjusting countries, echo = FALSE}
-# substituting specific british isles regions with UK
-icvs_data$country[icvs_data$country %in% c("England & Wales", "Scotland", "Northern Ireland")] <- "United Kingdom"
+Unfortunately, smaller regions seem less likely to systematically collect data. For instance, some critical variables such as income inequality are not available either in the LIS, World Bank, nor government-level data in countries such as Northern Ireland or Scotland. We will keep only the combined UK observations, since  this study seeks to integrate individual and nation-level observations.
+
+
+```{r UK-only}
+icvs_data <- filter(icvs_data, country != "England & Wales" & country != "Scotland" & country != "Northern Ireland")
 
 # this throws an error sometimes (resolved with dplyr?)
 icvs_data$country<- dplyr::recode(icvs_data$country, "Hong Kong (SAR China)"= "Hong Kong",
                            "USA" = "United States")
 ```
 
+
+
+
+
+<!-- Scotland's gini - HBAI dataset, DWP (oecd-modified). (<https://www.gov.scot/publications/poverty-income-inequality-scotland-2013-14/pages/23/>) -->
+
+<!-- 2004/05: 30 2005/06: 31 2006/07: 32 -->
+
+```{r adjusting countries, echo = FALSE, eval = FALSE}
+# substituting specific british isles regions with UK
+icvs_data$country[icvs_data$country %in% c("England & Wales", "Scotland", "Northern Ireland")] <- "United Kingdom"
+
+
+```
+
 ```{r total adjusted countries}
 summary(icvs_data$country)[c("United Kingdom","England & Wales", "Northern Ireland", "Scotland", "Ireland")]
-sum(summary(icvs_data$country)>0)
+cleaned_countries <- sum(summary(icvs_data$country)>0)
+
+
 ```
 
 Notably, Ireland is not part of the UK, so has better data coverage and
@@ -185,47 +187,27 @@ case there are any meaningful differences
 kable_summary(icvs_data$questionnaire_used)
 ```
 
-We can see that *there are more than a dozen different surveys
-distributed as part of this project*: computer-assisted telephone
-interviewing (CATI), face to face, and something "country specific." I
-know with some questionnaires (possibly later, and outside this dataset)
-are done solely with computers, but those had very poor response rates.
-Likewise, we can see that the study has been conducted over 15 years,
-better seen below.
+We can see that *there are more than a dozen different surveys distributed as part of this project*: computer-assisted telephone interviewing (CATI), face to face, and something "country specific." I know with some questionnaires (possibly later, and outside this dataset) are done solely with computers, but those had very poor response rates. Likewise, we can see that the study has been conducted over 15 years, better seen below.
 
-A potentially important note is that 9833 cases have "0" coded as the
-questionnaire they received, which doesn't have a code to it. Likewise,
-16412 cases are NA. This means about *25,000 participants were given an
-unknown questionnaire.* More on this later
+A potentially important note is that 9833 cases have "0" coded as the questionnaire they received, which doesn't have a code to it. Likewise, 16412 cases are NA. This means about *25,000 participants were given an unknown questionnaire.* More on this later
 
 <br>
 
-This is important because the questions they receive, and the time they
-receive the questions, can change. There are variables that may help us
-clear this up, but we need to keep this uncertainty in our
-consideration, because as explored later on, **this study often uses NA
-values in the place of 0**
+This is important because the questions they receive, and the time they receive the questions, can change. There are variables that may help us clear this up, but we need to keep this uncertainty in our consideration, because as explored later on, **this dataset often uses NA values in the place of 0**
 
 <br>
 
-The codebook proves to be a useful, but incomplete, resource here. We
-can see which countries took part in each sweep, and what items were
-included (it even specifies the order of presentation!).
+The codebook proves to be a useful, but incomplete, resource here. We can see which countries took part in each sweep, and what items were included (it even specifies the order of presentation!).
 
 <br>
 
-![](C:/Users/dalla/Google%20Drive/offline_data_files/icvs_pwt_swiid/supporting_docs/ICVS_codebook_screenshot.png)
+![](C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/supporting_docs/ICVS_codebook_screenshot.png)
 
 # Choosing year(s) and questionnaire(s) for our analysis
 
-It's obvious we can't use all sweeps right off the bat. Although we have
-the "seal of approval" for comparability, this is for specific
-questionnaire items - some questions are not displayed to participants
-in some years/surveys.
+It's obvious we can't use all sweeps right off the bat. Although we have the "seal of approval" for comparability, this is for specific questionnaire items - some questions are not displayed to participants in some years/surveys.
 
-This problem best reveals itself when we try to choose nation-level
-variables to include in the model - if we look at GDP or gini, what year
-do we extract from?
+This problem best reveals itself when we try to choose nation-level variables to include in the model - if we look at GDP or gini, what year do we extract from?
 
 ```{r NA sweeps , warning=F, message=FALSE, echo = FALSE}
 library(reshape) # cast function
@@ -256,15 +238,9 @@ sweep_screen_c$eu_and_2005[sweep_screen_c$eu_and_2005 == 0] <- NA
 sweep_screen_c
 ```
 
-The above shows the number of participants in each country, for each
-wave, in addition to a total, AS WELL as the total number of
-participants for each country after combining the overlapping waves 5
-and EU ICS (2004-2006 for sweep 5, and 2005 for the EU ICS 5.1)
+The above shows the number of participants in each country, for each wave, in addition to a total, AS WELL as the total number of participants for each country after combining the overlapping waves 5 and EU ICS (2004-2006 for sweep 5, and 2005 for the EU ICS 5.1)
 
-Although we could compare the sums of eu_and_2005 with its constituents,
-it's easier to **sum the number of non-NAs** (i.e., countries with at
-least 1 respondent) to see whether the 2004-2006 and EU ICS sweeps
-measure the same countries twice (i.e., there's redundancy)
+Although we could compare the sums of eu_and_2005 with its constituents, it's easier to **sum the number of non-NAs** (i.e., countries with at least 1 respondent) to see whether the 2004-2006 and EU ICS sweeps measure the same countries twice (i.e., there's redundancy)
 
 ```{r count nonmissing,warning=F, message=FALSE, echo=FALSE}
 # sum non_missing 
@@ -272,16 +248,11 @@ sweep_screen_c %>%
   summarise_all(list(~ sum(!is.na(.))))
 ```
 
-So here we can see that the 4th sweep by has the most countries
-**WITHOUT NAs**, followed by sweeps 3 then 2
+So here we can see that the 4th sweep by has the most countries **WITHOUT NAs**, followed by sweeps 3 then 2
 
-Likewise, we can see that 18+16=34, which is equal to "eu_and_2005," so
-there is zero redundancy between the 2004-2006 surveys and the 2005 EU
-ICS. Given that there's no overlap, sweep 5 and the EU sweep seem to be
-perfectly complementary.
+Likewise, we can see that 18+16=34, which is equal to "eu_and_2005," so there appears to be zero redundancy between the 2004-2006 surveys and the 2005 EU ICS. Given that there's no overlap, sweep 5 and the EU sweep seem to be perfectly complementary.
 
-For now, let's assume that we'll be using the countries combined for
-sweeps 5 and 5.1.
+For now, let's assume that we'll be using the countries combined for sweeps 5 and 5.1.
 
 ```{r 2005 nrow}
 data_2005 <- icvs_data %>%
@@ -315,26 +286,21 @@ and 2006. This gives a reasonable balance of:
 3)  a decent number of level 2 clustering variables (which is needed for
     HLM).
 
-The most notable weakness is that this is data from WEIRD countries.
-Other, less WEIRD countries (e.g., phillipines, nigeria, india) are
-better represented throughout sweeps 2 to 4
+The most notable weakness is that this is data from WEIRD countries. Other, less WEIRD countries (e.g., phillipines, nigeria, india) are better represented throughout sweeps 2 to 4
 
 <br>
 
-I consider this topic in need for further discussion (including
-recognizing even how the newest data is 15 years old)
+I consider this topic in need for further discussion (including recognizing even how the newest data is 15 years old)
 
 ## Comparability of sweeps and questionnaires
 
-I reached out to John van Kesteren - one of the chief researchers
-involved in the ICVS:
+I reached out to John van Kesteren - one of the chief researchers involved in the ICVS:
 
 > "With regards to the different versions, the used questionnaires are much alike. Each country was allowed to ad a small amount of additional questions to the basic questionnaires. If the differences are too big, I used the 'based on xxx' qualification. In that case it was up to me to decide whether specific items were comparable to the main questionnaire. If not, they were not included in the main database. It sounds a bit arrogant, but if it is in the main database, it has my personal seal of approval and the data are comparable."
 
 # **How do we measure security consumption?**
 
-Some people refused to answer on their use of security measures, so
-obviously can't be used for this study.
+Some people refused to answer on their use of security measures, so obviously can't be used for this study.
 
 ```{r responders}
 responders_2005 = filter(data_2005, is.na(prev_refusal))
@@ -342,10 +308,8 @@ nrow(responders_2005)
 sum(summary(responders_2005$country)>0)
 ```
 
-Excluding refused participants leaves us with a total of
-`r length(summary(responders_2005$country)[summary(responders_2005$country)]>1)`
-countries and `r format(nrow(responders_2005), scientific = FALSE)`
-respondents.
+Excluding refused participants leaves us with a total of `r length(summary(responders_2005$country)[summary(responders_2005$country)]>1)`
+countries and `r format(nrow(responders_2005), scientific = FALSE)` respondents.
 
 ```{r questionnaires after exclusions}
 kable_summary(responders_2005$questionnaire_used)
@@ -495,7 +459,16 @@ vic_var_assault
 
 
 # filtering to remove missing variables for summing
-responders_2005 <- filter(responders_2005, (!is.na(cartheft_5yrs) & !is.na(bicyctheft_5yrs) & !is.na(burglar_5yrs) & !is.na(attempt_5yrs) & !is.na(robbery_5yrs) & !is.na(pers_theft_5yrs) & !is.na(motortheft_5yrs)))
+responders_2005 <-
+  filter(responders_2005,
+         (
+           !is.na(cartheft_5yrs) &
+             !is.na(bicyctheft_5yrs) &
+             !is.na(burglar_5yrs) &
+             !is.na(attempt_5yrs) &
+             !is.na(robbery_5yrs) &
+             !is.na(pers_theft_5yrs) & !is.na(motortheft_5yrs)
+         ))
 
 summary(responders_2005[,vic_var_drop])
 nrow(responders_2005)
@@ -652,21 +625,9 @@ employed, partnered and male are totally filled
 
 ### what countries should we include?
 
-My initial impression would be to drop japan and hong kong for any
-analysis - not controlling for age and income seems inadvisable
+My initial impression would be to drop japan and hong kong for any analysis - not controlling for age and income seems inadvisable
 
 At minimum need to drop hong kong to keep age
-
-### what variables should we include?
-
-<b>For minimum inclusion:</b> <u>age, male, employed, partnered
-(excludes hong kong)</u>
-
-**for moderate inclusion:** <u> police effective, income_quartile
-(excludes japan, iceland, peru) </u>
-
-**for liberal inclusion:** <u> feel_safe_dark, break_in_threat (excludes
-**NZ, CA**, IC, HK) </u>
 
 # **Nation-level variables**
 
@@ -680,6 +641,12 @@ iv_2005 <- filter(responders_2005, !is.na(age_num) & !is.na(male) & !is.na(emplo
 nrow(iv_2005)
 summary(iv_2005$country)[summary(iv_2005$country)!= 0]
 length(summary(iv_2005$country)[summary(iv_2005$country)!= 0])
+
+responders_2005_countries <- names(summary(responders_2005$country)[0!= summary(responders_2005$country)])
+
+iv_2005_countries <- names(summary(iv_2005$country)[0!= summary(iv_2005$country)])
+
+setdiff(responders_2005_countries, iv_2005_countries)
 
 
 iv_2005$male <- factor(iv_2005$male)
@@ -711,9 +678,7 @@ na_tally(iv_2005,country,all_of(new_iv)) %>%
 
 ## Survey Weights
 
-In large-scale surveys, a sample's representativeness is a critical part
-of making valid inferences. As such, the ICVS comes with weights to
-adjust over-and under-represented cases
+In large-scale surveys, a sample's representativeness is a critical part of making valid inferences. As such, the ICVS comes with weights to adjust over-and under-represented cases
 
 ```{r weights}
 # iv_2005 %>%   
@@ -737,7 +702,6 @@ values - perhaps with the exception of "indiv_survey_weight_n\_ss" and
 "individual_weight"
 
 ```{r missingness in weights}
-
 na_tally(iv_2005,questionnaire_used,weights)
 
 na_tally(iv_2005,questionnaire_used,c("indiv_survey_weight_n_ss", "individual_weight"))
@@ -745,19 +709,25 @@ na_tally(iv_2005,questionnaire_used,c("indiv_survey_weight_n_ss", "individual_we
 na_tally(iv_2005,questionnaire_based_on,c("indiv_survey_weight_n_ss", "individual_weight"))
 
 na_tally(iv_2005,country,c("indiv_survey_weight_n_ss", "individual_weight"))
-
-
 ```
 
-Lithuania is the only country in which all weight values are missing,
-but this is only for "indiv_survey_weight_n\_ss," so it seems reasonable
-to filter any missingness from "individual_weight"
+Lithuania is the only country in which all weight values are missing, but this is only for "indiv_survey_weight_n\_ss," so it seems reasonable to filter any missingness from "individual_weight"
 
 ```{r filtering on weighting and look at # countries}
+pre_weightscreen_n <- nrow(iv_2005)
+
+pre_weightscreen_k <- length(summary(iv_2005$country)[0!= summary(iv_2005$country)])
+
 iv_2005 <- filter(iv_2005, !is.na(individual_weight))
+
+post_weightscreen_n <- nrow(iv_2005)
+
+post_weightscreen_k <- length(summary(iv_2005$country)[0!= summary(iv_2005$country)])
 
 summary(iv_2005$country)[0!= summary(iv_2005$country)]
 ```
+
+Screening on missingngess for `individual_weight` drops `r pre_weightscreen_n-post_weightscreen_n` participants and `r pre_weightscreen_k-post_weightscreen_k` countries
 
 ```{r household}
 na_tally(iv_2005,country,all_of(new_iv)) %>%
@@ -819,7 +789,8 @@ iv_2005_mod$num_victim_5yr_assault_winz <- DescTools::Winsorize(iv_2005_mod$num_
 
 # create dataframe averaging victimization within each country
 assault_data <- plyr::ddply(iv_2005_mod, c("country"), summarise,
-               victim_nation_assault = mean(num_victim_5yr_assault))
+               victim_nation_assault = mean(num_victim_5yr_assault),
+               victim_nation_assault_winz = mean(num_victim_5yr_assault_winz))
 
 assault_data$victim_nation_assault_winz <- DescTools::Winsorize(assault_data$victim_nation_assault)
 
@@ -856,6 +827,37 @@ sum(summary(iv_2005_lib1$country)>0)
 iv_2005[,c("age_num", "male", "employed", "partnered", "police_effective", "income_quartile", "feel_safe_dark", "break_in_threat")] %>%
  summary()
 ```
+
+```{r country-comparisons comparisons}
+iv_2005_mod_countries <- names(summary(iv_2005_mod$country)[0!= summary(iv_2005_mod$country)])
+
+iv_2005_lib_countries <- names(summary(iv_2005_lib$country)[0!= summary(iv_2005_lib$country)])
+
+iv_2005_lib1_countries <- names(summary(iv_2005_lib1$country)[0!= summary(iv_2005_lib1$country)])
+
+
+setdiff(iv_2005_countries,iv_2005_mod_countries)
+
+setdiff(iv_2005_countries,iv_2005_lib_countries)
+
+setdiff(iv_2005_mod_countries,iv_2005_lib_countries)
+
+setdiff(iv_2005_mod_countries,iv_2005_lib1_countries)
+
+setdiff(iv_2005_lib_countries,iv_2005_lib1_countries)
+
+```
+
+
+### what variables should we include?
+
+<b>For minimum inclusion (`iv_2005`):</b> <u>age, male, employed, partnered
+(excludes hong kong) </u>
+
+**for moderate inclusion (`iv_mod_2005`):** <u> police effective, income_quartile
+(excludes `r paste(setdiff(iv_2005_countries,iv_2005_mod_countries), collapse = ', ')` </u>
+
+**for liberal inclusion (`iv_lib_2005`):** <u> feel_safe_dark, break_in_threat (excludes `r paste(setdiff(iv_2005_countries,iv_2005_lib_countries), collapse = ', ')` </u>
 
 ```{r transform variables in new datasets}
 datasets <- list(iv_2005,iv_2005_mod,iv_2005_lib,iv_2005_lib1)
@@ -1290,19 +1292,20 @@ gd <- iv_2005_mod2 %>%
                   gdppc_2004_6_cent = mean(gdppc_2004_6_cent),
                   num_victim_5yr  = mean(num_victim_5yr),
                   num_victim_5yr_winz = mean(num_victim_5yr_winz),
-                  
+                  num_victim_5yr_assault = mean(num_victim_5yr_assault),
+                  num_victim_5yr_assault_winz = mean(num_victim_5yr_assault_winz),
                   gini_2004_6  = mean(av_gini),
                   gini_winz = mean(gini_2004_6_winz)
                   )
-rm(iv_2005_mod2)
 
+rm(iv_2005_mod2)
 ```
 
 
 ```{r merging and saving}
 rm(data_2005, victim_2005,responders_2005, pwt, swiid, swiid_responders,swiid_spread, icvs_data)
 
-save(iv_2005, iv_2005_lib, iv_2005_lib1, iv_2005_mod, sweep5_nrow, sweep5_countries, vic_var_assault, vic_var_drop, prevention_min2, gd, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/iv_2005.RData")
+save(iv_2005, iv_2005_lib, iv_2005_lib1, iv_2005_mod, sweep5_nrow, sweep5_countries, vic_var_assault, vic_var_drop, prevention_min2, gd,pre_weightscreen_n, pre_weightscreen_k, post_weightscreen_n, post_weightscreen_k, responders_2005_countries, iv_2005_countries, iv_2005_mod_countries, iv_2005_lib_countries, iv_2005_lib1_countries, cleaned_countries, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/iv_2005.RData")
 
 
 # icvs_joined <- swiid_2004_6 %>%
