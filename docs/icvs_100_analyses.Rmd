@@ -69,6 +69,18 @@ save(mod_joined1, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pw
 
 ```
 
+```{r m100_1}
+m1_ord_null <- ordinal::clmm(ordered(num_victim_5yr_assault_winz) ~ 1 + (1 | country), data = mod_joined[[1]])
+
+m1_ord <- ordinal::clmm(ordered(num_victim_5yr_assault_winz) ~  gdppc_2004_6_scale + gini_2004_6_cent + age_cent + employed + male + police_effective + income_quartile + (1 | country), data = mod_joined[[1]])
+
+m1_ord_summ <- summary(m1_ord)
+
+m1_ord$info$AIC
+m1_ord$info$logLik
+```
+
+
 ```{r ordinal model}
 # takes about an hour
 m100_ord <- mod_joined %>% map(~ ordinal::clmm(ordered(num_victim_5yr_assault_winz) ~  gdppc_2004_6_scale + gini_2004_6_cent + age_cent + employed + male + police_effective + income_quartile + (1 | country), data = .x))
@@ -184,7 +196,6 @@ m100_sims <- lapply(seq_along(combined), function(i) {
 
 
 save(m100_sims, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/m100_sims.RData")
-
 ```
 
 
@@ -281,7 +292,7 @@ percent <- function(x, digits = 0, format = "f", ...) {      # Create user-defin
   paste0(formatC(x * 100, format = format, digits = digits, ...), "%")
 }
 
-model_nonconvergence <- percent(Reduce("+",mw100_invalid)/length(mw100_invalid))
+model_nonconvergence <- Reduce("+",mw100_invalid)
 
 save(model_nonconvergence, file = here::here("output", "icvs_output.RData"))
 
@@ -379,4 +390,6 @@ m_brm <- brms::brm(ordered(num_victim_5yr) ~ age_cent + gdppc_2004_6 + (1|countr
 m100_brms <- brms::brm(ordered(num_victim_5yr_winz) ~ gini_2004_6_cent + gdppc_2004_6_scale + age_cent + employed + male + police_effective + income_quartile + (1 | country), family = cumulative,
   data = mod_joined1)
 ```
+
+
 
