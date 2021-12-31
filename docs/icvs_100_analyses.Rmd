@@ -258,7 +258,7 @@ m100_ord1 <- ordinal::clmm(ordered(num_victim_5yr_winz) ~ gini_2004_6_cent + gdp
 ```
 
 
-```{r mord11 simulation}
+```{r mord1 simulation}
 
 simm100_ord1 <- smvrnorm(1000, coefm100_ord1, vcovm100_ord1) %>% tbl_df() %>% # 1,000 sims, convert matrix to tbl
   mutate(sim = seq(1:1000)) %>% # create simulation identifier
@@ -284,8 +284,8 @@ is.nan(summary(mw100_ord[[9]])$coefficients[,"Std. Error"]["gini_2004_6_cent"])
 mw100_invalid <- list()
 
 mw100_invalid <- lapply(seq_along(mw100_ord), function(i) {
- mw100_valid[[i]] <- is.nan(summary(mw100_ord[[i]])$coefficients[,"Std. Error"]["gini_2004_6_cent"])
-  return(mw100_valid[[i]])
+ mw100_invalid[[i]] <- is.nan(summary(mw100_ord[[i]])$coefficients[,"Std. Error"]["gini_2004_6_cent"])
+  return(mw100_invalid[[i]])
 }) 
 
 percent <- function(x, digits = 0, format = "f", ...) {      # Create user-defined function
@@ -380,13 +380,13 @@ simm100_ord1 %>% # we're going to name things to match up nicely with the above 
 
  
 
-```{r}
+```{r, eval=FALSE}
 library(brms)
 # 4 chains, takes 3-4 days
 m_brm <- brms::brm(ordered(num_victim_5yr) ~ age_cent + gdppc_2004_6 + (1|country), data = mod_joined1, family = 'cumulative', prior = set_prior('normal(0, 3)'))
 ```
 
-```{r brms model}
+```{r brms-model, eval=FALSE}
 m100_brms <- brms::brm(ordered(num_victim_5yr_winz) ~ gini_2004_6_cent + gdppc_2004_6_scale + age_cent + employed + male + police_effective + income_quartile + (1 | country), family = cumulative,
   data = mod_joined1)
 ```

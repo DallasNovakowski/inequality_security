@@ -91,6 +91,10 @@ tidy_ci$ci95_hi <- tidy_ci$estimate + 1.96*tidy_ci$std.error # = 0.4539815
 tidy_ci$z_score <- tidy_ci$estimate/tidy_ci$std.error #Wald tests
 tidy_ci$p_value <-  as.numeric(format(2*pnorm(abs(tidy_ci$z_score), lower.tail=FALSE), scientific = FALSE))
 
+tidy_ci$p_value <-  ifelse(tidy_ci$p_value < .001,
+                 "< .001",
+                 paste(tidy_ci$p_value %>% round(3)))
+
 tidy_ci <- round_df(tidy_ci, 3)
 
 
@@ -98,6 +102,8 @@ tidy_ci %>%
   kbl(booktabs = T) %>%
   kable_styling(latex_options = c("striped"))
 
+
+cgwtools::resave(tidy_ci, file = here::here("output","icvs_output.RData"))
 
 ```
 
