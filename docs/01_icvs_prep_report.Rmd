@@ -89,7 +89,7 @@ some inconsistencies in the codebook.
 # **At a Glance**
 
 ```{r source scripts, warning=F, message=FALSE, echo=FALSE}
- source("C:/Users/dalla/Google Drive/project_files/icvs_inequality/scripts/icvs_scripts.r", local = knitr::knit_global())
+ source("C:/Users/dalla/Google Drive/project_files/inequality_security/scripts/icvs_scripts.r", local = knitr::knit_global())
 ```
 
 ```{r ncols and nrow, warning=F, message=FALSE, include = TRUE}
@@ -378,7 +378,7 @@ prevention_min2 <- c("prev_burglar_alarm", "prev_special_door_locks", "prev_spec
 ```
 
 ```{r min prev missingness, warning=F, message=FALSE, echo=FALSE}
-# source("C:/Users/dalla/Google Drive/R Coding/icvs_inequality/scripts/03_icvs_explore.r", local = knitr::knit_global())
+# source("C:/Users/dalla/Google Drive/R Coding/inequality_security/scripts/03_icvs_explore.r", local = knitr::knit_global())
 
 na_tally(responders_2005,country,prevention_min2) %>%
     dplyr::bind_rows(dplyr::summarise(.,

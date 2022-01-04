@@ -22,7 +22,7 @@ cgwtools::resave(nsims, file = here::here("output", "pretest_output.RData"))
 
 After the pretest, we found substantial variation within conditions. From data vizualization, a few strategies can be identified for guiding consumption of security goods: firstly, purchasing none at all (the most risk-accepting strategy), secondly, purchasing the maximum possible, and third, purchasing the median value of the possible range. Lastly, for those that do not use one of these max/min/median strategies, participants seem to make purchases in multiples of five.
 
-![](C:/Users/dalla/Google Drive/project_files/inequality_security/figs/spending_pretest_splitplot.png){width="60%"}
+![](C:/Users/dalla/Google Drive/project_files/inequality_security/figures/spending_pretest_splitplot.png){width="60%"}
 
 For this project, we will be using values from the 50_02 condition, which corresponds to a baseline 50% chance of successful thefts, and each unit of security costing \$0.02. This condition seems to produce the least skewed data, at `r round(base_skew,2)`.
 
@@ -44,7 +44,7 @@ l2security_01_design <- ANOVA_design(design = "2b",
                    # r = 0.8, 
                    labelnames = c("inequality", "yes", "no"))
 
-ggplot2::ggsave(here::here("figs", "l2_design_plot.png"), height = 3, width =5)
+ggplot2::ggsave(here::here("figures", "l2_design_plot.png"), height = 3, width =5)
 ```
 
 
@@ -61,7 +61,7 @@ l2security_01_powerplot$plot_ANOVA
 l2d <-ggplot2:: ggplot_build(l2security_01_powerplot$plot_ANOVA)
 
 
-ggplot2::ggsave(here::here("figs", "l2powerplot.png"), height = 3, width =5)
+ggplot2::ggsave(here::here("figures", "l2powerplot.png"), height = 3, width =5)
 ```
 
 ```{r l2exact, warning=FALSE, echo=FALSE}
@@ -101,7 +101,7 @@ security_05_design <- ANOVA_design(design = "2b*2b",
                    plot = TRUE)
 
 
-ggplot2::ggsave(here::here("figs", "power_design_plot.png"), height = 3, width =5)
+ggplot2::ggsave(here::here("figures", "power_design_plot.png"), height = 3, width =5)
 ```
 
 It is worth noting that this design constitutes a ["no-way" interaction,](https://aaroncaldwell.us/SuperpowerBook/the-no-way-interactions.html) which "requires at least twice as many subjects per cell as a study that simply aims to show the simple effect." This requirement follows ["because we are testing the reduction of that same effect"](http://datacolada.org/17).
@@ -187,7 +187,7 @@ d <-ggplot2:: ggplot_build(security_01_powerplot$plot_ANOVA)
 # 
 # p
 
-ggplot2::ggsave(here::here("figs", "01powerplot.png"), height = 3, width =5)
+ggplot2::ggsave(here::here("figures", "01powerplot.png"), height = 3, width =5)
 ```
 
 ```{r power plot01, warning=FALSE, echo=FALSE}

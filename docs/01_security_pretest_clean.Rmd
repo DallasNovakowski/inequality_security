@@ -627,7 +627,7 @@ g <-
 
 g
 
-ggsave(here::here("figs", "securitypretest_rainclouds.png"))
+ggsave(here::here("figures", "securitypretest_rainclouds.png"))
 ```
 
 
@@ -757,7 +757,7 @@ spending_pretest_splitplot <- data_long %>%
 
 spending_pretest_splitplot
 
-ggsave(here::here("figs", "spending_pretest_splitplot.png"),
+ggsave(here::here("figures", "spending_pretest_splitplot.png"),
        height = 3)
 
 ```

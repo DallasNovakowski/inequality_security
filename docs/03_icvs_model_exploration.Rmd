@@ -20,7 +20,7 @@ library(Statamarkdown)
 
 load("C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005.RData")
 
-source("C:/Users/dalla/Google Drive/project_files/icvs_inequality/scripts/icvs_scripts.r", local = knitr::knit_global())
+source("C:/Users/dalla/Google Drive/project_files/inequality_security/scripts/icvs_scripts.r", local = knitr::knit_global())
 
 
 # icvs_joined <-  icvs_joined %>%

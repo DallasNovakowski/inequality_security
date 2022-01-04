@@ -22,7 +22,7 @@ library(WeMix)
 
 load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/iv_2005.RData")
 
-source("C:/Users/dalla/Google Drive/project_files/icvs_inequality/scripts/icvs_scripts.r", local = knitr::knit_global())
+source("C:/Users/dalla/Google Drive/project_files/inequality_security/scripts/icvs_scripts.r", local = knitr::knit_global())
 
 iv_2005_mod <- iv_2005_mod %>% 
         filter(!is.na(num_victim_5yr))
