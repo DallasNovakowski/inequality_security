@@ -1,0 +1,655 @@
+---
+title: "ICVS exploration, assumption check, and contingency procedure"
+output: 
+  html_document:
+    number_sections: true
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse) # pipe
+library(purrr) # map function
+library(car) #qqPlot
+library(survey)
+# library(nloptr) # for bobyqa used in svy2lme
+
+library(WeMix)
+library(Statamarkdown)
+
+load("C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/iv_2005.RData")
+
+source("C:/Users/dalla/Google Drive/project_files/icvs_inequality/scripts/icvs_scripts.r", local = knitr::knit_global())
+
+
+# icvs_joined <-  icvs_joined %>%
+#   map(. %>% filter(., !is.na(num_victim_5yr)))
+
+iv_2005 <- iv_2005 %>% 
+        filter(!is.na(num_victim_5yr))
+
+
+```
+
+# Analysis procedure
+
+If the assumptions underlying a multilevel regression hold in this dataset, the analysis will be conducted using maximum likelihood estimates (MLE) in Stata (IC 14.2; @REF), as there are a relatively small number of level-2 units in this data. Likewise, the use of full maximum lilkelihood will enable the use of statistical weights to increase the representativeness of the available data.
+
+Given that the SWIID is presented in a list of 100 different dataframes, the analysis will firstly be conducted on each dataframe, with the results stored separately.
+
+I would prefer to use an r package for my analyses (lme4, EdSurvey, WeMix, BIFIEsurvey ). However, we saw that lme4 runs into convergence problems; likewise the other packages are so new and specific that they don't generate objects that can be used for analyses like cook's distance. By contrast, Stata is far more developed for multilevel analysis with survey weights. For instance, it provides model-wide Cook's D values for just level-2 units. If we are going to use a package that has poor integration with r, we might as well use the program that best handles the statistics.
+
+# Exploration
+
+Starting with scatterplots. Nation Values with a cook's distance of 4 times the mean cook's distance values are flagged
+
+## Influential observations
+
+```{r influence screen, warning=F, message=FALSE, echo=FALSE}
+gd <- iv_2005 %>% 
+        filter(!is.na(num_victim_5yr)) %>%
+        group_by(country) %>% 
+        summarise(gdppc_2004_6 = mean(gdppc_2004_6),
+                  num_victim_5yr  = mean(num_victim_5yr),
+                  gini_2004_6  = mean(av_gini)
+                  )
+
+victim_age <- ggplot(iv_2005, aes(x = age_cent, y = num_victim_5yr)) +
+    geom_point(alpha = .02, position = "jitter", color = "#40B0A6") + geom_smooth(alpha = .25, color = "red", span = 1.25) + geom_smooth(method = "lm", alpha = .25) + theme_minimal()+ ggtitle("Age & victimization")
+
+
+gini_gdp_full <- gd %>% 
+  mutate(cooks = cooks.distance(lm(gini_2004_6 ~ gdppc_2004_6)),
+         outlier_country = ifelse(cooks > 4*mean(cooks), country, NA)) %>%
+  ggplot(aes(x = gini_2004_6, y = gdppc_2004_6, label = outlier_country)) +
+  geom_point(position = "jitter") + geom_smooth(alpha = .25, color = "red", span = 1.25) + geom_smooth(method = "lm", alpha = .25) + ggtitle("Gini & GDP - Full") + theme_minimal() + coord_cartesian(xlim = c(20, 65), ylim = c(-10000, 85000)) + ggrepel::geom_label_repel()
+
+
+# victim GINI plot with outliers
+victim_gini_full <- gd %>% 
+  mutate(cooks = cooks.distance(lm(num_victim_5yr ~ gini_2004_6)),
+         outlier_country = ifelse(cooks > 4*mean(cooks), country, NA)) %>%
+  ggplot(aes(x = gini_2004_6, y = num_victim_5yr, label = outlier_country)) +
+  geom_point(position = "jitter") + geom_smooth(alpha = .25, color = "red", span = 1.5) + geom_smooth(method = "lm", alpha = .25) + ggtitle("Victimization & Gini - Full") + theme_minimal() + coord_cartesian(xlim = c(20, 65), ylim = c(.25, 1.125)) + ggrepel::geom_label_repel()
+
+
+# victim GDP plot with outliers
+victim_gdp_full <- gd %>% 
+  mutate(cooks = cooks.distance(lm(num_victim_5yr ~ gdppc_2004_6)),
+         outlier_country = ifelse(cooks > 4*mean(cooks), country, NA)) %>%
+  ggplot(aes(x = gdppc_2004_6, y = num_victim_5yr, label = outlier_country)) +
+  geom_point(position = "jitter") + geom_smooth(alpha = .25, color = "red", span = 1.25) + geom_smooth(method = "lm", alpha = .25) + ggtitle("Victimization & GDP - Full") + theme_minimal() + coord_cartesian(xlim = c(0, 85000), ylim = c(.25, 1.125)) + ggrepel::geom_label_repel(label.size = 0.02)
+
+
+
+ 
+# victim_gini_full <- ggplot(gd, aes(x = gini_2004_6, y = num_victim_5yr)) +
+#     geom_point() + geom_smooth(alpha = .25, color = "red", span = 1.25) + geom_smooth(method = "lm", alpha = .25) + 
+#     theme_minimal() + ggtitle("Victimization & Gini - Full")  + coord_cartesian(xlim = c(20, 65), ylim = c(.25, 1.25))
+
+# 
+# 
+# victim_gdp_full <- ggplot(gd, aes(x = gdppc_2004_6, y = num_victim_5yr)) +
+#     geom_point() + geom_smooth(alpha = .25, color = "red", span = 1.25) + geom_smooth(method = "lm", alpha = .25) + 
+#     theme_minimal() + ggtitle("Victimization & GDP - Full")  + coord_cartesian(xlim = c(1500, 85000), ylim = c(.25, 1.25))
+
+gridExtra::grid.arrange(victim_age, victim_gini_full,victim_gdp_full, gini_gdp_full, nrow = 2, ncol=2)
+
+```
+
+## Model-based exploration
+
+Now there are obviously some heavy tails in this data.
+
+```{r estimation preview2, warning=T, message=FALSE}
+
+# Fixed effect variables in model
+summary(iv_2005[,c("num_victim_5yr", "av_gini", "gdppc_2004_6_cent", "age_cent", "employed", "male")])
+
+
+# Estimate model
+m1_sample <- lme4::lmer(num_victim_5yr ~ gini_cent + scale(gdppc_2004_6) +
+                     age_cent + employed + male + (1 | country), data = iv_2005, REML=FALSE)
+
+# call basic unweighted model
+# summary(m1_sample)
+
+# estimate weighted model - fails to converge even with all numeric variables scaled
+  # m1_weight <- lme4::lmer(scale(num_victim_5yr) ~ scale(av_gini) + scale(gdppc_2004_6) + scale(age_num) + employed +   male + (1 | country),data = iv_2005, REML=FALSE, weights = individual_weight)
+
+```
+
+Further seen in the normality statistics for the residuals - high skewness and kurtosis
+
+```{r model skewness kurtosis,  warning=F, message=FALSE}
+moments::skewness(resid(m1_sample))
+moments::kurtosis(resid(m1_sample))
+```
+
+Indeed, this model's residuals are definitely not normally-distributed, with a skewness of `r round(moments::skewness(resid(m1_sample)),2)`, and a kurtosis of *`r round(moments::kurtosis(resid(m1_sample)),2)`.* However, this is not yet the time to examine the residual plots - we need to explore and treat any potential influential observations that might be exacerbating
+
+> Note that this is based on simple aggregates. It is not based on empirical Bayesian estimates Doesn't take sampling variation due to sampling of into account Therefore a rough guide, but only rough
+
+### Cook's distance ( R package influence.ME )
+
+```{r cooksd model, warning=F, message=FALSE, fig.show="hold", out.width="50%"}
+# influential cases (Cook's Distance. Any values over 1 are likely to be significant outliers)
+cooksD <- cooks.distance(m1_sample)
+summary(cooksD)
+```
+
+```{r cooksd lv2, warning=F, message=FALSE, echo=FALSE, fig.show="hold", out.width="50%"}
+# look for influential observations in nation-level
+plot(cooksD, main="Model-wide Cook's D * BEWARE Y AXIS", ylim=c(0,.01))
+abline(h = 4/nrow(iv_2005), lty = 2, col = "steelblue") # add cutoff line
+abline(h = 4*mean(cooksD, na.rm=T), col="red") 
+
+
+# nation_cook <- cooks.distance(lm(gini_2004_6 ~ gdppc_2004_6, gd))
+# 
+# plot(nation_cook, main="Nation-level (Gini ~ GDP) Cook's D", ylim=c(0,1))
+# abline(h = 4/nrow(gd), lty = 2, col = "steelblue") # add cutoff line
+# abline(h = 4*mean(nation_cook, na.rm=T), col="red") 
+# text(x=1:length(nation_cook)+1, y=nation_cook, labels=ifelse(nation_cook>4*mean(nation_cook, na.rm=T), gd$country,""), col="red")
+
+victim_nation_cook <- cooks.distance(lm(num_victim_5yr ~ gini_2004_6 + gdppc_2004_6, gd))
+
+plot(victim_nation_cook, main="Cook's D, Victimization ~ Gini + GDP", ylim=c(0,1))
+abline(h = 4/nrow(gd), lty = 2, col = "steelblue") # add cutoff line
+abline(h = 4*mean(victim_nation_cook, na.rm=T), col="red") 
+text(x=1:length(victim_nation_cook)+1, y=victim_nation_cook, labels=ifelse(victim_nation_cook>4*mean(victim_nation_cook, na.rm=T), gd$country,""), col="red") 
+
+ 
+ # lablist.x<-gd$country
+# axis(1, at=seq(1, 31, by=1), labels = lablist.x)
+# text(x = seq(0, 31, by=1),par("usr")[3] - 0.45, labels = lablist.x, srt = 45, pos = 2, xpd = FALSE)
+
+
+ 
+ # add labels
+# 
+# axis(1, by=1, at = 1:31, labels = gd$country)
+
+# 
+# gd %>% 
+#   mutate(cooks = cooks.distance(lm(gini_2004_6 ~ gdppc_2004_6)),
+#          outlier_country = ifelse(cooks > 4/nrow(.), country, NA)) %>% 
+#   ggplot(aes(x = gini_2004_6, y = gdppc_2004_6, label = outlier_country)) +
+#   geom_point() + ggrepel::geom_label_repel()
+
+```
+
+A model-wide Cook's D shows that any given observation has a small influence on the entire model - to be expected with such a large sample. This is why it's important to break the analysis of influential variables into multiple levels
+
+We can see that level-2 analysis yields much larger Cook's D values. The cooks distance values are all well under 1. Importantly, this is the same for the nation-level variables; they have a smaller sample size - and are thus the more susceptible to influential observations.
+
+**However, there are a few observations at nation-level that exceed the 4/n threshold, and some that exceed 0.5. Generally, there are changes in the slope, but ultimately the direction doesn't change**
+
+# Handling influential observations - Winzorization
+
+Since these influential observations are not a mistake - but rather truly extreme data, we will not delete the data, but instead winzorize these extreme values.
+
+```{r winzorize descriptives, warning=F, message=FALSE, echo=FALSE, fig.show="hold", out.width="50%"}
+
+
+iv_2005[["num_victim_5yr_winz"]] <-  DescTools::Winsorize(iv_2005[["num_victim_5yr"]])
+
+
+iv_2005[["gdppc_2004_6_winz"]] <-  DescTools::Winsorize(iv_2005[["gdppc_2004_6"]])
+
+iv_2005[["gdppc_2004_6_wc"]] <-  iv_2005[["gdppc_2004_6_winz"]] - mean(iv_2005[["gdppc_2004_6_winz"]])
+
+iv_2005[["gdppc_2004_6_scale"]] <- scale(iv_2005[["gdppc_2004_6"]])
+
+iv_2005[["gdppc_2004_6_ws"]] <- scale(iv_2005[["gdppc_2004_6_winz"]])
+
+
+iv_2005[["security_winz"]] <-  DescTools::Winsorize(iv_2005$total_security)
+
+
+iv_2005[,c("num_victim_5yr", "num_victim_5yr_winz", "gdppc_2004_6", "gdppc_2004_6_winz", "av_gini", "gini_winz")] %>%
+  summary()
+
+
+gd <- iv_2005 %>% 
+        filter(!is.na(num_victim_5yr)) %>%
+        group_by(country) %>% 
+        summarise(gdppc_2004_6 = mean(gdppc_2004_6),
+                  gdppc_2004_6_winz = mean(gdppc_2004_6_winz),
+                  num_victim_5yr  = mean(num_victim_5yr),
+                  num_victim_5yr_winz = mean(num_victim_5yr_winz),
+                  gini_2004_6  = mean(av_gini),
+                  gini_winz = mean(gini_winz)
+                  )
+```
+
+Dramatic changes to the max values, less-so for the mean values (with the exception of number of victimizations)
+
+```{r winzorize histograms, warning=F, message=FALSE, echo=FALSE}
+
+gridExtra::grid.arrange(
+
+
+hist_plot(iv_2005,num_victim_5yr,"Regular number of victimizations"),
+hist_plot(iv_2005,num_victim_5yr_winz,"Winzorized number of victimizations"),
+
+
+hist_plot(gd,gdppc_2004_6,"Regular GDP"),
+hist_plot(gd,gdppc_2004_6_winz,"Winzorized GDP"),
+
+hist_plot(gd,gini_2004_6,"Regular Gini"),
+hist_plot(gd,gini_winz,"Winzorized Gini"),
+
+nrow = 3, ncol=2)
+
+```
+
+## Winzorized plots
+
+```{r winz scatter, warning=F, message=FALSE, echo=FALSE, fig.show="hold", out.width="50%"}
+gini_gdp_winz <- gd %>% 
+  mutate(cooks = cooks.distance(lm( gdppc_2004_6_winz ~ gini_winz)),
+         outlier_country = ifelse(cooks > 4*mean(cooks), country, NA)) %>%
+  ggplot(aes(x = gini_winz, y = gdppc_2004_6_winz, label = outlier_country)) +
+  geom_point(position = "jitter") + geom_smooth(alpha = .25, color = "red", span = 1.6) + geom_smooth(method = "lm", alpha = .25) + ggtitle("Gini & GDP - Winzorized") + theme_minimal() + coord_cartesian(xlim = c(20, 65), ylim = c(-10000, 85000)) + ggrepel::geom_label_repel()
+
+# victim GINI plot, winzorized
+victim_gini_winz <- gd %>% 
+  mutate(cooks = cooks.distance(lm(num_victim_5yr_winz ~ gini_winz)),
+         outlier_country = ifelse(cooks > 4*mean(cooks), country, NA)) %>%
+  ggplot(aes(x = gini_winz, y = num_victim_5yr_winz, label = outlier_country)) +
+  geom_point(position = "jitter") + geom_smooth(alpha = .25, color = "red", span = 1.6) + geom_smooth(method = "lm", alpha = .25) + ggtitle("Victimization & Gini - Winzorized") + theme_minimal() + coord_cartesian(xlim = c(20, 65), ylim = c(.25, 1.125)) + ggrepel::geom_label_repel()
+
+# victim GDP plot, winzorized
+victim_gdp_winz <- gd %>% 
+  mutate(cooks = cooks.distance(lm(num_victim_5yr_winz ~ gdppc_2004_6_winz)),
+         outlier_country = ifelse(cooks > 4*mean(cooks), country, NA)) %>%
+  ggplot(aes(x = gdppc_2004_6_winz, y = num_victim_5yr_winz, label = outlier_country)) +
+  geom_point(position = "jitter") + geom_smooth(alpha = .25, color = "red", span = 1.6) + geom_smooth(method = "lm", alpha = .25) + ggtitle("Victimization & GDP - Winzorized") + theme_minimal() + coord_cartesian(xlim = c(0, 85000), ylim = c(.25, 1.125)) + ggrepel::geom_label_repel(label.size = 0.02)
+
+
+
+victim_gini_full
+victim_gini_winz
+victim_gdp_full
+victim_gdp_winz
+# gini_gdp_full
+# gini_gdp_winz
+```
+
+```{r sqrt winz, echo = FALSE}
+iv_2005 <- iv_2005 %>%
+  filter(!is.na(num_victim_5yr)) %>%
+  mutate(num_victim_5yr_winz_sqrt = sqrt(num_victim_5yr_winz),
+          gdppc_2004_6_winz_sqrt = sqrt(gdppc_2004_6_winz),
+          gini_winz_sqrt = sqrt(gini_winz),
+         num_victim_5yr_winz_rankit = RNOmni::RankNorm(num_victim_5yr+1)
+         )
+
+m1_winz_sqrt <- lme4::lmer(num_victim_5yr_winz_sqrt ~ gdppc_2004_6_winz_sqrt + gini_winz_sqrt +
+                     age_cent + employed + male + (1 | country),data = iv_2005, REML=FALSE)
+
+```
+
+```{r Normality, warning=F, message=FALSE, echo=FALSE, fig.show="hold", out.width="50%"}
+qqnorm(resid(m1_sample))
+qqline(resid(m1_sample), col = "darkgreen")
+
+qqnorm(resid(m1_winz_sqrt), main = "sqrt winzorized gini + victim - QQ plot")
+qqline(resid(m1_winz_sqrt), col = "darkgreen")
+# 
+# qqnorm(resid(m1_winz_log), main = "only logged winzorized gini - QQ plot")
+# qqline(resid(m1_winz_log), col = "darkgreen")
+```
+
+Winzorizing definitely seems to help the normality of the model. Again, it does not remedy normality by any stretch; there are still some very heavy tails
+
+Interestingly, winzorizing with no other transformations seems to have the same (best) fit to the qq line
+
+# Assumption checks and and contingencies
+
+## Influential observations
+
+-   **Check:** cook's D values exceeding the threshold 4/n; where n = \# of clusters.
+-   **Treatment:** winzorize variables that demonstrate exhibit sufficient influence on model
+-   **Robustness check:**
+
+a.  retain the level-1 cases of extreme values, add a dummy variable at level-2 to control for their unit, rerun analysis (Van de Meer et al, 2010). Document whether any coefficients change.
+b.  
+
+run analyses excluding cases that exceed the threshold 4/n; where n = \# of clusters. Following, evaluate cook's D values on this reduced dataset. Eliminate any cases that exceed a cook's d of .5, and conduct a third analysis.
+
+## Linearity
+
+-   **Check:** Scatterplots for nonlinear relationships
+-   **Treatment:** If robust nonlinear relationship detected, add polynomials until adequate fit to linear function is obtained
+
+Nonlinearity does not seem to be a major issue in the data. There may be some pattern of as much as a third-order polynomial in the effects of gini on victimization, (second-order for GDP).
+
+Especially with a small sample at level-2, adding polynomials seems more likely to risk overfitting the data. I would only assess the fit of a polynomial model if I could then test it on another dataset, for cross-validation.
+
+## Normality in residuals
+
+-   **Check**: QQplots (The Normal Probability Plot method.) for whether lie on normal distribution
+
+**NO treatment:** Although there are many possible transformations possible for this kind of data (square root, rankit/INT, log(x+1), boxcox(x+1)), nonnormal data, by itself, is not expected to adversely impact the proposed analysis. Lumley, Diehr, Emerson, & Chen (2002) provided simulation evidence that linear regressions conducted on large samples are robust to departures from normality. With at least 500 observations, they found that linear regression can be conducted with negligible impact on Type I errors. Likewise, Knief & Forstmeier (2021) found that for anything other than very small sample sizes, "p-values from Gaussian models are highly robust to even extreme violation of the normality assumption and can be trusted, except when involving X and Y distributions with extreme outliers (p. ??). Likewise, "for N = 1000, power was essentially unaffected by the distribution of Y and X."
+
+```{r other distributions, warning=F, message=FALSE, echo=FALSE, results='hide', fig.show="hold", out.width="50%"}
+# https://www.juliapilowsky.com/2018/10/19/a-practical-guide-to-mixed-models-in-r/
+
+# # unexpected missingness exclusion
+# summary(!is.na(iv_2005[["num_victim_5yr"]]))
+# which(is.na(iv_2005[["num_victim_5yr"]]))
+
+iv_2005$num_victim_5yr_winz_1 <- iv_2005$num_victim_5yr_winz + 1
+
+norm <- MASS::fitdistr(iv_2005$num_victim_5yr_winz_1, "normal")
+
+# qqp(iv_2005$num_victim_5yr, "norm", main = "Normal distribution")
+
+qqp(iv_2005$num_victim_5yr_winz_1, "norm", main = "Normal distribution")
+
+
+qqp(sqrt(iv_2005$num_victim_5yr_winz), "norm", main = "Normal distribution, square root")
+# qqp(sqrt(iv_2005$num_victim_5yr_winz), "norm", main = "winzorized and square root")
+
+qqp(iv_2005$num_victim_5yr_winz_1, "lnorm", main = "Logged normal distribution")
+# qqp(iv_2005$num_victim_5yr_winz + 1, "lnorm", main = "Winzorized and Logged")
+
+# negative binomial - fails to optimize with +1 transformation
+# nbinom <- MASS::fitdistr(iv_2005$num_victim_5yr_1, "Negative Binomial")
+# qqp(iv_2005$num_victim_5yr_1, "nbinom", main = "Negative binomial distribution", size = nbinom$estimate[[1]], mu = nbinom$estimate[[2]])
+
+
+#poisson distribution
+poisson <- MASS::fitdistr(iv_2005$num_victim_5yr_winz_1, "Poisson")
+qqp(iv_2005$num_victim_5yr_winz_1, "pois", main = "Poisson distribution", lambda = poisson$estimate)
+
+
+#poisson modeldistribution
+poisson <- MASS::fitdistr(iv_2005$num_victim_5yr_winz_1, "Poisson")
+qqp(iv_2005$num_victim_5yr_winz_1, "pois", main = "Poisson distribution", lambda = poisson$estimate)
+
+
+# qqp(iv_2005$num_victim_5yr_winz+1, "pois", main = "Winzorized Poisson distribution", lambda = poisson$estimate)
+
+
+# lattice::qqmath(m1_sample, id=0.05)
+```
+
+**On alternate error distributions**
+
+Initially, a poisson process seems to better describe the distribution of this study's dependent variable. However, the variables *num_victim_5yr* and *security_total* each likely violate the assumption of event independence, where one event does not affect the likelihood of a subsequent event. For instance, in the case of security consumption, the psychological and material impacts of buying a security product (e.g., feelings of safety, reduced budget), can plausibly impact a consumers' decision to purchase further security goods. Knief & Forstmeier (2021) found a Gaussian error distribution to be far more robust to violations of its assumptions than Poisson and Binomial distributions. Given the potential for heavy bias in poisson and negative binomial models, a gaussian error structure's comparative robustness appears to make a (violated) assumption of normality be the most appropriate choice compared to a possibly misattributed poisson distribution.
+
+Knief & Forstmeier, 2021
+
+> Poisson distribution - lambdas specify variance and mean of the distribution (doesn't have to be an integer)
+
+> We have shown that Poisson models yielded heavily biased type I error rates (at α = 0.05) in either direction ranging from 0 to as high as 0.55 when their distribution assumption is violated (Fig. 3 right column, Fig. S7).
+
+> Moreover, we worry that sophisticated methods may allow presenting nearly anything as statistically significant (Simmons et al., 2011) because complex methods will only rarely be questioned by reviewers.
+
+> Moreover, we worry that sophisticated methods may allow presenting nearly anything as statistically significant (Simmons et al., 2011) because complex methods will only rarely be questioned by reviewers.
+
+DFBeta values: difference between estimate including and deleting outlier
+
+DFFit: difference between adjusted predicted value and original value
+
+## Heteroscedasticity (Homogeneity of Variance)
+
+-   **Check**: Plot residuals vs predicted values, for changes in residual variance across levels of predicted values
+
+```{stata heteroscedasticity plot}
+
+*use "C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/joined_sample.dta"
+
+
+*Winzorized model
+*xtmixed num_victim_5yr_winz gini_wc gdppc_2004_6_ws age_cent employed male [pw=individual_weight] || country:, pwscale(size)
+
+
+*predict double xb, xb
+*predict double re, residuals
+
+*graph twoway scatter re xb, mcolor(black) msize(small) ylabel( , angle(horizontal) nogrid)
+
+```
+
+-   **Treatment:** Transformation of DV (e.g., box-cox, square root, log, rankit). Beyond this, the model already has robust standard errors
+
+```{r victimization transformation}
+
+# Square root method
+iv_2005$sqrt_victimization <- sqrt(iv_2005$num_victim_5yr)
+  # normality_stats(iv_2005$sqrt_victimization)
+
+# Cube root method
+iv_2005$cubrt_victimization <- '^'(iv_2005$num_victim_5yr,1/3) # cube root transformation
+  #normality_stats(iv_2005$cubrt_victimization)
+
+# rankit method
+iv_2005$rankit_victimization <- RNOmni::RankNorm(iv_2005$num_victim_5yr) # rank-based inverse normal transformation (approximately normalize most distribtutional shapes, and which effectively minimizes type I errors and maximizes statistical power; Bishara & Hittner, 2012; Puth et al., 2014
+  #normality_stats(iv_2005$rankit_victimization)
+
+#ggplot(iv_2005, aes(x = rankit_victimization))  +  geom_histogram(binwidth= 1, alpha=.7, fill="#40B0A6", colour='grey') + geom_density(adjust=6, aes(y=..count..)) + theme_minimal()
+
+# Ordinal method
+iv_2005$ordinal_victimization <- NA
+iv_2005$ordinal_victimization <- ifelse(between(iv_2005$num_victim_5yr,0,1), 1, NA)
+iv_2005$ordinal_victimization[iv_2005$num_victim_5yr == 0] <- 0 
+iv_2005$ordinal_victimization[iv_2005$num_victim_5yr > 1] <- 2
+
+# Log method
+iv_2005$log_victimization <- log10(iv_2005$num_victim_5yr+1)
+  #normality_stats(iv_2005$log_victimization)
+
+
+```
+
+```{r sqrt security, warning=F, message=FALSE, echo=FALSE}
+# Square root method
+iv_2005$sqrt_security <- sqrt(iv_2005$total_security) # square root transformation seems to provide something closer, so just use that?
+
+  #hist_plot(iv_2005, sqrt_security, "Histogram of Total Security (Square root)")
+  #normality_stats(iv_2005$sqrt_security)
+
+
+# Ordinal security
+iv_2005$ordinal_security <- NA
+
+iv_2005$ordinal_security <- ifelse(between(iv_2005$total_security,0,1), 1, NA)
+iv_2005$ordinal_security[iv_2005$total_security == 0] <- 0 
+iv_2005$ordinal_security[iv_2005$total_security > 1] <- 2
+  # hist_plot(iv_2005, ordinal_security, "Histogram of Ordinal Security")
+  # normality_stats(iv_2005$ordinal_security)
+
+
+# log+1 method
+iv_2005$log_security <- log10(iv_2005$total_security+1)
+  # hist_plot(iv_2005, log_security, "Histogram of Logged Security")
+  # normality_stats(iv_2005$log_security)
+
+
+# inverse method
+iv_2005$inv_security <- 1/(iv_2005$total_security+1)
+  # hist_plot(iv_2005, inv_security, "Histogram of inverted Security")
+
+
+
+# Box Cox Method
+security_boxcox<- geoR::boxcoxfit(iv_2005$total_security, lambda=0, lambda2 = 1) 
+  # security_boxcox <- MASS::boxcox(iv_2005$total_security)
+```
+
+-   **Stopping rule:**
+
+## Correlated random effects
+
+McNeish et al (2017)
+
+```{stata random effects plot}
+xtmixed num_victim_5yr_winz gini_wc gdppc_2004_6_ws age_cent employed male [pw=individual_weight] || country:, pwscale(size)
+
+```
+
+pwcorr rint resids
+
+-   graph of correlation between within-level residuals and random effects
+
+twoway (scatter resids rint) (lfit resids rint)
+
+#### Sampling
+
+> Random digit dialling -- data for Sydney from the national survey. Additional respondents from immigrant and second generation immigrants have been downweighted
+
+> two-stage stratified sampling: administrative region
+
+> of particular groups within the population in the primary samples: -- The 2-stage sampling (random selection of a household and a random selection of a person within that household) means that people from small (single-person) households are by definition over-represented and people from large household are underrepresented. Weight variables are used to compensate for this.
+
+> In each randomly selected household only one randomly selected respondent aged 16 or over was interviewed.
+
+argentina is three-stage
+
+> In each randomly selected household only one randomly selected respondent aged 16 or over was interviewed
+
+> People in households of different sizes have different probabilities of being chosen for the interview, and a weighting procedure is needed to correct this to generate a representative sample of 'persons'.
+
+> household weights that were computed based on gender, household size and regional distribution. The individual weights were computed using the same iterative procedure, but apart from gender and regional distribution, also age and number of adults in the household served as criteria.
+
+from <https://notstatschat.rbind.io/2019/04/19/progress-on-linear-mixed-models-for-surveys/>
+
+from Dr. B on Kenward Roger test:
+
+> Issue is that in smaller samples, sampling distribution may not be normal The KR is an "approximation" method that accounts for small-sample bias Can be used in Stata with dfmethod(kroger) Using this method will also invoke t-distribution The problem is that it can only be used with REML estimation So it really can't be used with survey estimation
+
+More reading needed, but I think I'll be using one of the individual weight items
+
+"individual_weight"\
+[10] "individual_weight_for_national_surveys"
+
+"household_weight_n\_ss" "household_country_weight_n\_2000" "indiv_country_weight_n\_2000"
+
+-   Clusters are "primary sampling units" (PSUs)
+-   Clustering is sometimes treated as a nuiscance that we try to correct
+-   OTHER TIMES, clustering can be an interesting phenomenon to model
+
+Multi-stage sampling Primary sampling units (PSUs) refer to the sampling unit that you start with
+
+Within each PSU (e.g., counties) - Segments o Households  Person
+
+Adjustments - Clusters within PSU are assumed to be representative, so you don't have to make adjustments beyond the PSU
+
+Strata and adjustments - Standard error decreases with strata adjustments - Increases with clustering adjustments - Increases with weighting adjustments
+
+Taylor Series Linearization (TSL) "consists of approximating a complex, nonlinear estimator by a linear function and then computing the variance of the linear approximation" (Valliant 2007:932) Mathematically complex, but essentially results in adjusting standard errors for clustering into strata and PSU's
+
+Book on weighting: applied survey data analysis - Herringa West Berglund
+
+Researchers are resistant to weights because standard errors are often inflated when weights are employed But, the representativeness of one's data will typically be impaired if weights are not employed So, yes, you have to use the \^\$\@&\# weights!
+
+PSU's are often not the end of sampling Surveyors will often sample within PSU's, based on, for example, sets of census blocks (secondary stage sampling) and then households (third stage) The individual within the household then forms the fourth stage of sampling
+
+Heeringa et al (2010:67-68) explain that observations within a PSU form an "ultimate cluster" of observations "The resulting sample can be thought of as a single-stage without replacement selection of ultimate clusters, where all elements within each selected ultimate cluster are sampled" (pg. 68) **Thus, one can consider each PSU as a cluster in which all subsequent aspects of the PSU appropriately represented, so one need only adjust analyses for the sampling based on PSUs**
+
+Sampling without replacement will generally lower variance estimates somewhat You can adjust variance downward using a "finite population correction" But, PSUs are typically assumed to have been sampled with replacement, even though they are typically sampled without replacement The result is simpler variance estimation (because you don't include the FPC) with a slight over-estimation of variance Therefore conservative for population inference
+
+we can't just drop a weight created from a design-based approach into a model-based approach The bigger issue here is that many surveys do not provide information specifically on cluster-level probabilities of selection that would allow us to easily scale our design-based weights
+
+Two approaches that are common are the PWIGLS method 2 and the MPML method A
+
+Chen (2018), a researcher with the Add Health study, argues in a presentation that the PWIGLS method is recommended when informative sampling methods are used in sampling both levels In other words, if one does not have an SRS at both levels
+
+```{r heteroscedasticity, warning=F, message=FALSE, echo=FALSE, fig.show="hold", out.width="50%"}
+
+plot(m1_sample, resid(., type = "pearson") ~ fitted(.), abline = 0, main="Heteroscedasticity check - fitted values vs. residuals")
+
+plot(m1_winz, resid(., type = "pearson") ~ fitted(.), abline = 0, main="Heteroscedasticity (Winzorized)")
+
+```
+
+The variance of residuals seems consistent across all levels - so no notable heteroscedasticity?
+
+Not too sure how to interpret these plots - but I think this one isn't great
+
+In particular, the residuals don't appear to be symmetrically distributed (tending to cluster towards the middle of the plot). For low fitted values, residuals seem to be skewed higher, leveling off as the fitted values get larger
+
+> There is a two-parameter version of the Box-Cox transformation that allows a shift before transformation:\The usual Box-Cox transformation sets λ2=0. One common choice with the two-parameter version is λ1=0 and λ2=1 which has the neat property of mapping zero to zero. There is even an R function for this: log1p(). More generally, both parameters can be estimated. In R, the boxcox.fit() function in package geoR will fit the parameters.
+
+> -   Inverse hyperbolic sine (IHS) transformation, mixture models (<https://robjhyndman.com/hyndsight/transformations/>) Other options:
+> -   we want to obtain heteroskedasticity robust standard errors and their corresponding t values. In R the function coeftest from the lmtest package can be used in combination with the function vcovHC from the sandwich package to do this.
+
+<https://stackoverflow.com/questions/48479984/r-mixed-model-with-heteroscedastic-data-only-lm-function-works>
+
+> The sandwich package is not limited to lm/glm only but it is in principle object-oriented, see vignette("sandwich-OOP", package = "sandwich") (also published as <doi:10.18637/jss.v016.i09>.
+>
+> There are suitable methods for a wide variety of packages/models but not for nlme or lme4. The reason is that it's not so obvious for which mixed-effects models the usual sandwich trick actually works. (Disclaimer: But I'm no expert in mixed-effects modeling.)
+>
+> However, for lme4 there is a relatively new package called merDeriv (<https://CRAN.R-project.org/package=merDeriv>) that supplies estfun and bread methods so that sandwich covariances can be computed for lmer output etc. There is also a working paper associated with that package: <https://arxiv.org/abs/1612.04911>
+
+**Snijders & Bosker, on sandwich estimators (p. 173)** \> sandwich estimators for standard errors, also called cluster-robust standard errors, make no assumptions about the distributional shape of the random coefficients. Verbeke and Lesaffre (1997) and Yan and Bentler (2002) proposed sandwich estimators to provide standard errors applicable for nonnormalily distributed random effects... However, sandwich estimators do require large enough numbers of units at the highest level; see Verbeke and Lesaffre 997), Maas and Hox (2004), and hthe further discussion in 12.2 \* <https://www.r-econometrics.com/methods/hcrobusterrors/>
+
+> For a heteroskedasticity robust F test we perform a Wald test using the waldtest function, which is also contained in the lmtest package. It can be used in a similar way as the anova function, i.e., it uses the output of the restricted and unrestricted model and the robust variance-covariance matrix as argument vcov. Based on the variance-covariance matrix of the unrestriced model we, again, calculate White standard errors.
+
+knief and Forstmeier, 2021 \> Most elegantly,heteroscedasticity can be modeled directly, for instance by using the "weights" argument in lme (see Pinheiro & Bates, 2000, p. 214), which also enables us to test directly whether allowing for heteroscedasticity increases the fit of the model significantly. Similarly, heteroscedasticity-consistent standard errors could be estimated (Hayes & Cai, 2007). For more advice on handling heteroscedasticity, see McGuinness (2002).
+
+> we did not cover collinearity between predictors or the distribution of random effects, but others have dealt with these aspects before (Freckleton, 2011; Schielzeth et al., 2020).
+
+## Multicolinnearity
+
+-   **Check**: VIF/tolerances
+-   **Fix** remove values \>= 5
+
+```{r VIF1, warning=F, message=FALSE}
+performance::check_collinearity(m1_sample)
+
+#car::vif(m1_sample) # display VIF values
+```
+
+> "Importantly, the robustness of regression methods to deviations from normality of the regression errors e does not only depend on sample size, but also on the distribution of the predictor X (Box & Watson, 1962; Mardia, 1971). Specifically, when the predictor variable X contains a single outlier, then it is possible that the case coincides with an outlier in Y, creating an extreme observation with high leverage on the regression line. This is the only case where statistical significance gets seriously misestimated based on the assumption of Gaussian errors in Y which is violated by the outlier in Y. This problem has been widely recognized (Ali & Sharma, 1996; Box&Watson, 1962; Miller, 1986; Osborne &Waters, 2002; Ramsey & Schafer, 2013; Zuur et al., 2010) leading to the conclusion that Gaussian models are robust as long as there are Trimmed values \> 4\*mean(cook) that occur in X and Y simultaneously."
+
+poisson assumptions \* rate at which events occur is constant \* occurence of one event does not affect occurence of a subsequent event
+
+Probability Mass Function (PMF) - how likely a given value is
+
+cumulative distribution function - all of the likelihoods of values up to and including the designated value
+
+GEE: GENERALIZED LINEAR MODELS FOR DEPENDENT DATA (<https://cehs-research.github.io/eBook_multilevel/gee-count-outcome-epilepsy.html>)
+
+**Snijders & Bosker, on Generalized Estimating Equations (GEE) (p. 1198)**
+
+-   assumes linear or genarlized linear model for the *expected values* of de[emdemt variable in a multilevel data structure, conditional on the explanatory variables
+
+-   No assumptions made with respect to the variances and correlations, except that these are independent between highest-level units
+
+-   linear model parameters estimated through a working model
+
+-   standard errors estimated through sandwich estimator
+
+-   comparison between GEE and HLM discussed in Gardiner et al. 2009
+
+-   LARGE SAMPLE METHOD - without large sample, need a tailored small-sample version with a differently defined sandwich estimators
+
+Match Poisson Regresssion (GLM)
+
+restricted maximum likelihood (REML)
+
+Thus REML, by accounting for the loss in degrees of freedom from estimating the fixed effects, provides an unbiased estimate of variance components, while ML estimators for variance components are biased under assumptions of normality, since they use estimated fixed effects rather than the true values.
+
+lmeresampler provides an easy way to bootstrap nested linear-mixed effects models using either the parametric, residual, cases, CGR (semi-parametric), or random effects block (REB) bootstrap fit using either lme4 or nlme. The output from lmeresampler is an lmeresamp <http://aloy.github.io/lmeresampler/>
+
+bootMer
+
+<https://www.juliapilowsky.com/2018/10/19/a-practical-guide-to-mixed-models-in-r/> Semi-parametric multilevel modeling (Tihomir Asparouhov)
+
+Probably the advice on this site will be to start with what kind of data your dependent variable is, and then choose an appropriate glm or regression approach. That is, if your dv is count, perhaps Poisson or negative binomial regression. If your dv is concentration, perhaps gamma regression. --
+
+Note that the negative binomial and gamma distributions can only handle positive numbers, and the Poisson distribution can only handle positive whole numbers
+
+# Limitations
+
+The most notable weakness is that this is data from WEIRD countries. Other, less WEIRD countries (e.g., phillipines, nigeria, india) are better represented throughout sweeps 2 to 4
+
+-   Unaccounted third variables
+
+Limited

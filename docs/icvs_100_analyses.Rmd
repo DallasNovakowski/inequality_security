@@ -1,0 +1,395 @@
+---
+title: "icvs_100_analyses"
+author: "Dallas Novakowski"
+date: "14/12/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lme4)
+library(ordinal)
+load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/mod_joined.RData")
+
+#used for dotwhisker plots
+mod_joined1 <- mod_joined[[1]]
+save(mod_joined1, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/mod_joined1.RData")
+```
+
+
+```{r testmodel}
+# m1 <- mod_joined %>% map(~ lmer(num_victim_5yr ~ gini_2004_6_cent + gdppc_2004_6_scale + 
+#                      age_cent + employed + male + police_effective + income_quartile + (1 | country),
+# data = .x))
+```
+
+```{r test tidymodel}
+# m1_sims <- m1 %>%
+#   map(. %>% arm::sim(n.sims = 1000)) %>%
+#   map_df(. %>% slot("fixef") %>% as_tibble())
+# 
+# 
+# # Generate a tidy dataframe of results (cf. broom::tidy())
+# m1_tidy <- tibble(
+#   term = names(m1_sims),
+#   estimate = summarise_all(m1_sims, list(mean)) %>%
+#     t() %>%
+#     as.vector(),
+#   std.error = m1_sims %>%
+#     summarise_all(list(sd)) %>%
+#     t() %>%
+#     as.vector()
+# )
+# 
+# 
+# library(dotwhisker)
+# # Plot the results
+# m1_tidy %>%
+#   by_2sd(mod_joined1) %>%
+#   relabel_predictors(
+#     c(
+#       gini_2004_6_cent = "Income Inequality",
+#       gdppc_2004_6_scale = "GDP/capita",
+#       age_cent = "Age",
+#       employed1 = "Employed",
+#       male1 = "Male",
+#       police_effective = "Perceived police effectiveness",
+#       income_quartile = "Income quartile"
+#     )
+#   ) %>%
+#   dwplot() +
+#   theme_bw() +
+#   geom_vline(xintercept = 0,
+#              colour = "grey60",
+#              linetype = "dashed") +
+#   theme(legend.position = "none") +
+#   labs(title = "Predicting crime victimization",
+#        x = "Coefficient Estimate")
+
+```
+
+```{r m100_1}
+m1_ord_null <- ordinal::clmm(ordered(num_victim_5yr_assault_winz) ~ 1 + (1 | country), data = mod_joined[[1]])
+
+m1_ord <- ordinal::clmm(ordered(num_victim_5yr_assault_winz) ~  gdppc_2004_6_scale + gini_2004_6_cent + age_cent + employed + male + police_effective + income_quartile + (1 | country), data = mod_joined[[1]])
+
+m1_ord_summ <- summary(m1_ord)
+
+m1_ord$info$AIC
+m1_ord$info$logLik
+```
+
+
+```{r ordinal model}
+# takes about an hour
+m100_ord <- mod_joined %>% map(~ ordinal::clmm(ordered(num_victim_5yr_assault_winz) ~  gdppc_2004_6_scale + gini_2004_6_cent + age_cent + employed + male + police_effective + income_quartile + (1 | country), data = .x))
+# 
+# m100_ord1 <- m100_ord[1:10]
+# 
+# save(m100_ord1, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/m100_ord1.RData")
+# 
+# m100_ord2 <- m100_ord[11:20]
+# 
+# save(m100_ord2, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/m100_ord2.RData")
+# 
+# m100_ord3 <- m100_ord[21:30]
+# 
+# save(m100_ord3, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/m100_ord3.RData")
+# 
+# m100_ord4 <- m100_ord[31:40]
+# 
+# save(m100_ord4, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/m100_ord4.RData")
+# 
+# m100_ord5 <- m100_ord[41:50]
+# 
+# save(m100_ord5, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/m100_ord5.RData")
+# 
+# m100_ord6 <- m100_ord[51:60]
+# 
+# save(m100_ord6, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/m100_ord6.RData")
+# 
+# m100_ord7 <- m100_ord[61:70]
+# 
+# save(m100_ord7, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/m100_ord7.RData")
+# 
+# m100_ord8 <- m100_ord[71:80]
+# 
+# save(m100_ord8, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/m100_ord8.RData")
+# 
+# m100_ord9 <- m100_ord[81:90]
+# 
+# save(m100_ord9, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/m100_ord9.RData")
+# 
+# m100_ord10 <- m100_ord[91:100]
+# 
+# save(m100_ord10, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/m100_ord10.RData")
+
+
+# m100_ord2 <- mod_joined2 %>% map(~ ordinal::clmm(ordered(num_victim_5yr_winz) ~ gini_2004_6_cent + gdppc_2004_6_scale + age_cent + employed + male + police_effective + income_quartile + (1 | country), data = .x))
+# 
+# save(m100_ord2, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/m100_ord2.RData")
+```
+
+
+
+```{r ordinal2 simulation}
+list_100 <- list()
+
+# load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/m100_ord1.RData")
+# 
+
+
+# load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/m100_ord2.RData")
+# 
+# load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/m100_ord3.RData")
+# 
+# load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/m100_ord4.RData")
+# 
+# load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/m100_ord5.RData")
+# 
+# load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/m100_ord6.RData")
+# 
+# load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/m100_ord7.RData")
+# 
+# load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/m100_ord8.RData")
+# 
+# load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/m100_ord9.RData")
+# 
+# load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/m100_ord10.RData")
+
+
+library(stevemisc) # my toy R package with various helper functions
+library(modelr) # for data_grid
+library(kableExtra) # for pretty tables
+
+
+# http://svmiller.com/blog/2020/04/summarizing-ordinal-models-with-simulation-multivariate-normal/
+# extract coefficients for each model
+m100_coef <- m100_ord %>%
+  map(. %>% coef())
+
+# extract
+m100_vcov <- m100_ord %>%
+  map(. %>% vcov()) 
+  
+m100_vcov <- m100_vcov %>%
+  map(. %>% .[-nrow(.), -ncol(.)])
+
+combined <- list()
+combined <- mapply(data.frame, m100_coef, m100_vcov, SIMPLIFY=FALSE)
+
+combined <- lapply(seq_along(combined), function(i) {
+  colnames(combined[[i]])[1] <- "estimates"
+  return(combined[[i]])
+}) 
+
+# m100_sims2 <- combined %>%
+#   map(. %>% smvrnorm(1000, .$estimates, as.matrix(.[,-1])))
+
+m100_sims <- list()
+
+m100_sims <- lapply(seq_along(combined), function(i) {
+ m100_sims[[i]] <- smvrnorm(1000, combined[[i]]$estimates, as.matrix(combined[[i]][,-1]))
+  return(m100_sims[[i]])
+}) 
+
+
+save(m100_sims, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/m100_sims.RData")
+```
+
+
+```{r m100 ord table}
+load(file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/m100_sims.RData")
+
+
+m100_sims <- m100_sims %>%
+  map_df(. %>% as_tibble())
+
+
+m100_tidy <- tibble(
+  term = names(m100_sims),
+  estimate = summarise_all(m100_sims, list(mean)) %>%
+    t() %>%
+    as.vector(),
+  std.error = m100_sims %>%
+    summarise_all(list(sd)) %>%
+    t() %>%
+    as.vector()
+)
+
+
+library(dotwhisker)
+# Plot the results
+m100_tidy %>%
+  by_2sd(mod_joined1) %>%
+  relabel_predictors(
+    c(
+      gini_2004_6_cent = "Income Inequality",
+      gdppc_2004_6_scale = "GDP/capita",
+      age_cent = "Age",
+      employed1 = "Employed",
+      male1 = "Male",
+      police_effective = "Perceived police effectiveness",
+      income_quartile = "Income quartile"
+    )
+  ) %>%
+  dwplot() +
+  theme_bw() +
+  geom_vline(xintercept = 0,
+             colour = "grey60",
+             linetype = "dashed") +
+  theme(legend.position = "none") +
+  labs(title = "Predicting crime victimization",
+       x = "Coefficient Estimate")
+
+# m100_sims2 <- smvrnorm(1000, combined[[1]][,1], as.matrix(combined[[1]][,-1])) 
+  
+
+# smvrnorm(1000, coefm100_ord1, vcovm100_ord1) %>% tbl_df() %>% # 1,000 sims, convert matrix to tbl
+#   mutate(sim = seq(1:1000)) %>% # create simulation identifier
+#   select(sim, everything())
+
+```
+
+
+```{r mord100}
+m100_ord1 <- ordinal::clmm(ordered(num_victim_5yr_winz) ~ gini_2004_6_cent + gdppc_2004_6_scale + age_cent + employed + male + police_effective + income_quartile + (1 | country), data = mod_joined1)
+```
+
+
+```{r mord1 simulation}
+
+simm100_ord1 <- smvrnorm(1000, coefm100_ord1, vcovm100_ord1) %>% tbl_df() %>% # 1,000 sims, convert matrix to tbl
+  mutate(sim = seq(1:1000)) %>% # create simulation identifier
+  select(sim, everything()) # make sim column first in the data
+```
+
+
+> Chapter 7 of Gelman and Hill (2007) for how the multivariate normal distribution is a novel way of simulating uncertainty regarding the model output from a generalized linear model. I’ll only note here that simulating values from a multivariate normal distribution of the ordinal model requires only the vector of regression coefficients and the variance-covariance matrix of the fitted model. 
+
+
+```{r mw100-ord}
+mw100_ord <- mod_joined %>% map(~ ordinal::clmm(ordered(num_victim_5yr_winz) ~ gini_2004_6_cent + gdppc_2004_6_scale + age_cent + employed + male + police_effective + income_quartile + (1 | country), data = .x, weights = individual_weight))
+
+save(mw100_ord, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/mw100_ord.RData")
+```
+
+
+```{r view-convergence}
+summary(mw100_ord[[1]])$coefficients[,"Std. Error"]
+
+is.nan(summary(mw100_ord[[9]])$coefficients[,"Std. Error"]["gini_2004_6_cent"])
+
+mw100_invalid <- list()
+
+mw100_invalid <- lapply(seq_along(mw100_ord), function(i) {
+ mw100_invalid[[i]] <- is.nan(summary(mw100_ord[[i]])$coefficients[,"Std. Error"]["gini_2004_6_cent"])
+  return(mw100_invalid[[i]])
+}) 
+
+percent <- function(x, digits = 0, format = "f", ...) {      # Create user-defined function
+  paste0(formatC(x * 100, format = format, digits = digits, ...), "%")
+}
+
+model_nonconvergence <- Reduce("+",mw100_invalid)
+
+save(model_nonconvergence, file = here::here("output", "icvs_output.RData"))
+
+```
+
+
+```{r mw100 extraction}
+# extract
+
+mw100_coef2 <- mw100_ord %>%
+  map(. %>% coef())
+
+
+mw100_vcov2 <- mw100_ord %>%
+  map(. %>% vcov()) 
+  
+combined <- list()
+combined <- mapply(data.frame, mw100_coef2, mw100_vcov2, SIMPLIFY=FALSE)
+
+combined <- lapply(seq_along(combined), function(i) {
+  colnames(combined[[i]])[1] <- "estimates"
+  return(combined[[i]])
+}) 
+
+# mw100_sims2 <- combined %>%
+#   map(. %>% smvrnorm(1000, .$estimates, as.matrix(.[,-1])))
+
+mw100_sims2 <- list()
+
+mw100_sims2 <- lapply(seq_along(combined), function(i) {
+ mw100_sims2[[i]] <- smvrnorm(1000, combined[[i]]$estimates, as.matrix(combined[[i]][,-1]))
+  return(mw100_sims2[[i]])
+}) 
+
+
+save(mw100_sims2, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/mw100_sims2.RData")
+
+```
+ 
+ 
+```{r tidy mord1}
+ broom::tidy(m100_ord1) %>% # tidy up m100_ord1 for context
+  # z95 comes with stevemisc for precise values coinciding with areas under N(0,1)
+  # also, these lwr/upr bounds make less sense for alphas, but we're not going to belabor those.
+  mutate(lwr = estimate - p_z(.05)*std.error,
+         upr = estimate + p_z(.05)*std.error) %>%
+  mutate(category = "Ordinal Logistic Regression Summary") -> tidym100_ord1
+
+simm100_ord1 %>% # we're going to name things to match up nicely with the above output
+  gather(term, value, everything(), -sim) %>%
+  group_by(term) %>%
+  summarize(estimate = mean(value),
+            `std.error` = sd(value), # you can laugh now at calling this a std.error, but I'm going somewhere with this
+            lwr = quantile(value, .025),
+            upr = quantile(value, .975)) %>%
+  mutate(category = "Model Simulation Summary") %>%
+  # this is why i'm standardizing column names...
+  bind_rows(tidym100_ord1, .) %>%
+  # group_by fill to drop the alphas
+  group_by(term) %>%
+  fill(coef.type) %>%
+  filter(coef.type == "location") %>%
+  ungroup() %>%
+  mutate(term = fct_recode(term,
+                           "Income Inequality" = "gini_2004_6_cent",
+      "GDP/capita" = "gdppc_2004_6_scale",
+      "Age" = "age_cent",
+      "Employed" = "employed1",
+      "Male" = "male1",
+      "Perceived police effectiveness" = "police_effective",
+      "Income quartile" = "income_quartile")) %>%
+  mutate(term = fct_rev(fct_inorder(term))) %>%
+  # plot..
+  ggplot(.,aes(term, estimate, ymin=lwr, ymax=upr,color=category, shape=category)) +
+  theme_steve_web() + post_bg() +
+  scale_colour_brewer(palette = "Set1") +
+  geom_hline(yintercept =  0, linetype="dashed") +
+  geom_pointrange(position = position_dodge(width = .5)) + coord_flip()+
+  labs(title = "Mixed Ordinal Regression on Victimization",
+       x = "", y = "Coefficient (with 95% Intervals)",
+       # subtitle = "Nothing here is terribly surprising and simulating allows another means to summarize uncertainty around the parameters.",
+       shape = "", color="",
+       caption = "Data: ICVS,PWT,SWIID. Random effect of country omitted for presentation.\nHigher values = more reported crime victimization.")
+```
+
+ 
+
+```{r, eval=FALSE}
+library(brms)
+# 4 chains, takes 3-4 days
+m_brm <- brms::brm(ordered(num_victim_5yr) ~ age_cent + gdppc_2004_6 + (1|country), data = mod_joined1, family = 'cumulative', prior = set_prior('normal(0, 3)'))
+```
+
+```{r brms-model, eval=FALSE}
+m100_brms <- brms::brm(ordered(num_victim_5yr_winz) ~ gini_2004_6_cent + gdppc_2004_6_scale + age_cent + employed + male + police_effective + income_quartile + (1 | country), family = cumulative,
+  data = mod_joined1)
+```
+
+
+

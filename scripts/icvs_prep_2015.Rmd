@@ -1,0 +1,247 @@
+---
+title: "icvs_2015_prep_report"
+output:
+  html_document:
+    df_print: paged
+    number_sections: true
+    toc: true
+---
+
+```{r source script 1 & data, warning=F, message=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(haven) # haven for reading .sav file
+library(janitor)
+library(stats)
+library(tidyverse)
+library(dplyr) # for glimpse and filter functions
+library(data.table)
+library(knitr)
+library(readxl) # read xls file
+
+#sjPlot::view_df(icvs_data)
+#names_and_labels <- icvs_data %>%
+#  surveytoolbox::varl_tb()
+
+#names_and_labels <- icvs_data %>%
+#surveytoolbox::extract_vallab()
+#raw_classes <- as.character(lapply(lapply(icvs_data, class),tail,1))
+
+icvs_data <- read_sav("C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/ICVS2015_2b.sav")  # Reading data
+
+# names(icvs_data)
+# 
+# # urban or rural
+# glimpse(icvs_data$i004)
+# 
+# # main city
+# glimpse(icvs_data$i004a)
+# 
+# glimpse(icvs_data$i005b)
+# summary(as.factor(icvs_data$i005b))
+```
+
+
+```{r janitor, message=FALSE, echo=FALSE}
+raw_classes <- sapply(sapply(icvs_data, class),tail,1)
+
+icvs_data <- icvs_data %>% 
+  mutate_all(as_factor) %>%   # convert all variables from chr+lbl to fct type          
+  set_names(icvs_data %>%       # convert variable names to informative labels
+              sjlabelled::get_label() %>% # pull labels from original tibble
+              enframe() %>%               # convert list of column names to a new tibble
+              na_if("") %>%               # if variable label is empty string, convert to NA
+              mutate(value = coalesce(value, name)) %>%  # fill in NA with original if missing
+              pull(value)) %>%            # extract new variable name into a character vector
+  janitor::clean_names()      # clean names to be all lowercase, replacing spaces with "_"     
+
+```
+
+```{r source scripts, warning=F, message=FALSE, echo=FALSE}
+ source("C:/Users/dalla/Google Drive/project_files/icvs_inequality/scripts/icvs_scripts.r", local = knitr::knit_global())
+```
+
+```{r unlabeled,message=FALSE, echo=FALSE}
+# i005b identifies the national surveys conducted
+
+summary(icvs_data$i002b)
+summary(icvs_data$sweep)
+
+# i004 appears to be sweep information
+```
+
+
+
+The ICVS provides more specific regional data compared to the LIS or World Bank, distinguishing data collection across England and Wales, Ireland, Northern Ireland, and Scotland (in addition to the United Kingdom).
+
+
+
+# Creating a variable for countries 
+
+Since my analysis is multilivel, with countries as clusters, identifying countries in a single variable is imperative.
+
+```{r nation-scan}
+summary(icvs_data$national_surveys)
+```
+
+A lot of missing values for national_surveys
+
+```{r main_city}
+summary(icvs_data$main_city)
+```
+
+still a lot of NAs, but gives values for missing data like Turkey
+
+```{r first country creation}
+# extract characters between parentheses from main_city
+icvs_data$country <- gsub("(?<=\\()[^()]*(?=\\))(*SKIP)(*F)|.", "", icvs_data$main_city, perl=T)
+
+summary(as.factor(icvs_data$country))
+# view unique countries
+# unique(icvs_data$country)
+```
+
+Lots of blanks and NAs. Maybe we can supplement this with the national_surveys variable
+
+```{r missingness}
+# change blank to NA
+icvs_data$country <- gsub("^$|^ $", NA, icvs_data$country)
+
+# for missing country variables, import national survey values
+icvs_data$country[is.na(icvs_data$country)] <- as.character(icvs_data$national_surveys[is.na(icvs_data$country)])
+
+# view after national survey
+summary(as.factor(icvs_data$country))
+
+icvs_data$country <- as.factor(icvs_data$country)
+```
+
+gets rid of under half of NA values
+
+```{r does this work, message=FALSE, echo=FALSE}
+# I don't think this does anything
+# icvs_data$country[is.na(icvs_data$country)] <- icvs_data$national_surveys[is.na(icvs_data$country)]
+# 
+# summary(as.factor(icvs_data$country))
+```
+
+Looking at the 2005.sav, I know Spain should be visible by now, fortunately, the regional_survey variable seems uniquely created to handle this
+
+```{r regional spain}
+summary(icvs_data$regional_survey)
+
+# filling spain into country variable from regional_survey responses
+icvs_data$country[is.na(icvs_data$country)] <- gsub("(?<=\\()[^()]*(?=\\))(*SKIP)(*F)|.", "", icvs_data$regional_survey[is.na(icvs_data$country)], perl=T)
+```
+
+```{r post-spain}
+summary(icvs_data$country)
+```
+
+Spain is now in. Since I'm just using 2004-2006+ 2005 ICS, maybe I can just stop here. If there are no more missing values in my sweeps, I can just exclude the rest and move on
+
+```{r sweep country missingness}
+icvs_data$sweep[is.na(icvs_data$country)] %>%
+  summary()
+
+```
+
+no luck
+
+```{r nation-identifying}
+icvs_data$country <- as.factor(icvs_data$country)
+
+data_2005 <- icvs_data %>%
+  filter(sweep == "5th sweep -2004-2006" | sweep == "EU ICS 2005") 
+
+summary(data_2005$country)[summary(data_2005$country) >0]
+```
+
+6020 NAs
+
+From 2005.sav file:
+
+math checks out for united kingdom (889+1004+2002+2010+2004 = 7909)
+
+missing cases for peru (7011 vs 1030 = 3289), argentina (2529 vs 5260= 2731);  2731+3289 = 6020. Accounts for all NAs
+
+
+## Peru and argentina
+
+This interactive table of a subset of rows suggests that these observations are lacking country identification. They have latin america for global region, but nothing more specific 
+
+A combination of the region variable and questionnaire_that_was_used seems to hold some kind of promise. Reliably, the country-specific surveys have region information, bat FtoF 2000 does not.
+
+```{r look at data}
+set.seed(12345) 
+
+data_2005[is.na(data_2005$country),][sample(1:nrow(data_2005[is.na(data_2005$country),]), 30), ]
+
+```
+
+
+Another perspective is to look at patterns of response country X survey type
+
+```{r questionnaire missingness, message=FALSE}
+setnames(data_2005, old=c("questionnaire_that_was_used","questionnaire_was_based_on"), new=c("questionnaire_used","questionnaire_based_on"), skip_absent=TRUE)
+
+
+questionnaire_screen <- data_2005 %>% group_by(questionnaire_used) %>% 
+  dplyr::count(country)
+
+# view number of responses for each country*sweep
+questionnaire_screen_c <- reshape::cast(questionnaire_screen,country~questionnaire_used)
+
+# compute total number of participants
+questionnaire_screen_c$total <- rowSums(questionnaire_screen_c[,2:ncol(questionnaire_screen_c)], na.rm=TRUE)
+
+questionnaire_screen_c$total[questionnaire_screen_c$total == 0] <- NA
+
+questionnaire_screen_c
+
+```
+
+Looking at the 2005.sav, Argentina got the FtoF 2000, and Peru got Country specific
+
+```{r argentina and peru}
+data_2005$country <- ifelse(is.na(data_2005$country),ifelse(data_2005$questionnaire_used == "FtoF 2000", "Argentina",ifelse(data_2005$questionnaire_used == "Country specific", "Peru",NA)),as.character(data_2005$country))
+
+data_2005$country <- as.factor(data_2005$country)
+
+summary(data_2005$country)
+```
+
+This treatment gives the same values as 2005.sav
+
+
+
+# Uk transformations
+
+
+```{r non adjusted countries}
+summary(data_2005$country)[c("United Kingdom","England & Wales", "England", "Northern Ireland", "Scotland", "Ireland")]
+```
+
+
+It would be preferable to retain data granularity across the United Kingdom. Firstly, it would keep the number of clusters closer 30 countries, and secondly, the regions likely have important economic and cultural differences. For instance, Northern Ireland has a smaller gini compared to the broader UK (.33 vs. .39 in 2013; https://www.nicva.org/resource/economic-inequality-in-northern-ireland).
+
+Unfortunately, smaller regions seem less likely to systematically collect data. For instance, some critical variables such as income inequality are not available either in the LIS, World Bank, nor government-level data in countries such as Northern Ireland or Scotland. Since this study seeks to integrate individual and nation-level observations, members of the United Kingdom were combined under the single country of the UK.
+
+```{r adjusting countries}
+# substituting specific british isles regions with UK
+data_2005$country[data_2005$country %in% c("England & Wales", "England", "Northern Ireland", "Scotland")] <- "United Kingdom"
+
+data_2005$country<- recode(data_2005$country, "SAR China"= "Hong Kong",
+                           "USA" = "United States", "RSA" = "South Africa")
+```
+
+
+```{r total adjusted countries}
+summary(data_2005$country)[c("United Kingdom","England & Wales", "England", "Northern Ireland", "Scotland", "Ireland")]
+sum(summary(data_2005$country)>0)
+```
+
+Notably, Ireland is not part of the UK, so has better data coverage and is left separately for this study
+
+
+
