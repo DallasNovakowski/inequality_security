@@ -13,8 +13,7 @@ library(ordinal)
 load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/mod_joined.RData")
 
 #used for dotwhisker plots
-mod_joined1 <- mod_joined[[1]]
-save(mod_joined1, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/mod_joined1.RData")
+load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/mod_joined1.RData")
 ```
 
 

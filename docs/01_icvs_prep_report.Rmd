@@ -1328,6 +1328,9 @@ mod_joined <- swiid_mod %>%
 
 save(mod_joined, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/mod_joined.RData")
 
+mod_joined1 <- mod_joined[[1]]
+save(mod_joined1, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/mod_joined1.RData")
+
 rm(iv_2005_mod, mod_joined, swiid_mod)
 
 

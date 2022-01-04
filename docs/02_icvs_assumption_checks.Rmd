@@ -26,6 +26,10 @@ source("C:/Users/dalla/Google Drive/project_files/inequality_security/scripts/ic
 
 iv_2005_mod <- iv_2005_mod %>% 
         filter(!is.na(num_victim_5yr))
+
+
+#used for dotwhisker plots
+load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/mod_joined1.RData")
 ```
 
 # At a glance
