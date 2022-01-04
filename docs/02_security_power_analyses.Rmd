@@ -13,35 +13,88 @@ set.seed(1234)
 
 load(here::here("output", "pretest_output.RData"))
 
-
 Superpower_options("plot" = FALSE, "verbose" = FALSE) 
-```
 
+nsims <- 2000
+
+cgwtools::resave(nsims, file = here::here("output", "pretest_output.RData"))
+```
 
 After the pretest, we found substantial variation within conditions. From data vizualization, a few strategies can be identified for guiding consumption of security goods: firstly, purchasing none at all (the most risk-accepting strategy), secondly, purchasing the maximum possible, and third, purchasing the median value of the possible range. Lastly, for those that do not use one of these max/min/median strategies, participants seem to make purchases in multiples of five.
 
+![](C:/Users/dalla/Google Drive/project_files/inequality_security/figs/spending_pretest_splitplot.png){width="60%"}
 
-
-![](C:/Users/dalla/Google Drive/project_files/inequality_security/figs/spending_pretest_splitplot.png){width=60%}
-
-For this project, we will be using values from the 50_02 condition, which corresponds to a baseline 50% chance of successful thefts, and each unit of security costing $0.02. This condition seems to produce the least skewed data, at `r round(base_skew,2)`.
+For this project, we will be using values from the 50_02 condition, which corresponds to a baseline 50% chance of successful thefts, and each unit of security costing \$0.02. This condition seems to produce the least skewed data, at `r round(base_skew,2)`.
 
 The following document details power analyses using R package Superpower conducted to find adequately-powered sample sizes at varying effect sizes.
 
 A major benefit of having run a pilot study is getting information on mean and standard deviation for our variables. It is generally uninformative to conduct a power analysis without these values, particularly the sd. Here, we can use a baseline average security consumption of `r round(base_mean,2)` units , with a standard deviation of `r round(base_sd,2)`.
 
 
-# Trial 1: partial η2 = .05
+
+# Two-level
+
+```{r l2design, warning=FALSE}
+# m_units = 37.1
+# detecting .01 partial η2, with 95% power
+l2security_01_design <- ANOVA_design(design = "2b",
+                   n = 646, 
+                   mu = c(0.6798, base_mean), 
+                   sd = base_sd, 
+                   # r = 0.8, 
+                   labelnames = c("inequality", "yes", "no"))
+
+ggplot2::ggsave(here::here("figs", "l2_design_plot.png"), height = 3, width =5)
+```
+
+
+```{r l2powerplot-01, warning=FALSE, echo=FALSE}
+l2security_01_powerplot <- plot_power(l2security_01_design, min_n = 20, max_n = 700, desired_power = 95)
+
+l2cell_n_01 <- l2security_01_powerplot$anova_n$n[1]
+
+cgwtools::resave(l2cell_n_01, file = here::here("output", "pretest_output.RData"))
+
+
+l2security_01_powerplot$plot_ANOVA
+
+l2d <-ggplot2:: ggplot_build(l2security_01_powerplot$plot_ANOVA)
+
+
+ggplot2::ggsave(here::here("figs", "l2powerplot.png"), height = 3, width =5)
+```
+
+```{r l2exact, warning=FALSE, echo=FALSE}
+
+# security_01_power <- ANOVA_power(security_01_design, 
+#                                   alpha = 0.05, 
+#                                   nsims = nsims, 
+#                                   seed = 1234)
+# 
+# knitr::kable(confint(security_01_power, level = .98))
+
+
+l2_01_exact <- ANOVA_exact(l2security_01_design, 
+                                  alpha = 0.05)
+
+
+cgwtools::resave(l2_01_exact, file = here::here("output", "pretest_output.RData"))
+
+
+knitr::kable(l2_01_exact$main_results)
+```
+
+
+# 2x2 factorial
+
+## Trial 1: partial η2 = .05
 
 ```{r power 05, warning = FALSE}
-nsims <- 2000
-
-cgwtools::resave(nsims, file = here::here("output", "pretest_output.RData"))
-
+# mean security consumed = 45.4
 # detecting .05 partial η2, with 95% power
 security_05_design <- ANOVA_design(design = "2b*2b",
-                   n = 63, 
-                   mu = c(45.4, base_mean, base_mean, base_mean), 
+                   n = 65, 
+                   mu = c(0.908, base_mean, base_mean, base_mean), 
                    sd = base_sd, 
                    # r = 0.8, 
                    labelnames = c("inequality", "yes", "no", "income_visible", "yes", "no"),
@@ -50,8 +103,6 @@ security_05_design <- ANOVA_design(design = "2b*2b",
 
 ggplot2::ggsave(here::here("figs", "power_design_plot.png"), height = 3, width =5)
 ```
-
-
 
 It is worth noting that this design constitutes a ["no-way" interaction,](https://aaroncaldwell.us/SuperpowerBook/the-no-way-interactions.html) which "requires at least twice as many subjects per cell as a study that simply aims to show the simple effect." This requirement follows ["because we are testing the reduction of that same effect"](http://datacolada.org/17).
 
@@ -63,13 +114,9 @@ security_05_powerplot <- plot_power(security_05_design, min_n = 20, max_n = 200,
 security_05_powerplot$plot_ANOVA
 ```
 
+> According to Cohen's (1988) guidelines, f2≥ 0.02, f2≥ 0.15, and f2 ≥ 0.35 represent small, medium, and large effect sizes, respectively.
 
->According to Cohen’s (1988) guidelines, f2≥ 0.02, f2≥ 0.15, and f2 ≥ 0.35 represent small, medium, and large effect sizes, respectively.
-
-
-> for eta square Basic rules of thumb are that: η2 = 0.01, indicates small effect; η2 = 0.06,  medium effect; η2 = 0.14 large effect.
-
-
+> for eta square Basic rules of thumb are that: η2 = 0.01, indicates small effect; η2 = 0.06, medium effect; η2 = 0.14 large effect.
 
 ```{r power summary05, warning=FALSE, echo=FALSE}
 # security_05_power <- ANOVA_power(security_05_design, 
@@ -89,20 +136,18 @@ Also following from the no-way interaction, each coefficient has the same effect
 
 <!-- > [The interaction tests whether the average effect of hunger on liking fruit differs in the presence of bananas. In the presence of bananas the effect of hunger on the desireability of fruit is 5 scalepoints. The average effect (that we get from the marginal means) of hunger on fruit desireability is 2.5 (22.5-20). In other words, the interaction tests whether the difference effect between hunger and no hunger is different in the presence of an apple versus in the presence of a banana.](https://aaroncaldwell.us/SuperpowerBook/the-no-way-interactions.html) -->
 
-
-# Trial 2: partial η2 = .01
+## Trial 2: partial η2 = .01
 
 ```{r power 01, warning=FALSE}
-
+# m_units = 37.1
 # detecting .01 partial η2, with 95% power
 security_01_design <- ANOVA_design(design = "2b*2b",
-                   n = 339, 
-                   mu = c(37.1, base_mean, base_mean, base_mean), 
+                   n = 340, 
+                   mu = c(0.7419, base_mean, base_mean, base_mean), 
                    sd = base_sd, 
                    # r = 0.8, 
                    labelnames = c("inequality", "yes", "no", "income_visible", "yes", "no"))
 ```
-
 
 ```{r powerplot 01, warning=FALSE, echo=FALSE}
 security_01_powerplot <- plot_power(security_01_design, min_n = 20, max_n = 500, desired_power = 95)
@@ -113,13 +158,37 @@ cgwtools::resave(cell_n_01, file = here::here("output", "pretest_output.RData"))
 
 
 security_01_powerplot$plot_ANOVA
+
+d <-ggplot2:: ggplot_build(security_01_powerplot$plot_ANOVA)
+
 # security_01_powerplot$anova_n$n[3]
-
-
+# 
+# fplot <- security_01_powerplot$plot_ANOVA
+# 
+# 
+# # Rows and columns can be dropped from the layout.
+# 
+# 
+# g1 = ggplot2::ggplotGrob(fplot)
+# 
+# # To show the layout:
+# gtable::gtable_show_layout(g1)
+# 
+# # Which columns (and/or rows) to drop?
+# # In this case drop columns 5 and 6 to leave am = 0 plot
+# # Drop columns 4 and 5 to leave am = 1 plot
+# 
+# # am = 0 plot
+# g1_am0 = g1[-c(7,9),]
+# 
+# library(grid)
+# p <-  grid.newpage()
+# p <- grid.draw(g1_am0)
+# 
+# p
 
 ggplot2::ggsave(here::here("figs", "01powerplot.png"), height = 3, width =5)
 ```
-
 
 ```{r power plot01, warning=FALSE, echo=FALSE}
 
@@ -141,20 +210,18 @@ cgwtools::resave(security_01_exact, file = here::here("output", "pretest_output.
 knitr::kable(security_01_exact$main_results)
 ```
 
-
-
-# Trial 3: partial η2 = .02
+## Trial 3: partial η2 = .02
 
 ```{r power 02, warning=FALSE}
+#units = 39.8
 # detecting .01 partial η2, with 95% power
 security_02_design <- ANOVA_design(design = "2b*2b",
-                   n = 161, 
-                   mu = c(39.8, base_mean, base_mean, base_mean), 
+                   n = 168, 
+                   mu = c(0.7959, base_mean, base_mean, base_mean), 
                    sd = base_sd, 
                    # r = 0.8, 
                    labelnames = c("inequality", "yes", "no", "income_visible", "yes", "no"))
 ```
-
 
 ```{r powerplot 02, warning=FALSE, echo=FALSE}
 security_02_powerplot <- plot_power(security_02_design, min_n = 20, max_n = 500, desired_power = 95)
@@ -163,7 +230,6 @@ security_02_powerplot <- plot_power(security_02_design, min_n = 20, max_n = 500,
 
 security_02_powerplot$plot_ANOVA
 ```
-
 
 ```{r power plot02, warning=FALSE, echo=FALSE}
 
@@ -180,4 +246,3 @@ security_02_exact <- ANOVA_exact(security_02_design,
 
 knitr::kable(security_02_exact$main_results)
 ```
-

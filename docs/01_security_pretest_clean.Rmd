@@ -49,27 +49,59 @@ test_data <- merge(test_data,test_data2, all = TRUE)
 ```{r import identified data, eval = FALSE, echo=FALSE}
 # read timer data
 
-page_times <- read_csv("C:/Users/dalla/Google Drive/offline_data_files/security_game/security_pretest_processed_times-2021-11-12.csv")
 
-data <-  read_csv("C:/Users/dalla/Google Drive/offline_data_files/security_game/security_pretest_2021_11_21.csv")
+page_times <-
+  read_csv(
+    "C:/Users/dalla/Google Drive/offline_data_files/security_game/security_pretest_processed_times-2021-11-12.csv"
+  )
+
+data <-
+  read_csv(
+    "C:/Users/dalla/Google Drive/offline_data_files/security_game/security_pretest_2021_11_21.csv"
+  )
 
 
-names(page_times) <- gsub(x = names(page_times), pattern = "\\._", replacement = "_")
+names(page_times) <-
+  gsub(x = names(page_times),
+       pattern = "\\._",
+       replacement = "_")
 
-names(page_times) <- gsub(x = names(page_times), pattern = "\\.", replacement = "_")
+names(page_times) <-
+  gsub(x = names(page_times),
+       pattern = "\\.",
+       replacement = "_")
 
-names(data) <- gsub(x = names(data), pattern = "._", replacement = "_", fixed = TRUE)
-names(data) <- gsub(x = names(data), pattern = ".", replacement = "_", fixed = TRUE)
+names(data) <-
+  gsub(
+    x = names(data),
+    pattern = "._",
+    replacement = "_",
+    fixed = TRUE
+  )
+names(data) <-
+  gsub(
+    x = names(data),
+    pattern = ".",
+    replacement = "_",
+    fixed = TRUE
+  )
 
-out_wide <- pivot_wider(page_times, id_cols = participant_code, names_from = page_name, names_prefix ="time_", values_from = seconds_on_page)
+out_wide <-
+  pivot_wider(
+    page_times,
+    id_cols = participant_code,
+    names_from = page_name,
+    names_prefix = "time_",
+    values_from = seconds_on_page
+  )
 
 data <- data %>%
-   left_join(out_wide, by = c("participant_code")) %>%
+  left_join(out_wide, by = c("participant_code")) %>%
   select(-contains(c("prolific", "completion", "mturk"))) %>%
   filter(!is.na(participant_label))
 
 # save identified data
-save(data,file="C:/Users/dalla/Google Drive/offline_data_files/security_game/ident_pretest_data.RData")
+save(data, file = "C:/Users/dalla/Google Drive/offline_data_files/security_game/ident_pretest_data.RData")
 
 #de-identify
 data <- data %>%
@@ -86,39 +118,139 @@ load(here::here("data", "pretest_data.RData"))
 
 # delete columns totally unrelated to pretest
 data <- data %>%
-  select(-starts_with(c("intro_notask", "slider_task", "merit", "security_game_1","session"))) %>%
-  select(-contains(c("payoff","mturk","id_in","player_role","bot","_ts_", "index","current","time_started","visited","submit_missing", ".y", "round_number")))
+  select(-starts_with(
+    c(
+      "intro_notask",
+      "slider_task",
+      "merit",
+      "security_game_1",
+      "session"
+    )
+  )) %>%
+  select(-contains(
+    c(
+      "payoff",
+      "mturk",
+      "id_in",
+      "player_role",
+      "bot",
+      "_ts_",
+      "index",
+      "current",
+      "time_started",
+      "visited",
+      "submit_missing",
+      ".y",
+      "round_number"
+    )
+  ))
 
 
 # clean names
-names(data) <- gsub(x = names(data), pattern = "questionnaires_1_player_", replacement = "", fixed = TRUE)
-names(data) <- gsub(x = names(data), pattern = "intro_1_player_", replacement = "", fixed = TRUE)
-names(data) <- gsub(x = names(data), pattern = "consent_1_player_", replacement = "", fixed = TRUE)
-names(data) <- gsub(x = names(data), pattern = "session_config_", replacement = "", fixed = TRUE)
+names(data) <-
+  gsub(
+    x = names(data),
+    pattern = "questionnaires_1_player_",
+    replacement = "",
+    fixed = TRUE
+  )
+names(data) <-
+  gsub(
+    x = names(data),
+    pattern = "intro_1_player_",
+    replacement = "",
+    fixed = TRUE
+  )
+names(data) <-
+  gsub(
+    x = names(data),
+    pattern = "consent_1_player_",
+    replacement = "",
+    fixed = TRUE
+  )
+names(data) <-
+  gsub(
+    x = names(data),
+    pattern = "session_config_",
+    replacement = "",
+    fixed = TRUE
+  )
 
 
-names(data) <- gsub(x = names(data), pattern = "attention_check_1_player_other", replacement = "attention_check_1_player_atn_other", fixed = TRUE)
+names(data) <-
+  gsub(
+    x = names(data),
+    pattern = "attention_check_1_player_other",
+    replacement = "attention_check_1_player_atn_other",
+    fixed = TRUE
+  )
 
-names(data) <- gsub(x = names(data), pattern = "attention_check_1_player_", replacement = "", fixed = TRUE)
+names(data) <-
+  gsub(
+    x = names(data),
+    pattern = "attention_check_1_player_",
+    replacement = "",
+    fixed = TRUE
+  )
 
 data <- data %>%
-  select(-contains(c("participation_fee","real_world_currency_per_point","attention_check_1_subsession_round_number","completionlink", "oTree_version_used","prolific_id")))
+  select(-contains(
+    c(
+      "participation_fee",
+      "real_world_currency_per_point",
+      "attention_check_1_subsession_round_number",
+      "completionlink",
+      "oTree_version_used",
+      "prolific_id"
+    )
+  ))
 
-data$comments <- paste(data$comments, data$study_end_1_player_comments)
+data$comments <-
+  paste(data$comments, data$study_end_1_player_comments)
 
 data <- subset(data, select = -study_end_1_player_comments)
 
-names(data) <- gsub(x = names(data), pattern = ".x", replacement = "", fixed = TRUE)
+names(data) <-
+  gsub(
+    x = names(data),
+    pattern = ".x",
+    replacement = "",
+    fixed = TRUE
+  )
 
 
 data <- data %>%
-  janitor::clean_names()      # clean names to be all lowercase, replacing spaces with "_"     
+  janitor::clean_names()      # clean names to be all lowercase, replacing spaces with "_"
 
 
-names(data) <- gsub(x = names(data), pattern = "pre_test", replacement = "pretest", fixed = TRUE)
-names(data) <- gsub(x = names(data), pattern = "security_game_pretest", replacement = "sg", fixed = TRUE)
-names(data) <- gsub(x = names(data), pattern = "player_", replacement = "", fixed = TRUE)
-names(data) <- gsub(x = names(data), pattern ="subsession_", replacement = "", fixed = TRUE)
+names(data) <-
+  gsub(
+    x = names(data),
+    pattern = "pre_test",
+    replacement = "pretest",
+    fixed = TRUE
+  )
+names(data) <-
+  gsub(
+    x = names(data),
+    pattern = "security_game_pretest",
+    replacement = "sg",
+    fixed = TRUE
+  )
+names(data) <-
+  gsub(
+    x = names(data),
+    pattern = "player_",
+    replacement = "",
+    fixed = TRUE
+  )
+names(data) <-
+  gsub(
+    x = names(data),
+    pattern = "subsession_",
+    replacement = "",
+    fixed = TRUE
+  )
 
 pretest_initial_n <- nrow(data)
 ```
@@ -144,7 +276,7 @@ post_atn2_n <- data %>%
 #   filter(comp_check == "Deciding whether to try stealing from me" | comp_check == "Deciding whether to purchase a security product") %>%
 #   nrow()
 
-# strict interpretation of comprehension check 
+# strict interpretation of comprehension check
 post_comp_n <-  data %>%
   filter(comp_check == "Deciding whether to try stealing from me") %>%
   nrow()
@@ -155,8 +287,10 @@ post_comp_n <-  data %>%
 # actual screening, attention checks and moderate comprehension criteria
 data <-  data %>%
   filter(!is.na(age) & !is.na(gender)) %>%
-  filter(comp_check == "Deciding whether to try stealing from me" | 
-           comp_check == "Deciding whether to purchase a security product") %>% 
+  filter(
+    comp_check == "Deciding whether to try stealing from me" |
+      comp_check == "Deciding whether to purchase a security product"
+  ) %>%
   filter(atn_other2 == "yes" | atn_other2 == "Yes") %>%
   filter(atn_other == "yes" | atn_other == "Yes")
 
@@ -169,21 +303,26 @@ A substantial portion of the sample is lost during data quality screening. From 
 After all screening, and using a moderate threshold for comprehension checks, we are left with n=`r nrow(data)`
 
 ```{r aggregation, echo=FALSE}
-
 # make lists of useful variables
 time_vars <- colnames(data[grepl('time_', colnames(data))])
-time_vars <- Filter(function(x) !any(grepl("participant", x)), time_vars)
+time_vars <-
+  Filter(function(x)
+    ! any(grepl("participant", x)), time_vars)
 dospert_vars <- colnames(data[grepl('dospert_', colnames(data))])
 iu_vars <- colnames(data[grepl('iu_', colnames(data))])
-consumed_vars <- colnames(data[grepl('security_consumed', colnames(data))])
+consumed_vars <-
+  colnames(data[grepl('security_consumed', colnames(data))])
 page_vars <- colnames(data[grepl('page_in_round', colnames(data))])
 
 # make totals of variables
-data$time_total <- rowSums(data[,time_vars], na.rm = TRUE) * NA ^ (rowSums(!is.na(data[,time_vars])) == 0)
+data$time_total <-
+  rowSums(data[, time_vars], na.rm = TRUE) * NA ^ (rowSums(!is.na(data[, time_vars])) == 0)
 
-data$iu_total <- rowSums(data[,iu_vars], na.rm = TRUE) * NA ^ (rowSums(!is.na(data[,iu_vars])) == 0)
+data$iu_total <-
+  rowSums(data[, iu_vars], na.rm = TRUE) * NA ^ (rowSums(!is.na(data[, iu_vars])) == 0)
 
-data$dospert_total <- rowSums(data[,dospert_vars], na.rm = TRUE) * NA ^ (rowSums(!is.na(data[,dospert_vars])) == 0)
+data$dospert_total <-
+  rowSums(data[, dospert_vars], na.rm = TRUE) * NA ^ (rowSums(!is.na(data[, dospert_vars])) == 0)
 
 ```
 
@@ -216,7 +355,22 @@ time_means <- sapply(time_data, mean)
 
 time_means
 
-curate_time <- sum(time_means[c("time_consent","time_at_bo","time_demographics", "time_task_intro", "time_pretest50_02","time_iu","time_iu", "time_ac1","time_ac2","time_cc", "time_comments","time_consent")])
+
+curate_time <-
+  sum(time_means[c(
+    "time_consent",
+    "time_at_bo",
+    "time_demographics",
+    "time_task_intro",
+    "time_pretest50_02",
+    "time_iu",
+    "time_iu",
+    "time_ac1",
+    "time_ac2",
+    "time_cc",
+    "time_comments",
+    "time_consent"
+  )])
 ```
 
 After trimming some extreme observations, participants spent an average of `r round(sum(sapply(time_data, mean))/60,2)` minutes on the study. Our targeted configuration for our first inequality study, would take an estimated `r round(curate_time/60,2)` minutes.
@@ -246,54 +400,93 @@ After attention checks, we are left with `r nrow(data)` participants.
 
 ```{r within, warning=FALSE, echo=FALSE, message=FALSE, results='hide', include=FALSE}
 # create long data for withing subjects analyses
-data_long <- data %>% pivot_longer(
-  consumed_vars, names_to = "round_num", values_to = "consumed"
-)
+data_long <- data %>% pivot_longer(consumed_vars, names_to = "round_num", values_to = "consumed")
 
 # clean up round num variable
 data_long$round_num <- data_long$round_num %>%
-  sub("sg_", "",.) %>%
-  sub("_security_consumed", "",.) %>%
+  sub("sg_", "", .) %>%
+  sub("_security_consumed", "", .) %>%
   as.numeric()
 
 # create variable to log page displayed page for each observation
 data_long <- data_long %>%
-  dplyr::mutate(page = ifelse(round_num == 1,sg_1_page_in_round,
-                              ifelse(round_num == 2,sg_2_page_in_round,
-                                     ifelse(round_num == 3,sg_3_page_in_round,
-                                            ifelse(round_num == 4,sg_4_page_in_round,
-                                                   ifelse(round_num == 5,sg_5_page_in_round,
-                                                          ifelse(round_num == 6,sg_6_page_in_round,NA)))))))
+  dplyr::mutate(page = ifelse(
+    round_num == 1,
+    sg_1_page_in_round,
+    ifelse(
+      round_num == 2,
+      sg_2_page_in_round,
+      ifelse(
+        round_num == 3,
+        sg_3_page_in_round,
+        ifelse(
+          round_num == 4,
+          sg_4_page_in_round,
+          ifelse(
+            round_num == 5,
+            sg_5_page_in_round,
+            ifelse(round_num == 6, sg_6_page_in_round, NA)
+          )
+        )
+      )
+    )
+  ))
 
+# create variables for different levels of probability and cost
+data_long <- data_long %>%
+  dplyr::mutate(prob = ifelse(
+    page == "PreTest50_02" | page == "PreTest50_04",
+    50,
+    ifelse(
+      page == "PreTest60_02" | page == "PreTest60_04",
+      60,
+      ifelse(page == "PreTest75_02" |
+               page == "PreTest75_04",  75, NA)
+    )
+  ))
 
 data_long <- data_long %>%
-  dplyr::mutate(prob = ifelse(page == "PreTest50_02" | page == "PreTest50_04",  50,
-                              ifelse(page == "PreTest60_02" | page == "PreTest60_04",  60,
-                                     ifelse(page == "PreTest75_02" | page == "PreTest75_04",  75, NA
-  ))))
-
-data_long <- data_long %>%
-  dplyr::mutate(cost = ifelse(page == "PreTest50_02" | page == "PreTest60_02"| page == "PreTest75_02",  02,
-                              ifelse(page == "PreTest50_04" | page == "PreTest60_04"| page == "PreTest75_04",04, NA)))
+  dplyr::mutate(
+    cost = ifelse(
+      page == "PreTest50_02" |
+        page == "PreTest60_02" | page == "PreTest75_02",
+      02,
+      ifelse(
+        page == "PreTest50_04" |
+          page == "PreTest60_04" | page == "PreTest75_04",
+        04,
+        NA
+      )
+    )
+  )
 
 
 data_long$page <- data_long$page %>%
-  sub("PreTest", "",.)
+  sub("PreTest", "", .)
 
+# create security consumption as proportion of whole
+data_long <- data_long %>%
+  mutate(prop_consumed = ifelse(cost == 4, consumed / 25,
+                                ifelse(cost == 2, consumed / 50, NA)))
+
+# create security spending variable
+data_long <- data_long %>%
+  mutate(security_spending = ifelse(cost == 4, consumed * .04,
+                                    ifelse(cost == 2, consumed * .02, NA)))
 ```
 
 
 ```{r initial exploration, warning=FALSE, echo=FALSE}
-# data_5002 <- data_long %>% 
-#   filter(page == "PreTest50_02") 
+# create utility items for later analyses and reporting
+skew_groups <-
+  by(data_long$security_spending, data_long$page, moments::skewness)
 
-skew_groups <- by(data_long$consumed, data_long$page, moments::skewness)
+kurt_groups <-
+  by(data_long$security_spending, data_long$page, moments::kurtosis)
 
-kurt_groups <- by(data_long$consumed, data_long$page, moments::kurtosis)
+sd_groups <- by(data_long$security_spending, data_long$page, sd)
 
-sd_groups <- by(data_long$consumed, data_long$page, sd)
-
-mean_groups <- by(data_long$consumed, data_long$page, mean)
+mean_groups <- by(data_long$security_spending, data_long$page, mean)
 
 base_mean <- mean_groups["50_02"]
 
@@ -304,85 +497,131 @@ base_skew <- skew_groups["50_02"]
 overall_skew <- moments::skewness(data_long$security_spending)
 
 
-cgwtools::resave(skew_groups, pretest_initial_n, screened_n, kurt_groups,sd_groups, mean_groups, base_skew,base_sd,base_mean, overall_skew, file = here::here("output", "pretest_output.RData"))
-  
+# use this first time saving, resave every other time
 # save(skew_groups, pretest_initial_n, screened_n, kurt_groups,sd_groups, mean_groups, base_skew,base_sd,base_mean, file = here::here("output", "pretest_output.RData"))
 
 
-data_long$page <- data_long$page %>%
-  sub("_0", "%_",.)
+cgwtools::resave(
+  skew_groups,
+  pretest_initial_n,
+  screened_n,
+  kurt_groups,
+  sd_groups,
+  mean_groups,
+  base_skew,
+  base_sd,
+  base_mean,
+  overall_skew,
+  file = here::here("output", "pretest_output.RData")
+)
 
-data_long$page <- paste(data_long$page,"¢", sep="", collapse=NULL)
-
-data_long <- data_long %>%
-  mutate(prop_consumed = ifelse(cost == 4,consumed/25, 
-                                ifelse(cost == 2,consumed/50,NA)))
-                                
-
-data_long <- data_long %>%
-  mutate(security_spending = ifelse(cost == 4,consumed*.04, 
-                                ifelse(cost == 2,consumed*.02,NA)))
-                                
 
 ```
 
 Note: for x_04 conditions, 25 constitutes the maximum possible value for consumption.
 
+```{r page clean}
+
+
+
+# increase legibility of page variable
+data_long$page <- data_long$page %>%
+  sub("_0", "%_", .)
+
+data_long$page <- paste(data_long$page, "¢", sep = "", collapse = NULL)
+
+
+
+```
+
+
 ```{r raincloud, warning=FALSE, echo=FALSE, message=FALSE}
 
+
 raincloud_theme = theme(
-text = element_text(size = 10),
-axis.title.x = element_text(size = 16),
-axis.title.y = element_text(size = 16),
-axis.text = element_text(size = 14),
-axis.text.x = element_text(angle = 45, vjust = 0.5),
-legend.title=element_text(size=16),
-legend.text=element_text(size=16),
-legend.position = "right",
-plot.title = element_text(lineheight=.8, face="bold", size = 16),
-panel.border = element_blank(),
-panel.grid.minor = element_blank(),
-axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
-axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'))
+  text = element_text(size = 10),
+  axis.title.x = element_text(size = 16),
+  axis.title.y = element_text(size = 16),
+  axis.text = element_text(size = 14),
+  axis.text.x = element_text(angle = 45, vjust = 0.5),
+  legend.title = element_text(size = 16),
+  legend.text = element_text(size = 16),
+  legend.position = "right",
+  plot.title = element_text(
+    lineheight = .8,
+    face = "bold",
+    size = 16
+  ),
+  panel.border = element_blank(),
+  panel.grid.minor = element_blank(),
+  axis.line.x = element_line(
+    colour = 'black',
+    size = 0.5,
+    linetype = 'solid'
+  ),
+  axis.line.y = element_line(
+    colour = 'black',
+    size = 0.5,
+    linetype = 'solid'
+  )
+)
 
 
-    # stat_summary(fun = "mean",
-    #            geom = "crossbar", 
-    #            width = 0.2,
-    #            colour = "grey",
-    #            position = position_nudge(x = .2, y = 0))
+# stat_summary(fun = "mean",
+#            geom = "crossbar",
+#            width = 0.2,
+#            colour = "grey",
+#            position = position_nudge(x = .2, y = 0))
 
 
-cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+cbPalette <-
+  c(
+    "#999999",
+    "#E69F00",
+    "#56B4E9",
+    "#009E73",
+    "#F0E442",
+    "#0072B2",
+    "#D55E00",
+    "#CC79A7"
+  )
 
 
-g <- ggplot(data = data_long, aes(y = consumed, x = page, fill = page)) +
+g <-
+  ggplot(data = data_long, aes(y = consumed, x = page, fill = page)) +
   geom_flat_violin(position = position_nudge(x = .2, y = 0), alpha = .8) +
-    stat_summary(fun.data = "mean_cl_boot", geom = "pointrange",
-               colour = "black",
-               position = position_nudge(x = .27, y = 0),
-               alpha = .5) +
+  stat_summary(
+    fun.data = "mean_cl_boot",
+    geom = "pointrange",
+    colour = "black",
+    position = position_nudge(x = .27, y = 0),
+    alpha = .5
+  ) +
   
   ggbeeswarm::geom_quasirandom(aes(y = consumed, color = page),
-    ## draw bigger points
-    # size = 1,
-    ## add some transparency
-    alpha = .5,
-    ## control range of the beeswarm
-    width = .2
-  )  +
-  # 
+                               ## draw bigger points
+                               # size = 1,
+                               ## add some transparency
+                               alpha = .5,
+                               ## control range of the beeswarm
+                               width = .2)  +
+  #
   # scale_color_brewer(palette = "Spectral") +
   # scale_fill_brewer(palette = "Spectral") +
   
-# geom_point(aes(y = consumed, color = page), position = position_jitter(width = .15), size = .5, alpha = 0.8) +
-  geom_boxplot(width = .1, guides = FALSE, outlier.shape = NA, alpha = 0.5) +
+  # geom_point(aes(y = consumed, color = page), position = position_jitter(width = .15), size = .5, alpha = 0.8) +
+  geom_boxplot(
+    width = .1,
+    guides = FALSE,
+    outlier.shape = NA,
+    alpha = 0.5
+  ) +
   expand_limits(x = 5.25) +
   guides(fill = FALSE) +
   guides(color = FALSE) +
-  scale_fill_manual(values=cbPalette)+
-  scale_colour_manual(values=cbPalette) +
-# coord_flip() +
+  scale_fill_manual(values = cbPalette) +
+  scale_colour_manual(values = cbPalette) +
+  # coord_flip() +
   theme_bw() +
   raincloud_theme
 
@@ -394,56 +633,72 @@ ggsave(here::here("figs", "securitypretest_rainclouds.png"))
 
 ```{r splitdefine}
 GeomSplitViolin <- ggproto(
-  "GeomSplitViolin", 
-  GeomViolin, 
+  "GeomSplitViolin",
+  GeomViolin,
   draw_group = function(self, data, ..., draw_quantiles = NULL) {
-    data <- transform(data, 
-                      xminv = x - violinwidth * (x - xmin), 
-                      xmaxv = x + violinwidth * (xmax - x))
-    grp <- data[1,'group']
-    newdata <- plyr::arrange(
-      transform(data, x = if(grp%%2==1) xminv else xmaxv), 
-      if(grp%%2==1) y else -y
+    data <- transform(
+      data,
+      xminv = x - violinwidth * (x - xmin),
+      xmaxv = x + violinwidth * (xmax - x)
     )
-    newdata <- rbind(newdata[1, ], newdata, newdata[nrow(newdata), ], newdata[1, ])
-    newdata[c(1,nrow(newdata)-1,nrow(newdata)), 'x'] <- round(newdata[1, 'x']) 
-    if (length(draw_quantiles) > 0 & !scales::zero_range(range(data$y))) {
+    grp <- data[1, 'group']
+    newdata <- plyr::arrange(transform(data, x = if (grp %% 2 == 1)
+      xminv
+      else
+        xmaxv),
+      if (grp %% 2 == 1)
+        y
+      else -y)
+    newdata <-
+      rbind(newdata[1,], newdata, newdata[nrow(newdata),], newdata[1,])
+    newdata[c(1, nrow(newdata) - 1, nrow(newdata)), 'x'] <-
+      round(newdata[1, 'x'])
+    if (length(draw_quantiles) > 0 &
+        !scales::zero_range(range(data$y))) {
       stopifnot(all(draw_quantiles >= 0), all(draw_quantiles <= 1))
-      quantiles <- ggplot2:::create_quantile_segment_frame(data, draw_quantiles)
-      aesthetics <- data[rep(1, nrow(quantiles)), setdiff(names(data), c("x", "y")), drop = FALSE]
+      quantiles <-
+        ggplot2:::create_quantile_segment_frame(data, draw_quantiles)
+      aesthetics <-
+        data[rep(1, nrow(quantiles)), setdiff(names(data), c("x", "y")), drop = FALSE]
       aesthetics$alpha <- rep(1, nrow(quantiles))
       both <- cbind(quantiles, aesthetics)
       quantile_grob <- GeomPath$draw_panel(both, ...)
-      ggplot2:::ggname("geom_split_violin", 
+      ggplot2:::ggname("geom_split_violin",
                        grid::grobTree(GeomPolygon$draw_panel(newdata, ...), quantile_grob))
     } else {
-      ggplot2:::ggname("geom_split_violin", GeomPolygon$draw_panel(newdata, ...))
+      ggplot2:::ggname("geom_split_violin",
+                       GeomPolygon$draw_panel(newdata, ...))
     }
   }
 )
 
-geom_split_violin <- function (mapping = NULL, 
-                               data = NULL, 
-                               stat = "ydensity", 
-                                 position = "identity", ..., 
-                               draw_quantiles = NULL, 
-                               trim = TRUE, 
-                               scale = "area", 
-                               na.rm = FALSE, 
-                               show.legend = NA, 
+geom_split_violin <- function (mapping = NULL,
+                               data = NULL,
+                               stat = "ydensity",
+                               position = "identity",
+                               ...,
+                               draw_quantiles = NULL,
+                               trim = TRUE,
+                               scale = "area",
+                               na.rm = FALSE,
+                               show.legend = NA,
                                inherit.aes = TRUE) {
-  layer(data = data, 
-        mapping = mapping, 
-        stat = stat, 
-        geom = GeomSplitViolin, 
-        position = position, 
-        show.legend = show.legend, 
-        inherit.aes = inherit.aes, 
-        params = list(trim = trim, 
-                      scale = scale, 
-                      draw_quantiles = draw_quantiles, 
-                      na.rm = na.rm, ...)
-        )
+  layer(
+    data = data,
+    mapping = mapping,
+    stat = stat,
+    geom = GeomSplitViolin,
+    position = position,
+    show.legend = show.legend,
+    inherit.aes = inherit.aes,
+    params = list(
+      trim = trim,
+      scale = scale,
+      draw_quantiles = draw_quantiles,
+      na.rm = na.rm,
+      ...
+    )
+  )
 }
 ```
 
@@ -455,44 +710,55 @@ spending_summary_data <- data_long %>%
   group_by(prob, cost) %>%
   summarise(
     mean = mean(security_spending),
-    min = mean(security_spending) - qnorm(0.975)*sd(security_spending)/sqrt(n()),
-    max = mean(security_spending) + qnorm(0.975)*sd(security_spending)/sqrt(n())
+    min = mean(security_spending) - qnorm(0.975) * sd(security_spending) /
+      sqrt(n()),
+    max = mean(security_spending) + qnorm(0.975) * sd(security_spending) /
+      sqrt(n())
   )
 
 
 spending_pretest_splitplot <- data_long %>%
-  ggplot(aes(y = security_spending, x = as.factor(prob), fill = as.factor(cost))) +
-  geom_split_violin(color="black", trim=TRUE, alpha = 0.5,
-                    width = 1, 
-                    # position = position_nudge(x = -.005)
-                    ) +
+  ggplot(aes(
+    y = security_spending,
+    x = as.factor(prob),
+    fill = as.factor(cost)
+  )) +
+  geom_split_violin(
+    color = "black",
+    trim = TRUE,
+    alpha = 0.5,
+    width = 1,
+    # position = position_nudge(x = -.005)
+  ) +
   geom_pointrange(
     data = spending_summary_data,
-    aes(as.factor(prob), mean, ymin=min, ymax=max),
-    color = "black", 
-     alpha = 0.5,
-    shape = 20, # 95,
+    aes(as.factor(prob), mean, ymin = min, ymax = max),
+    color = "black",
+    alpha = 0.5,
+    shape = 20,
+    # 95,
     position = position_dodge(width = 0.25),
-    show.legend=FALSE) +
-    # geom_boxplot(color = "black", 
-    #            width = 0.1, 
-    #            alpha = .1,
-    #            position = position_dodge(width=0.5)) +
+    show.legend = FALSE
+  ) +
+  # geom_boxplot(color = "black",
+  #            width = 0.1,
+  #            alpha = .1,
+  #            position = position_dodge(width=0.5)) +
   ylab("$ spent on security") +
   xlab("Starting probability of successful thefts") +
-  labs(fill = "Security price (¢)")+
-  ylim(0,1) + 
-  scale_fill_manual(values=cbPalette)+
-  scale_colour_manual(values=cbPalette)+ 
-  scale_x_discrete(labels=c("50" = "50%", "60" = "60%",
+  labs(fill = "Security price (¢)") +
+  ylim(0, 1) +
+  scale_fill_manual(values = cbPalette) +
+  scale_colour_manual(values = cbPalette) +
+  scale_x_discrete(labels = c("50" = "50%", "60" = "60%",
                               "75" = "75%")) +
-    theme_bw() +
+  theme_bw() +
   raincloud_theme
 
 spending_pretest_splitplot
 
-ggsave(here::here("figs", "spending_pretest_splitplot.png"), height = 3)
-
+ggsave(here::here("figs", "spending_pretest_splitplot.png"),
+       height = 3)
 
 ```
 
@@ -528,54 +794,6 @@ ggsave(here::here("figs", "spending_pretest_splitplot.png"), height = 3)
 
 ```
 
-
-
-```{r burgerplot, eval = F}
-# GeomBurger <- ggproto(
-#   "GeomBurger", 
-#   GeomViolin, 
-#   draw_group = function(self, data, ..., draw_quantiles = NULL) {
-#     data <- transform(data, 
-#                       xminv = x - violinwidth * (x - xmin), 
-#                       xmaxv = x + violinwidth * (xmax - x))
-#     grp <- data[1,'group']
-#     newdata <- plyr::arrange(
-#       transform(data, x = if(grp%%2==1) xminv else xmaxv), 
-#       if(grp%%2==1) y else -y
-#     )
-#     newdata <- rbind(newdata[1, ], newdata, newdata[nrow(newdata), ], newdata[1, ])
-#     newdata[c(1,nrow(newdata)-1,nrow(newdata)), 'x'] <- round(newdata[1, 'x']) 
-#   }
-# )
-# 
-# geom_burger <- function (mapping = NULL, 
-#                                data = NULL, 
-#                                stat = "ydensity", 
-#                                  position = "identity", ..., 
-#                                draw_quantiles = NULL, 
-#                                trim = TRUE, 
-#                                scale = "area", 
-#                                na.rm = FALSE, 
-#                                show.legend = NA, 
-#                                inherit.aes = TRUE) {
-#   layer(data = data, 
-#         mapping = mapping, 
-#         stat = stat, 
-#         geom = GeomBurger, 
-#         position = position, 
-#         show.legend = show.legend, 
-#         inherit.aes = inherit.aes, 
-#         params = list(trim = trim, 
-#                       scale = scale, 
-#                       draw_quantiles = draw_quantiles, 
-#                       na.rm = na.rm, ...)
-#         )
-# }
-  
-```
-
-
-
 For this project, we will be using values from the 50_02 condition, which corresponds to a baseline 50% chance of successful thefts, and each unit of security costing $0.02. This condition seems to produce the least skewed data, at `r round(skew_groups["50_02"],2)`
 
 ```{r order analysis, warning=FALSE, echo=FALSE}
@@ -586,7 +804,9 @@ m1_order <- lmerTest::lmer(security_spending ~ as.numeric(round_num) + as.numeri
 
 pretest_model <- summary(m1_order)
 
+
 pretest_model
+
 
 cgwtools::resave(pretest_model, file = here::here("output", "pretest_output.RData"))
 ```
