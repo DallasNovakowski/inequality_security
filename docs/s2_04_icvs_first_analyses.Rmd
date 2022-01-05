@@ -6,16 +6,14 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
+library(tidyverse)
 library(dplyr) # pipe
 library(purrr) # map function
 library(car) #qqPlot
-load("C:/Users/dalla/Google Drive/project_files/icvs_inequality/data/joined_sample.RData")
+# load("C:/Users/dalla/Google Drive/project_files/icvs_inequality/data/joined_sample.RData")
 
-
-# 
-# icvs_joined <-  icvs_joined %>%
-#   map(. %>% filter(., !is.na(num_victim_5yr)))
-
+#used for dotwhisker plots
+load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/mod_joined1.RData")
 ```
 
 
@@ -72,9 +70,7 @@ Given that the SWIID is presented in a list of 100 different dataframes, the ana
 #   map(~ lme4::lmer(num_victim_5yr ~ gini_2004_6_cent + gdppc_2004_6_cent + 
 #                      age_cent + employed + male + (1 | country),data = .x, REML=FALSE))
 
-
-m1_sample <- lme4::lmer(num_victim_5yr ~ gini_2004_6_cent + gdppc_2004_6_cent +
-                     age_cent + employed + male + (1 | country),data = join_sample, REML=FALSE)
+m1_sample <- lme4::lmer(num_victim_5yr ~ gdppc_2004_6_scale + gini_2004_6_cent + age_cent + employed + male + police_effective + income_quartile + (1 | country), data = mod_joined1, REML=FALSE)
 
 
 # Both packages use Lattice as the backend, but nlme has some nice features like groupedData() and lmList() that are lacking in lme4 (IMO). From a practical perspective, the two most important criteria seem, however, that
@@ -100,111 +96,14 @@ Each of these 100 dataframes will then be subjected to 100 simulations, yielding
 
 "We could now use Rubin’s (1987) rules to calculate the mean and standard error for each fixed effect estimate across these 100 sets of results (these rules are implemented in the package mitools (Lumley 2014) and others), but instead we will use simulation. Using sim from the arm package (Gelman and Su 2015), we generate the distribution of fixed-effects estimates in the results both for each dataframe and across the 100 dataframes."
 
-
-```{r simulation preview1, warning=F, message=FALSE, echo=FALSE}
-#Simulate distribution of estimates
-
-# m1_sims <- m1 %>%
-#   map(. %>% 
-#         arm::sim(n.sims = 100)) %>%
-#   map_df(. %>%
-#            slot("fixef") %>% 
-#            as_tibble())
-
-
-
-```
-
-Then we will use these distributions to calculate estimates and standard errors for each fixed effect, putting them in a tidy data frame like that achieved by using broom::tidy() (Robinson 2016).
-
-```{r tidying, warning=F, message=FALSE}
-# Generate a tidy dataframe of results (cf. broom::tidy())
-
-# m1_tidy <- tibble(term = names(m1_sims),
-# estimate = summarise_all(m1_sims, list(mean)) %>%
-# t() %>%
-# as.vector(),
-# std.error = m1_sims %>%
-# summarise_all(list(sd)) %>%
-# t() %>%
-# as.vector())
-
-
-
-
-# transmute(country = countrycode(S003,
-# origin = "iso3n",
-# destination = "country.name"),
-# year = as.numeric(S020),
-# religiosity = ifelse(F063>0, F063, NA),
-# 
-# male = ifelse(X001>0, as.numeric(X001 == 1), NA),
-# educ = ifelse(X025>0, X025, NA),
-# age = ifelse(X003>0, X003, NA)) %>%
-# filter(complete.cases(.)) %>%
-# left_join(pwt91_gdppc, by = c("country", "year"))
-# 
-# m1_tidy
-
-summary(m1_sample)
-```
-
-
 Here we use the dotwhisker package (Solt and Hu 2015) to present a dot-and-whisker plot of the results. The dots represent the estimated change on the ten-point religiosity scale for a change of two standard deviations in each independent variable; the whiskers represent the 95% confidence intervals of
 these estimates.
 
 
-```{r plot sample, warning=F, message=FALSE, echo=FALSE}
-
-library(dotwhisker)
-
-# Plot the results
-# m1_tidy %>%
-#     by_2sd(icvs_joined[[1]]) %>%
-#     relabel_predictors(c(gini_2004_6 = "Income Inequality",
-#     gdppc_2004_6 = "GDP/capita",
-#     age_cent = "Age",
-#     city_size_k = "City Size",
-#     male = "Male")) %>%
-#       dwplot() +
-#       theme_bw() +
-#       geom_vline(xintercept = 0,
-#       colour = "grey60",
-#       linetype = "dashed") +
-#       theme(legend.position="none") +
-#       labs(title = "Predicting victimizations",
-#       x = "Coefficient Estimate")
-
-
-
-# 
-# # Plot the results
-# m1_tidy %>%
-#     by_2sd(join_sample) %>%
-#     relabel_predictors(c(gini_2004_6 = "Income Inequality",
-#     gdppc_2004_6 = "GDP/capita",
-#     age_cent = "Age",
-#     city_size_k = "City Size",
-#     male = "Male")) %>%
-#       dwplot() +
-#       theme_bw() +
-#       geom_vline(xintercept = 0,
-#       colour = "grey60",
-#       linetype = "dashed") +
-#       theme(legend.position="none") +
-#       labs(title = "Predicting victimizations",
-#       x = "Coefficient Estimate")
-```
-
-
 # reporting effects and models
-
-
 
 What can an empty model tell us?
 -	Intraclass correlation
-
-
 
 Not looking for significance in the intercept, but rather significance in the variance of the intercept
 -	BUT: variance can’t be negative, so standard significance tests aren’t of any help
@@ -230,8 +129,6 @@ when adding predictors, we can evaluate change in log likelihood to assess wheth
 -	Degrees of freedom = difference in # of estimated parameters
 -	You basically want to run a one-tailed test due to the inability to have a negative variance
 o	Because we are testing the variance of the intercept
-
-
 
 Chibar2(01)
 -	Does the adjustment for the 1-tail test
@@ -278,9 +175,7 @@ o	you can’t just use a difference in p-values to claim an interaction
 
 
 
-there is
-much to be gained when researchers follow a standardized
-way of reporting effect sizes (Lumley et al., 2002).
+there is much to be gained when researchers follow a standardized way of reporting effect sizes (Lumley et al., 2002).
 
 # Assumption checks and and contingencies
 
@@ -298,7 +193,7 @@ Nonlinearity does not seem to be a major issue in the data. Especially with a sm
 cooksD <- cooks.distance(m1_sample)
 summary(cooksD)
 
-gd <- join_sample %>% 
+gd <- mod_joined1 %>% 
         filter(!is.na(num_victim_5yr)) %>%
         group_by(country) %>% 
         summarise(gdppc_2004_6 = mean(gdppc_2004_6),
@@ -386,7 +281,7 @@ ggplot(gd, aes(x = gini_2004_6, y = gdppc_2004_6)) +
     geom_point(position = "jitter") + geom_smooth(alpha = .25, color = "red", span = 1.25) + geom_smooth(method = "lm", alpha = .25)
 
 # there is so much skew in this data that it does not do much to inform linearity judgments
-plot(resid(m1_sample),join_sample$num_victim_5yr[1:length(resid(m1_sample))])
+plot(resid(m1_sample),mod_joined1$num_victim_5yr[1:length(resid(m1_sample))])
 ```
 
     
@@ -429,21 +324,21 @@ With high sample sizes, their analyses found that even dramatic violations of no
 # # unexpected missingness exclusion
 # summary(!is.na(join_sample[["num_victim_5yr"]]))
 # which(is.na(join_sample[["num_victim_5yr"]]))
-join_sample <- join_sample[-c(29052),] 
+# join_sample <- join_sample[-c(29052),] 
+# 
 
-
-join_sample$num_victim_5yr_1 <- join_sample$num_victim_5yr + 1
-
-norm <- MASS::fitdistr(join_sample$num_victim_5yr_1, "normal")
-
-# qqp(join_sample$num_victim_5yr, "norm", main = "Normal distribution")
-
-qqp(join_sample$sqrt_victimization, "norm", main = "Normal distribution, square root")
-
-qqp(join_sample$cubrt_victimization, "norm", main = "Normal distribution, cube root")
-
-qqp(join_sample$num_victim_5yr_1, "lnorm", main = "Logged normal distribution")
-
+# join_sample$num_victim_5yr_1 <- join_sample$num_victim_5yr + 1
+# 
+# norm <- MASS::fitdistr(join_sample$num_victim_5yr_1, "normal")
+# 
+# # qqp(join_sample$num_victim_5yr, "norm", main = "Normal distribution")
+# 
+# qqp(join_sample$sqrt_victimization, "norm", main = "Normal distribution, square root")
+# 
+# qqp(join_sample$cubrt_victimization, "norm", main = "Normal distribution, cube root")
+# 
+# qqp(join_sample$num_victim_5yr_1, "lnorm", main = "Logged normal distribution")
+# 
 
 # negative binomial - fails to optimize with +1 transformation
 # nbinom <- MASS::fitdistr(join_sample$num_victim_5yr_1, "Negative Binomial")
@@ -451,12 +346,12 @@ qqp(join_sample$num_victim_5yr_1, "lnorm", main = "Logged normal distribution")
 
 
 #poisson distribution
-poisson <- MASS::fitdistr(join_sample$num_victim_5yr_1, "Poisson")
-qqp(join_sample$num_victim_5yr_1, "pois", main = "Poisson distribution", lambda = poisson$estimate)
+poisson <- MASS::fitdistr(mod_joined1$num_victim_5yr, "Poisson")
+qqp(mod_joined1$num_victim_5yr, "pois", main = "Poisson distribution", lambda = poisson$estimate)
 
 
-gamma <- MASS::fitdistr(join_sample$num_victim_5yr_1, "gamma")
-qqp(join_sample$num_victim_5yr_1, "gamma", main = "Gamma distribution", shape = gamma$estimate[[1]], rate = gamma$estimate[[2]])
+gamma <- MASS::fitdistr(mod_joined1$num_victim_5yr+1, "gamma")
+qqp(mod_joined1$num_victim_5yr+1, "gamma", main = "Gamma distribution", shape = gamma$estimate[[1]], rate = gamma$estimate[[2]])
 
 # lattice::qqmath(m1_sample, id=0.05)
 ```
@@ -511,7 +406,7 @@ advice on handling heteroscedasticity, see McGuinness
 aspects before (Freckleton, 2011; Schielzeth et al., 2020).
 
 ```{r heteroscedasticity1, warning=F, message=FALSE}
-levene_data<- join_sample[1:length(resid(m1_sample)),]
+levene_data<- mod_joined1[1:length(resid(m1_sample)),]
 
 levene_data$model_res<- residuals(m1_sample)
 levene_data$model_res_abs <-abs(levene_data$model_res) #creates a new column with the absolute value of the residuals

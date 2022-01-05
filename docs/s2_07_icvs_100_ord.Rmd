@@ -105,5 +105,8 @@ tidy_ci %>%
 
 cgwtools::resave(tidy_ci, file = here::here("output","icvs_output.RData"))
 
+# save(tidy_ci, file = here::here("output", "icvs_output.RData"))
+
+
 ```
 

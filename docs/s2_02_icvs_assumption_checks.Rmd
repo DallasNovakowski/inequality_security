@@ -24,7 +24,7 @@ load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/iv_2005
 
 source("C:/Users/dalla/Google Drive/project_files/inequality_security/scripts/icvs_scripts.r", local = knitr::knit_global())
 
-iv_2005_mod <- iv_2005_mod %>% 
+mod_joined1 <- mod_joined1 %>% 
         filter(!is.na(num_victim_5yr))
 
 
@@ -40,7 +40,7 @@ The purpose of this section is to outline the branches of how this data will be 
 
 The following describes two survey sweeps of the International Crime Victimization Survey conducted across 2004-6. At first, this data had `r sweep5_nrow` respondents and `r sweep5_countries` countries. After a exclusion process maximizing the number of countries and observations, there were 31 countries with 85,085 participants, with a minimum of 790 participants per country. An exclusion strategy maximizing the number of variables yields 27 countries, and 48,671 participants.
 
-The following and planned analyses will be carried out with `r sum(summary(iv_2005_mod$country)>0)` countries, and `r format(nrow(iv_2005_mod), big.mark = ",", scientific = FALSE)` participants.
+The following and planned analyses will be carried out with `r sum(summary(mod_joined1$country)>0)` countries, and `r format(nrow(mod_joined1), big.mark = ",", scientific = FALSE)` participants.
 
 ## Software
 
@@ -60,87 +60,87 @@ The use of survey weights has cascading effects: survey weights can only be used
 
 ```{r victimization transformation, warning=F, message=FALSE, echo=FALSE}
 # Square root method
-iv_2005_mod$sqrt_victimization <- sqrt(iv_2005_mod$num_victim_5yr)
-  # normality_stats(iv_2005_mod$sqrt_victimization)
+mod_joined1$sqrt_victimization <- sqrt(mod_joined1$num_victim_5yr)
+  # normality_stats(mod_joined1$sqrt_victimization)
 
 # Cube root method
-iv_2005_mod$cubrt_victimization <- '^'(iv_2005_mod$num_victim_5yr,1/3) # cube root transformation
-  #normality_stats(iv_2005_mod$cubrt_victimization)
+mod_joined1$cubrt_victimization <- '^'(mod_joined1$num_victim_5yr,1/3) # cube root transformation
+  #normality_stats(mod_joined1$cubrt_victimization)
 
 # rankit method
-iv_2005_mod$rankit_victimization <- RNOmni::RankNorm(iv_2005_mod$num_victim_5yr) # rank-based inverse normal transformation (approximately normalize most distribtutional shapes, and which effectively minimizes type I errors and maximizes statistical power; Bishara & Hittner, 2012; Puth et al., 2014
-  #normality_stats(iv_2005_mod$rankit_victimization)
+mod_joined1$rankit_victimization <- RNOmni::RankNorm(mod_joined1$num_victim_5yr) # rank-based inverse normal transformation (approximately normalize most distribtutional shapes, and which effectively minimizes type I errors and maximizes statistical power; Bishara & Hittner, 2012; Puth et al., 2014
+  #normality_stats(mod_joined1$rankit_victimization)
 
-#ggplot(iv_2005_mod, aes(x = rankit_victimization))  +  geom_histogram(binwidth= 1, alpha=.7, fill="#40B0A6", colour='grey') + geom_density(adjust=6, aes(y=..count..)) + theme_minimal()
+#ggplot(mod_joined1, aes(x = rankit_victimization))  +  geom_histogram(binwidth= 1, alpha=.7, fill="#40B0A6", colour='grey') + geom_density(adjust=6, aes(y=..count..)) + theme_minimal()
 
 # Ordinal method
-iv_2005_mod$ordinal_victimization <- NA
-iv_2005_mod$ordinal_victimization <- ifelse(between(iv_2005_mod$num_victim_5yr,0,1), 1, NA)
-iv_2005_mod$ordinal_victimization[iv_2005_mod$num_victim_5yr == 0] <- 0 
-iv_2005_mod$ordinal_victimization[iv_2005_mod$num_victim_5yr > 1] <- 2
+mod_joined1$ordinal_victimization <- NA
+mod_joined1$ordinal_victimization <- ifelse(between(mod_joined1$num_victim_5yr,0,1), 1, NA)
+mod_joined1$ordinal_victimization[mod_joined1$num_victim_5yr == 0] <- 0 
+mod_joined1$ordinal_victimization[mod_joined1$num_victim_5yr > 1] <- 2
 
 # Log method
-iv_2005_mod$log_victimization <- log10(iv_2005_mod$num_victim_5yr+1)
-  #normality_stats(iv_2005_mod$log_victimization)
+mod_joined1$log_victimization <- log10(mod_joined1$num_victim_5yr+1)
+  #normality_stats(mod_joined1$log_victimization)
 
 
 ```
 
 ```{r sqrt security, warning=F, message=FALSE, echo=FALSE}
 # Square root method
-iv_2005_mod$sqrt_security <- sqrt(iv_2005_mod$total_security) # square root transformation seems to provide something closer, so just use that?
+mod_joined1$sqrt_security <- sqrt(mod_joined1$total_security) # square root transformation seems to provide something closer, so just use that?
 
-  #hist_plot(iv_2005_mod, sqrt_security, "Histogram of Total Security (Square root)")
-  #normality_stats(iv_2005_mod$sqrt_security)
+  #hist_plot(mod_joined1, sqrt_security, "Histogram of Total Security (Square root)")
+  #normality_stats(mod_joined1$sqrt_security)
 
 
 # Ordinal security
-iv_2005_mod$ordinal_security <- NA
+mod_joined1$ordinal_security <- NA
 
-iv_2005_mod$ordinal_security <- ifelse(between(iv_2005_mod$total_security,0,1), 1, NA)
-iv_2005_mod$ordinal_security[iv_2005_mod$total_security == 0] <- 0 
-iv_2005_mod$ordinal_security[iv_2005_mod$total_security > 1] <- 2
-  # hist_plot(iv_2005_mod, ordinal_security, "Histogram of Ordinal Security")
-  # normality_stats(iv_2005_mod$ordinal_security)
+mod_joined1$ordinal_security <- ifelse(between(mod_joined1$total_security,0,1), 1, NA)
+mod_joined1$ordinal_security[mod_joined1$total_security == 0] <- 0 
+mod_joined1$ordinal_security[mod_joined1$total_security > 1] <- 2
+  # hist_plot(mod_joined1, ordinal_security, "Histogram of Ordinal Security")
+  # normality_stats(mod_joined1$ordinal_security)
 
 # log+1 method
-iv_2005_mod$log_security <- log10(iv_2005_mod$total_security+1)
-  # hist_plot(iv_2005_mod, log_security, "Histogram of Logged Security")
-  # normality_stats(iv_2005_mod$log_security)
+mod_joined1$log_security <- log10(mod_joined1$total_security+1)
+  # hist_plot(mod_joined1, log_security, "Histogram of Logged Security")
+  # normality_stats(mod_joined1$log_security)
 
 
 # inverse method
-iv_2005_mod$inv_security <- 1/(iv_2005_mod$total_security+1)
-  # hist_plot(iv_2005_mod, inv_security, "Histogram of inverted Security")
+mod_joined1$inv_security <- 1/(mod_joined1$total_security+1)
+  # hist_plot(mod_joined1, inv_security, "Histogram of inverted Security")
 
 # Box Cox Method
-security_boxcox<- geoR::boxcoxfit(iv_2005_mod$total_security, lambda=0, lambda2 = 1) 
-  # security_boxcox <- MASS::boxcox(iv_2005_mod$total_security)
+security_boxcox<- geoR::boxcoxfit(mod_joined1$total_security, lambda=0, lambda2 = 1) 
+  # security_boxcox <- MASS::boxcox(mod_joined1$total_security)
 ```
 
 # Exploration
 
 ```{r total security, warning=F, message=FALSE, echo=FALSE, fig.show="hold", out.width="50%"}
-hist_plot(iv_2005_mod, total_security, "Histogram of Total Security")
+hist_plot(mod_joined1, total_security, "Histogram of Total Security")
 ggsave(here::here("figures", "security_hist.png"),
        height = 3)
 
-hist_plot(iv_2005_mod, num_victim_5yr_assault, "Histogram of victimizations over past 5 years")
+hist_plot(mod_joined1, num_victim_5yr_assault, "Histogram of victimizations over past 5 years")
 ggsave(here::here("figures", "victim_hist.png"),
        height = 3)
 
 ```
 
 ```{r security summary}
-summary(iv_2005_mod$total_security)
+summary(mod_joined1$total_security)
 
-normality_stats(iv_2005_mod$total_security)
+normality_stats(mod_joined1$total_security)
 ```
 
-This summing procedure gives us a max score of `r max(iv_2005_mod$total_security)` on security consumption, with substantial positive skew
+This summing procedure gives us a max score of `r max(mod_joined1$total_security)` on security consumption, with substantial positive skew
 
 ```{r lv2 dat, echo=FALSE}
-# gd <- iv_2005_mod %>% 
+# gd <- mod_joined1 %>% 
 #         filter(!is.na(num_victim_5yr)) %>%
 #         group_by(country) %>% 
 #         summarise(gdppc_2004_6 = mean(gdppc_2004_6),
@@ -152,7 +152,7 @@ This summing procedure gives us a max score of `r max(iv_2005_mod$total_security
 #                   gini_winz = mean(gini_2004_6_winz)
 #                   )
 
-# gd <- iv_2005_mod %>% 
+# gd <- mod_joined1 %>% 
 #         filter(!is.na(num_victim_5yr)) %>%
 #         group_by(country) %>% 
 #         summarise(gdppc_2004_6 = mean(gdppc_2004_6),
@@ -167,16 +167,16 @@ gd$country <- as.character(gd$country)
 ```
 
 ```{r descriptives, echo=F}
-summary(iv_2005_mod[,c("num_victim_5yr", "age_cent", "employed", "male")])
+summary(mod_joined1[,c("num_victim_5yr", "age_cent", "employed", "male")])
 
-iv_2005_mod[,vic_var_assault] <- lapply(iv_2005_mod[,vic_var_assault], factor)
+mod_joined1[,vic_var_assault] <- lapply(mod_joined1[,vic_var_assault], factor)
 
-summary(iv_2005_mod[,vic_var_assault])
+summary(mod_joined1[,vic_var_assault])
 
-iv_2005_mod[,prevention_min2][is.na(iv_2005_mod[,prevention_min2])] <- 0
-iv_2005_mod[,prevention_min2] <- lapply(iv_2005_mod[,prevention_min2], factor)
+mod_joined1[,prevention_min2][is.na(mod_joined1[,prevention_min2])] <- 0
+mod_joined1[,prevention_min2] <- lapply(mod_joined1[,prevention_min2], factor)
 
-summary(iv_2005_mod[,prevention_min2])
+summary(mod_joined1[,prevention_min2])
 
 summary(gd[,c("gini_2004_6", "gdppc_2004_6_cent", "gdppc_2004_6")])
 ```
@@ -204,7 +204,7 @@ Starting with scatterplots. Nation Values with a cook's distance of 4 times the 
 
 # gd$country <- as.factor(gd$country)
 
-victim_age <- ggplot(iv_2005_mod, aes(x = age_cent, y = num_victim_5yr)) +
+victim_age <- ggplot(mod_joined1, aes(x = age_cent, y = num_victim_5yr)) +
     geom_point(alpha = .02, position = "jitter", color = "#40B0A6") + geom_smooth(alpha = .25, color = "red", span = 1.25) + geom_smooth(method = "lm", alpha = .25) + theme_minimal()+ ggtitle("Age & victimization")
 
 
@@ -263,18 +263,18 @@ Secondly, there is likely a meaningful difference between the values of 1, 2, an
 ```{r ord}
 library(ordinal)
 
-m_ord_null <- clmm(ordered(num_victim_5yr_winz) ~ 1 + (1|country), data = iv_2005_mod)
+m_ord_null <- clmm(ordered(num_victim_5yr_winz) ~ 1 + (1|country), data = mod_joined1)
 
 # country not found
-# m_ord <- clmm(ordered(num_victim_5yr) ~ age_cent + gdppc_2004_6, random  = country, data = iv_2005_mod)
+# m_ord <- clmm(ordered(num_victim_5yr) ~ age_cent + gdppc_2004_6, random  = country, data = mod_joined1)
           
-m_ord <- clmm(ordered(num_victim_5yr_winz) ~ gini_2004_6_cent + gdppc_2004_6_scale + age_cent + employed + male + police_effective + income_quartile + (1|country), data = iv_2005_mod)
+m_ord <- clmm(ordered(num_victim_5yr_winz) ~ gini_2004_6_cent + gdppc_2004_6_scale + age_cent + employed + male + police_effective + income_quartile + (1|country), data = mod_joined1)
 
 summary(m_ord)
 
 anova(m_ord_null, m_ord)
 
-mw_ord <- clmm(ordered(num_victim_5yr_winz) ~ gini_2004_6_cent + gdppc_2004_6_scale + age_cent + employed + male + police_effective + income_quartile + (1|country), data = iv_2005_mod, weights = individual_weight)
+mw_ord <- clmm(ordered(num_victim_5yr_winz) ~ gini_2004_6_cent + gdppc_2004_6_scale + age_cent + employed + male + police_effective + income_quartile + (1|country), data = mod_joined1, weights = individual_weight)
 
 
 # https://user2021.r-project.org/participation/technical_notes/t186/technote/
@@ -282,7 +282,7 @@ mw_ord <- clmm(ordered(num_victim_5yr_winz) ~ gini_2004_6_cent + gdppc_2004_6_sc
 
 # Warning: clmm2 may not have converged:
 #  optimizer 'ucminf' terminated with max|gradient|: 0.0442298313166208
-m_ord2 <- clmm2(ordered(num_victim_5yr) ~ gini_2004_6_cent + gdppc_2004_6_scale + age_cent + employed + male + police_effective + income_quartile, random = country, data = iv_2005_mod, Hess = TRUE)
+m_ord2 <- clmm2(ordered(num_victim_5yr) ~ gini_2004_6_cent + gdppc_2004_6_scale + age_cent + employed + male + police_effective + income_quartile, random = country, data = mod_joined1, Hess = TRUE)
 
 summary(m_ord2)
 ```
@@ -295,7 +295,7 @@ load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/swiid9_
 unique(swiid[[1]]$country)
 
 swiid_responders <-  swiid %>%
-  map(. %>% filter(.,country %in% names(summary(iv_2005_mod$country)[0!= summary(iv_2005_mod$country)]) )) %>%
+  map(. %>% filter(.,country %in% names(summary(mod_joined1$country)[0!= summary(mod_joined1$country)]) )) %>%
   map(. %>% select(country,year,gini_disp))
 
 
@@ -315,7 +315,7 @@ pwt100_gdppc <- pwt %>%
   filter(!is.na(gdppc))
 
 pwt_responders <-  pwt100_gdppc %>%
-  filter(country%in% names(summary(iv_2005_mod$country)[0!= summary(iv_2005_mod$country)]) )
+  filter(country%in% names(summary(mod_joined1$country)[0!= summary(mod_joined1$country)]) )
 ```
 
 ```{r merge icvs and PWT}
@@ -344,9 +344,9 @@ cumulative link models
 ```{r GLMMadaptive}
 library(GLMMadaptive)
 
-cr_vals <- cr_setup(iv_2005_mod$num_victim_5yr_winz)
+cr_vals <- cr_setup(mod_joined1$num_victim_5yr_winz)
 
-cr_data <- iv_2005_mod[cr_vals$subs, ]
+cr_data <- mod_joined1[cr_vals$subs, ]
 cr_data$y_new <- cr_vals$y
 cr_data$cohort <- cr_vals$cohort
 
@@ -359,7 +359,7 @@ summary(fm)
 ```{r brms}
 library(brms)
 # 4 chains, takes 3-4 days
-m_brm <- brms::brm(ordered(num_victim_5yr) ~ age_cent + gdppc_2004_6 + (1|country), data = iv_2005_mod, family = 'cumulative', prior = set_prior('normal(0, 3)'))
+m_brm <- brms::brm(ordered(num_victim_5yr) ~ age_cent + gdppc_2004_6 + (1|country), data = mod_joined1, family = 'cumulative', prior = set_prior('normal(0, 3)'))
 ```
 
 rdered logistic (or more accurately ordered logit) regression is an extension of logistic/logit regression: where in logistic regression you model one coefficient that captures the relative likelihood (in log-odds) of one outcome occurring over another (i.e. 2 outcomes captured by 1 coefficient), ordered logit regression models the relative likelihood of k different outcomes based on k-1 coefficients. The k-1 coefficients in the model capture the cumulative likelihood of responses falling into an expanding set of ordered response categories, e.g. in the case of 4 possible outcome categories (o1-o4) the three intercepts of the model, each of which will be at least as high as the preceding one, capture the baseline log-odds of observing:
@@ -368,9 +368,11 @@ log(o1 vs. o2, o3, o4) log(o1, o2 vs. o3, o4) log(o1, o2, o3 vs. o4)
 
 The choice of link function is typically not critical and most methods assume the "logit" function (the log-odds transformation that forms the basis of ordered logit regression) by default, but a different choice can be informed by your knowledge of the data.
 
-```{r}
+```{r brant}
 # testing parallel regression assumption using Brant's test
-brant(m_ord)
+# brant(m_ord)
+
+# brant(fm)
 ```
 
 ## doing bayesian
@@ -380,27 +382,27 @@ brant(m_ord)
 Solid red points show fitted values: the mean of posterior distribution and 95% CI
 
 ```{r brm2}
-# model specification
-mod = brm(real ~ corpus + (1|sound) + (1|id), data = df, family = 'bernoulli', prior = set_prior('normal(0, 3)'),
-iter = 1000, chains = 4, cores = 4)
-# model inspection
-summary(mod)
-plot(mod)
-pp_check(mod)
-# get fitted values
-newdata = data.frame(corpus = levels(df$corpus))
-fit = fitted(mod, newdata = newdata, re_formula = NA) * 100
-colnames(fit) = c('fit', 'se', 'lwr', 'upr')
-df_plot = cbind(newdata, fit) # and plot with ggplot
-# get contrasts
-fit1 = as.data.frame(fitted(mod, newdata = newdata, re_formula = NA, summary = FALSE))
-colnames(fit1) = newdata$corpus
-ut_vs_rest = fit1$ut - (fit1$belin + fit1$cordaro + fit1$hawk + fit1$lima + fit1$maurage + fit1$simon) / 6
-quantile(ut_vs_rest, probs = c(.5, .025, .975))
-hawk_vs_rest = fit1$hawk - (fit1$belin + fit1$cordaro + fit1$lima + fit1$maurage + fit1$simon) / 5
-quantile(hawk_vs_rest, probs = c(.5, .025, .975))
-ut_vs_hawk = fit1$ut - fit1$hawk
-quantile(ut_vs_hawk, probs = c(.5, .025, .975))
+# # model specification
+# mod = brm(real ~ corpus + (1|sound) + (1|id), data = df, family = 'bernoulli', prior = set_prior('normal(0, 3)'),
+# iter = 1000, chains = 4, cores = 4)
+# # model inspection
+# summary(mod)
+# plot(mod)
+# pp_check(mod)
+# # get fitted values
+# newdata = data.frame(corpus = levels(df$corpus))
+# fit = fitted(mod, newdata = newdata, re_formula = NA) * 100
+# colnames(fit) = c('fit', 'se', 'lwr', 'upr')
+# df_plot = cbind(newdata, fit) # and plot with ggplot
+# # get contrasts
+# fit1 = as.data.frame(fitted(mod, newdata = newdata, re_formula = NA, summary = FALSE))
+# colnames(fit1) = newdata$corpus
+# ut_vs_rest = fit1$ut - (fit1$belin + fit1$cordaro + fit1$hawk + fit1$lima + fit1$maurage + fit1$simon) / 6
+# quantile(ut_vs_rest, probs = c(.5, .025, .975))
+# hawk_vs_rest = fit1$hawk - (fit1$belin + fit1$cordaro + fit1$lima + fit1$maurage + fit1$simon) / 5
+# quantile(hawk_vs_rest, probs = c(.5, .025, .975))
+# ut_vs_hawk = fit1$ut - fit1$hawk
+# quantile(ut_vs_hawk, probs = c(.5, .025, .975))
 ```
 
 # questions
@@ -408,7 +410,7 @@ quantile(ut_vs_hawk, probs = c(.5, .025, .975))
 What is MCMC? ● What is a prior and why should I use one? ● Does my model make sense? (convergence, posterior prediction) ● Fitted values (brms::fitted.brmsfit) vs. posterior prediction (brms::predict.brmsfit) ● Shrinkage (e.g. brms::horseshoe) ● How can I extract and customize STAN code (brms::stancode)?
 
 ```{r MCMCglmm}
-m1<-MCMCglmm(cbind(tarsus, back) ~ trait:sex + trait:hatchdate - 1, random = ~ us(trait):animal + us(trait):fosternest, rcov = ~ us(trait):units, prior = prior, family = rep("gaussian", 2), nitt = 60000, burnin = 10000, thin=25, data = BTdata, pedigree=BTped)
+# m1<-MCMCglmm(cbind(tarsus, back) ~ trait:sex + trait:hatchdate - 1, random = ~ us(trait):animal + us(trait):fosternest, rcov = ~ us(trait):units, prior = prior, family = rep("gaussian", 2), nitt = 60000, burnin = 10000, thin=25, data = BTdata, pedigree=BTped)
 ```
 
 ## assumptions
@@ -503,21 +505,21 @@ Assuming a normal distribution, there are likely some heavy tails in the residua
 ```{r estimation preview2, warning=T, message=FALSE}
 # Fixed effect variables in model
 
-m1_null <- lme4::lmer(num_victim_5yr ~ (1 | country), data = iv_2005_mod, REML=FALSE)
+m1_null <- lme4::lmer(num_victim_5yr ~ (1 | country), data = mod_joined1, REML=FALSE)
 
 # Estimate model
 m1_sample <- lme4::lmer(num_victim_5yr ~ gini_2004_6_cent + gdppc_2004_6_scale + 
-                     age_cent + employed + male + police_effective + income_quartile + (1 | country), data = iv_2005_mod, REML=FALSE)
+                     age_cent + employed + male + police_effective + income_quartile + (1 | country), data = mod_joined1, REML=FALSE)
 
 #row-maximizing model
 # m1_sample <- lme4::lmer(num_victim_5yr ~ gini_2004_6_cent + gdppc_2004_6_scale +
-#                     age_cent + employed + male + police_effective + income_quartile + (1 | country), data = iv_2005_mod, REML=FALSE)
+#                     age_cent + employed + male + police_effective + income_quartile + (1 | country), data = mod_joined1, REML=FALSE)
 
 # call basic unweighted model
 summary(m1_sample)
 
 # estimate weighted model - fails to converge (even with all numeric variables scaled)
-m1_weight <- lme4::lmer(num_victim_5yr ~ gini_2004_6_cent + gdppc_2004_6_scale + age_cent + employed +   male + (1 | country),data = iv_2005_mod, REML=FALSE, weights = individual_weight)
+m1_weight <- lme4::lmer(num_victim_5yr ~ gini_2004_6_cent + gdppc_2004_6_scale + age_cent + employed +   male + (1 | country),data = mod_joined1, REML=FALSE, weights = individual_weight)
 ```
 
 Further seen in the normality statistics for the residuals - high skewness and kurtosis
@@ -556,7 +558,7 @@ summary(cooksD)
 ```{r cooksd lv2, warning=F, message=FALSE, echo=FALSE, fig.show="hold", out.width="50%"}
 # look for influential observations in nation-level
 plot(cooksD, main="Model-wide Cook's D * BEWARE Y AXIS", ylim=c(0,.01))
-abline(h = 4/nrow(iv_2005_mod), lty = 2, col = "steelblue") # add cutoff line
+abline(h = 4/nrow(mod_joined1), lty = 2, col = "steelblue") # add cutoff line
 abline(h = 4*mean(cooksD, na.rm=T), col="red") 
 
 
@@ -584,7 +586,7 @@ Going on with citing @knief2021:
 Since these influential observations are not a mistake - but rather truly extreme data, we will not delete the data, but instead winzorize these extreme values.
 
 ```{r winzorized descriptives, warning=F, message=FALSE, echo=FALSE, fig.show="hold", out.width="50%"}
-iv_2005_mod[,c("num_victim_5yr", "num_victim_5yr_winz")] %>%
+mod_joined1[,c("num_victim_5yr", "num_victim_5yr_winz")] %>%
   summary()
 
 gd[,c("gdppc_2004_6", "gdppc_2004_6_winz", "gini_2004_6", "gini_winz")] %>%
@@ -598,8 +600,8 @@ Dramatic changes to the max values, less-so for the mean values (with the except
 gridExtra::grid.arrange(
 
 
-hist_plot(iv_2005_mod,num_victim_5yr,"Regular number of victimizations"),
-hist_plot(iv_2005_mod,num_victim_5yr_winz,"Winzorized number of victimizations"),
+hist_plot(mod_joined1,num_victim_5yr,"Regular number of victimizations"),
+hist_plot(mod_joined1,num_victim_5yr_winz,"Winzorized number of victimizations"),
 
 
 hist_plot(gd,gdppc_2004_6,"Regular GDP"),
@@ -646,7 +648,7 @@ victim_gdp_winz
 ```
 
 ```{r sqrt winz, echo = FALSE, warning=FALSE}
-iv_2005_mod <- iv_2005_mod %>%
+mod_joined1 <- mod_joined1 %>%
   filter(!is.na(num_victim_5yr)) %>%
   mutate(num_victim_5yr_winz_sqrt = sqrt(num_victim_5yr_winz),
           gdppc_2004_6_winz_sqrt = sqrt(gdppc_2004_6_winz),
@@ -655,12 +657,12 @@ iv_2005_mod <- iv_2005_mod %>%
          )
 
 m1_winz_sqrt <- lme4::lmer(num_victim_5yr_winz_sqrt ~ gdppc_2004_6_winz_sqrt + gini_2004_6_winz_sqrt +
-                     age_cent + employed + male + police_effective + income_quartile + (1 | country),data = iv_2005_mod, REML=FALSE)
+                     age_cent + employed + male + police_effective + income_quartile + (1 | country),data = mod_joined1, REML=FALSE)
 ```
 
 ```{r winzorize model, message=F, warning=FALSE}
 m1_winz <- lme4::lmer(num_victim_5yr_winz ~ gdppc_2004_6_wc + gini_2004_6_winz +
-                     age_cent + employed + male + police_effective + income_quartile + (1 | country),data = iv_2005_mod, REML=FALSE)
+                     age_cent + employed + male + police_effective + income_quartile + (1 | country),data = mod_joined1, REML=FALSE)
 ```
 
 ```{r model winz skewness kurtosis,  warning=F, message=FALSE}
@@ -730,14 +732,14 @@ Poisson is the go-to distribution for handling count data, which tends to exhibi
 
 ```{r pois dis, message=FALSE}
 library('fitdistrplus')
-plot(fitdist(iv_2005_mod$total_security,"pois"))
-plot(fitdist(iv_2005_mod$num_victim_5yr,"pois"))
+plot(fitdist(mod_joined1$total_security,"pois"))
+plot(fitdist(mod_joined1$num_victim_5yr,"pois"))
 
 
-# ggplot(data = iv_2005_mod,
+# ggplot(data = mod_joined1,
 #        mapping = aes(sample = total_security)) + 
 #   stat_qq(distribution = stats::qpois,
-#           dparams = list(lambda = mean(iv_2005_mod$total_security))) + 
+#           dparams = list(lambda = mean(mod_joined1$total_security))) + 
 #   geom_step(data = data.frame(x = 0:10,
 #                               total_security = 0:10),
 #             mapping = aes(x = x,
@@ -746,14 +748,14 @@ plot(fitdist(iv_2005_mod$num_victim_5yr,"pois"))
 #             alpha = 0.5) 
 
 # print("Security mean is")
-mean(iv_2005_mod$total_security)
+mean(mod_joined1$total_security)
 # print("Security variance is")
-var(iv_2005_mod$total_security)
+var(mod_joined1$total_security)
 
 # print("Victimization mean is")
-mean(iv_2005_mod$num_victim_5yr)
+mean(mod_joined1$num_victim_5yr)
 # print("Victimization variance is")
-var(iv_2005_mod$num_victim_5yr)
+var(mod_joined1$num_victim_5yr)
 ```
 
 Mean and variance values are slightly overdispersed (larger variances than means) - How close do they need to be to argue for poisson?
@@ -761,7 +763,7 @@ Mean and variance values are slightly overdispersed (larger variances than means
 Specifying the poisson model:
 
 ```{r poisson model, message=FALSE, fig.show="hold", out.width="50%"}
-m_pois <- glmer(num_victim_5yr ~ gdppc_2004_6_scale + gini_2004_6_cent + age_cent + employed + male + police_effective + income_quartile + (1 | country), family = poisson, data = iv_2005_mod)
+m_pois <- glmer(num_victim_5yr ~ gdppc_2004_6_scale + gini_2004_6_cent + age_cent + employed + male + police_effective + income_quartile + (1 | country), family = poisson, data = mod_joined1)
 ```
 
 ## Poisson assumptions and contingencies
@@ -852,7 +854,7 @@ By default, plotResiduals plots against predicted values. However, you can also 
 ```{r dharma plot against}
 testQuantiles(simulationOutput)
 
-plotResiduals(simulationOutput, form = iv_2005_mod$gini_2004_6_cent)
+plotResiduals(simulationOutput, form = mod_joined1$gini_2004_6_cent)
 ```
 
 ```{r poisson qq, echo = FALSE}
@@ -872,7 +874,7 @@ blmeco::dispersion_glmer(m_pois)  # chec for dispersion, cutoff 1.4 https://stac
 # # cutoff 1.1 https://stats.stackexchange.com/questions/230721/how-to-check-overdispersion-of-binomial-glmms-lme4-package
 # 
 # # zero inflation test https://stats.stackexchange.com/questions/118322/how-to-test-for-zero-inflation-in-a-dataset
-# vcdExtra::zero.test(iv_2005_mod$total_security)
+# vcdExtra::zero.test(mod_joined1$total_security)
 ```
 
 ## Other packages to run modified glmm
@@ -889,7 +891,7 @@ GLMMadaptive: fits mixed effects models for grouped/clustered outcome variables
 
 ```{r vuong, echo=FALSE}
 # https://stackoverflow.com/questions/51016328/mixed-effects-model-with-zero-inflated-data-error-message-using-zeroinfl-fro 
-# m_zip <- glmmTMB::glmmTMB(num_victim_5yr ~ gdppc_2004_6_scale  + av_gini + age_cent + employed + male + police_effective + income_quartile + (1 | country),zi = ~ gdppc_2004_6_scale  + av_gini + age_cent + employed + male, data = iv_2005_mod, family = poisson)
+# m_zip <- glmmTMB::glmmTMB(num_victim_5yr ~ gdppc_2004_6_scale  + av_gini + age_cent + employed + male + police_effective + income_quartile + (1 | country),zi = ~ gdppc_2004_6_scale  + av_gini + age_cent + employed + male, data = mod_joined1, family = poisson)
 
 
 # 
@@ -910,7 +912,7 @@ GLMMadaptive: fits mixed effects models for grouped/clustered outcome variables
 
 ```{r nbinom, echo=FALSE}
 
-# m_bino <- glmer.nb(num_victim_5yr ~ gdppc_2004_6_scale + gini_2004_6_cent + age_cent + employed + male + police_effective + income_quartile + (1 | country),data = iv_2005_mod)
+# m_bino <- glmer.nb(num_victim_5yr ~ gdppc_2004_6_scale + gini_2004_6_cent + age_cent + employed + male + police_effective + income_quartile + (1 | country),data = mod_joined1)
 # 
 # bino_sim <- simulateResiduals(fittedModel = m_bino, plot = F)
 
@@ -932,40 +934,40 @@ GLMMadaptive: fits mixed effects models for grouped/clustered outcome variables
 # https://www.juliapilowsky.com/2018/10/19/a-practical-guide-to-mixed-models-in-r/
 
 # # unexpected missingness exclusion
-# summary(!is.na(iv_2005_mod[["num_victim_5yr"]]))
-# which(is.na(iv_2005_mod[["num_victim_5yr"]]))
+# summary(!is.na(mod_joined1[["num_victim_5yr"]]))
+# which(is.na(mod_joined1[["num_victim_5yr"]]))
 # 
-# iv_2005_mod$num_victim_5yr_winz_1 <- iv_2005_mod$num_victim_5yr_winz + 1
+# mod_joined1$num_victim_5yr_winz_1 <- mod_joined1$num_victim_5yr_winz + 1
 # 
-# norm <- MASS::fitdistr(iv_2005_mod$num_victim_5yr_winz_1, "normal")
+# norm <- MASS::fitdistr(mod_joined1$num_victim_5yr_winz_1, "normal")
 # 
-# # qqp(iv_2005_mod$num_victim_5yr, "norm", main = "Normal distribution")
+# # qqp(mod_joined1$num_victim_5yr, "norm", main = "Normal distribution")
 # 
-# qqp(iv_2005_mod$num_victim_5yr_winz_1, "norm", main = "Normal distribution")
+# qqp(mod_joined1$num_victim_5yr_winz_1, "norm", main = "Normal distribution")
 # 
 # 
-# qqp(sqrt(iv_2005_mod$num_victim_5yr_winz), "norm", main = "Normal distribution, square root")
-# # qqp(sqrt(iv_2005_mod$num_victim_5yr_winz), "norm", main = "winzorized and square root")
+# qqp(sqrt(mod_joined1$num_victim_5yr_winz), "norm", main = "Normal distribution, square root")
+# # qqp(sqrt(mod_joined1$num_victim_5yr_winz), "norm", main = "winzorized and square root")
 # 
-# qqp(iv_2005_mod$num_victim_5yr_winz_1, "lnorm", main = "Logged normal distribution")
-# # qqp(iv_2005_mod$num_victim_5yr_winz + 1, "lnorm", main = "Winzorized and Logged")
+# qqp(mod_joined1$num_victim_5yr_winz_1, "lnorm", main = "Logged normal distribution")
+# # qqp(mod_joined1$num_victim_5yr_winz + 1, "lnorm", main = "Winzorized and Logged")
 # 
 # # negative binomial - fails to optimize with +1 transformation
-# # nbinom <- MASS::fitdistr(iv_2005_mod$num_victim_5yr_1, "Negative Binomial")
-# # qqp(iv_2005_mod$num_victim_5yr_1, "nbinom", main = "Negative binomial distribution", size = nbinom$estimate[[1]], mu = nbinom$estimate[[2]])
+# # nbinom <- MASS::fitdistr(mod_joined1$num_victim_5yr_1, "Negative Binomial")
+# # qqp(mod_joined1$num_victim_5yr_1, "nbinom", main = "Negative binomial distribution", size = nbinom$estimate[[1]], mu = nbinom$estimate[[2]])
 # 
 # 
 # #poisson distribution
-# poisson <- MASS::fitdistr(iv_2005_mod$num_victim_5yr_winz_1, "Poisson")
-# qqp(iv_2005_mod$num_victim_5yr_winz_1, "pois", main = "Poisson distribution", lambda = poisson$estimate)
+# poisson <- MASS::fitdistr(mod_joined1$num_victim_5yr_winz_1, "Poisson")
+# qqp(mod_joined1$num_victim_5yr_winz_1, "pois", main = "Poisson distribution", lambda = poisson$estimate)
 # 
 # 
 # #poisson modeldistribution
-# poisson <- MASS::fitdistr(iv_2005_mod$num_victim_5yr_winz_1, "Poisson")
-# qqp(iv_2005_mod$num_victim_5yr_winz_1, "pois", main = "Poisson distribution", lambda = poisson$estimate)
+# poisson <- MASS::fitdistr(mod_joined1$num_victim_5yr_winz_1, "Poisson")
+# qqp(mod_joined1$num_victim_5yr_winz_1, "pois", main = "Poisson distribution", lambda = poisson$estimate)
 # 
 
-# qqp(iv_2005_mod$num_victim_5yr_winz+1, "pois", main = "Winzorized Poisson distribution", lambda = poisson$estimate)
+# qqp(mod_joined1$num_victim_5yr_winz+1, "pois", main = "Winzorized Poisson distribution", lambda = poisson$estimate)
 
 
 # lattice::qqmath(m1_sample, id=0.05)
@@ -986,7 +988,7 @@ library(tidyr)
 # - value: Name of new value column
 # - ...: Names of source columns that contain values
 # - factor_key: Treat the new key column as a factor (instead of character vector)
-iv_long <- gather(iv_2005_mod, measure, victimized, cartheft_5yrs:assault_5yrs, factor_key=TRUE)
+iv_long <- gather(mod_joined1, measure, victimized, cartheft_5yrs:assault_5yrs, factor_key=TRUE)
 
 iv_long$victimized <- as.factor(iv_long$victimized)
 
