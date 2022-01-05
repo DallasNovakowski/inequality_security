@@ -71,7 +71,6 @@ r_refs("r-references.bib")
 load("C:/Users/dalla/Google Drive/project_files/inequality_security/output/pretest_output.RData")
 load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/iv_2005.RData")
 load(here::here("output", "icvs_output.RData"))
-cgwtools::resave(model_nonconvergence, file = here::here("output", "icvs_output.RData"))
 ```
 
 ```{r analysis-preferences}
@@ -306,7 +305,7 @@ If the weighted model fails to converge, the model will be conducted without fre
 
 As a proof of concept, the proposed analyses have been conducted on individuals' victimization experiences, which, like security behaviours, is operationalized as a summed variable of multiple binary items, resulting in a similar distribution to security behaviours (see Figures \@ref(fig:icvs-security-hist) and \@ref(fig:icvs-victim-hist)).
 
-In this case, `r model_nonconvergence` of 100 analyzed dataframes failed to converge (preventing calculation of standard errors). As such, mixed ordinal regression without frequency weighting was conducted, and had no convergence issues.
+In this case, `r #model_nonconvergence` of 100 analyzed dataframes failed to converge (preventing calculation of standard errors). As such, mixed ordinal regression without frequency weighting was conducted, and had no convergence issues.
 
 
 ### Full descriptions must be provided of any outcome-neutral criteria that must be met for successful testing of the stated hypotheses.
@@ -362,38 +361,35 @@ The authors declare no competing interests.
 (ref:pretest-splitplot) Means (95% CI) and distributions for pretest. n=`r screened_n`, within-subjects
 
 ```{r pretest-splitplot, echo=FALSE, out.width='100%', fig.cap="(ref:pretest-splitplot)"}
-knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/inequality_security/figs/spending_pretest_splitplot.png")
+knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/inequality_security/figures/spending_pretest_splitplot.png")
 ```
 
-<!-- ![](C:/Users/dalla/Google Drive/project_files/inequality_security/figs/spending_pretest_splitplot.png) -->
 
 
 (ref:design) Study design for a priori power analysis for two-level experiments (Study 1a and b). Note: Max possible value is \$1.00; bars indicate +/-1 *SD* 
 ```{r l2-design, echo=FALSE, out.width='100%', fig.cap="(ref:design)"}
-knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/inequality_security/figs/l2_design_plot.png")
+knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/inequality_security/figures/l2_design_plot.png")
 ```
 
 (ref:powerplot2) Per-condition sample size thresholds for 95% power in main effect of inequality for two-level experiments (Study 1a and b). Assuming two-sided testing.
 ```{r powerplot2, echo=FALSE, out.width='100%', fig.cap='(ref:powerplot2)'}
-knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/inequality_security/figs/l2powerplot.png")
+knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/inequality_security/figures/l2powerplot.png")
 ```
 
 
 ```{r design, echo=FALSE, out.width='100%', fig.cap="(ref:design)"}
-knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/inequality_security/figs/power_design_plot.png")
+knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/inequality_security/figures/power_design_plot.png")
 ```
 
 <!-- is a "no-way interaction:" that the effect of inequality will be nullified when incomes are invisible. The hypothesis of a no-way interaction suggests firstly that sample sizes must twice the size of an equivalent study just testing a simple effect; secondly, our core hypothesis rests on all three coefficients being significant [d]in the following model: -->
 
-<!-- ![](C:/Users/dalla/Google Drive/project_files/inequality_security/figs/power_design_plot.png) -->
-
 (ref:powerplot) Per-condition sample size thresholds for 95% power in main and interactive effects. Assuming two-sided testing.
 
 ```{r powerplot, echo=FALSE, out.width='100%', fig.cap='(ref:powerplot)'}
-knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/inequality_security/figs/01powerplot.png")
+knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/inequality_security/figures/01powerplot.png")
 ```
 
-<!-- ![](C:/Users/dalla/Google Drive/project_files/inequality_security/figs/01powerplot.png) -->
+
 
 (ref:icvs-security-hist) Histogram for number of security measures (max = `r length(prevention_min2)`)
 
@@ -630,12 +626,12 @@ vis_modmed_test
 (ref:modmed) Hypothesized pattern of moderated mediation
 
 ```{r concept-modmed, echo=FALSE, out.width='100%', fig.cap="(ref:modmed)"}
-knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/inequality_security/figs/ineqsec_concepmodmed.jpg")
+knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/inequality_security/figures/ineqsec_concepmodmed.jpg")
 ```
 
 
 ```{r detail-modmed, echo=FALSE, out.width='100%', fig.cap="(ref:modmed)"}
-knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/inequality_security/figs/ineqsec_modmed_detail.jpg")
+knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/inequality_security/figures/ineqsec_modmed_detail.jpg")
 ```
 
 
