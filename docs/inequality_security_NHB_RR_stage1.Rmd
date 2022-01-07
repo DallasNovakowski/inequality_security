@@ -67,10 +67,16 @@ library(kableExtra)
 library(english)
 
 r_refs("r-references.bib")
+
 #trackdown::download_file(file="docs/05_icvs_NHB_RR_stage1.Rmd")
-load("C:/Users/dalla/Google Drive/project_files/inequality_security/output/pretest_output.RData")
+# trackdown::update_file(here::here("docs","inequality_security_NHB_RR_stage1.Rmd"),hide_code=T)
+  
 load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/iv_2005.RData")
+
 load(here::here("output", "icvs_output.RData"))
+load(here::here("output", "pretest_output.RData"))
+
+source(here::here("scripts", "manuscript_funs.r"), local = knitr::knit_global())
 ```
 
 ```{r analysis-preferences}
@@ -78,27 +84,6 @@ load(here::here("output", "icvs_output.RData"))
 set.seed(42)
 knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 ```
-
-```{r model-extract,, echo=F}
-inline_extract <- function(model,coef_name){
-  test_stat <- model$coefficients[coef_name,"t value"]
-  df <- model$coefficients[coef_name,"df"]
-  
-  pval <- ifelse(model$coefficients[coef_name,"Pr(>|t|)"] < .001,
-                 "< .001",
-                 paste("=", model$coefficients[coef_name,"Pr(>|t|)"] %>% round(3)))
-  
-  estimate <- model$coefficients[coef_name,"Estimate"]
-  se <- model$coefficients[coef_name,"Std. Error"]
-  ci_lo <- estimate-se*1.96
-  ci_hi <- estimate+se*1.96
-  
-  # print(c(test_stat, df, pval, estimate, se))
-  
-  paste("*t*","(",round(df,0),")"," = ", round(test_stat,2), ", *p* ", pval, ", *b* = ", round(estimate,3), ", SE = ", round(se,3) , ", CI(95%) = [", round(ci_lo,3), ", ", round(ci_hi,3),"]",  sep="")
-}
-```
-
 
 # Introduction
 
@@ -361,24 +346,24 @@ The authors declare no competing interests.
 (ref:pretest-splitplot) Means (95% CI) and distributions for pretest. n=`r screened_n`, within-subjects
 
 ```{r pretest-splitplot, echo=FALSE, out.width='100%', fig.cap="(ref:pretest-splitplot)"}
-knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/inequality_security/figures/spending_pretest_splitplot.png")
+knitr::include_graphics(here::here("figures", "spending_pretest_splitplot.png"))
 ```
 
 
 
 (ref:design) Study design for a priori power analysis for two-level experiments (Study 1a and b). Note: Max possible value is \$1.00; bars indicate +/-1 *SD* 
 ```{r l2-design, echo=FALSE, out.width='100%', fig.cap="(ref:design)"}
-knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/inequality_security/figures/l2_design_plot.png")
+knitr::include_graphics(here::here("figures", "l2_design_plot.png"))
 ```
 
 (ref:powerplot2) Per-condition sample size thresholds for 95% power in main effect of inequality for two-level experiments (Study 1a and b). Assuming two-sided testing.
 ```{r powerplot2, echo=FALSE, out.width='100%', fig.cap='(ref:powerplot2)'}
-knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/inequality_security/figures/l2powerplot.png")
+knitr::include_graphics(here::here("figures", "l2powerplot.png"))
 ```
 
 
 ```{r design, echo=FALSE, out.width='100%', fig.cap="(ref:design)"}
-knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/inequality_security/figures/power_design_plot.png")
+knitr::include_graphics(here::here("figures", "power_design_plot.png"))
 ```
 
 <!-- is a "no-way interaction:" that the effect of inequality will be nullified when incomes are invisible. The hypothesis of a no-way interaction suggests firstly that sample sizes must twice the size of an equivalent study just testing a simple effect; secondly, our core hypothesis rests on all three coefficients being significant [d]in the following model: -->
@@ -386,27 +371,27 @@ knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/inequality_se
 (ref:powerplot) Per-condition sample size thresholds for 95% power in main and interactive effects. Assuming two-sided testing.
 
 ```{r powerplot, echo=FALSE, out.width='100%', fig.cap='(ref:powerplot)'}
-knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/inequality_security/figures/01powerplot.png")
+knitr::include_graphics(here::here("figures", "01powerplot.png"))
 ```
 
 
 
-(ref:icvs-security-hist) Histogram for number of security measures (max = `r length(prevention_min2)`)
+(ref:icvs-security-hist) Histogram for number of security measures (max = `r length(prevention_min2)`). Dotted Line indicates mean (*M* =`r mean(iv_2005_mod$total_security)`
 
 ```{r icvs-security-hist, echo=FALSE, out.width='100%', fig.cap="(ref:icvs-security-hist)"}
-knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/icvs_inequality/figures/security_hist.png")
+knitr::include_graphics(here::here("figures", "security_hist.png"))
 ```
 
-(ref:icvs-victim-hist) Histogram for number of victimization experiences (max = `r length(vic_var_assault)`)
+(ref:icvs-victim-hist) Histogram for number of victimization experiences (max = `r length(vic_var_assault)`). Dotted Line indicates mean (*M* =`r mean(iv_2005_mod$vic_var_assault)`.
 
 ```{r icvs-victim-hist, echo=FALSE, out.width='100%', fig.cap="(ref:icvs-victim-hist)"}
-knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/icvs_inequality/figures/victim_hist.png")
+knitr::include_graphics(here::here("figures", "victim_hist.png"))
 ```
 
 (ref:icvs-victim-dotwhisk) Dot-whisker plot for ordinal regression coefficients predicting victimization experiences
 
 ```{r icvs-victim-dotwhisk, echo=FALSE, out.width='100%', fig.cap="(ref:icvs-victim-dotwhisk)"}
-knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/icvs_inequality/figures/ordinal_dotwhisker.png")
+knitr::include_graphics(here::here("figures", "ordinal_dotwhisker.png"))
 ```
 
 \newpage
@@ -513,303 +498,18 @@ tidy_ci %>%
 
 \newpage
 
-# Supplementary information
-
 \newpage
 
-## Assumptions and hypothesis testing
+# Supplementary information
 
-Below is the code for testing ANOVA assumptions
-
-```{r anova-check, eval=FALSE, echo=T}
-# Normality plots
-ggqqplot(residuals(m_vis))
-# Normality by condition
-ggqqplot(ineq_vis_data, "security_spending", ggtheme = theme_bw()) +
-  facet_grid(inequality ~ visibility)
-# Normality test - significant with large samples
-shapiro_test(residuals(m_vis))
-# levene test for homogeneity of variance
-ineq_vis_data %>% levene_test(security_spending ~ inequality*visibility)
-```
-
-The code for testing ANOVA hypotheses
-
-```{r statistical-test, eval=FALSE, echo=T}
-res.aov <- ineq_vis_data %>% rstatix::anova_test(security_spending ~ inequality*visibility)
-# test main effects at different levels
-ineq_vis_data %>%
-  group_by(visibility) %>%
-  rstatix::anova_test(security_spending ~ inequality, error = m_vis)
-ineq_vis_data %>% 
-  emmeans_test(
-    security_spending ~ inequality, p.adjust.method = "bonferroni",
-    model = m_vis
-    )
-```
-
-## Study 1c
-
-### Study 1c Hypotheses
-
-**H1c.1:** (Linear/ANOVA model) In the **a)** *significant* two-way model `m_vis`, coefficients for **b)** income inequality and **c)** the inequality\*visibility interaction each will have a significantly positive effect on security spending.
-
-```{r vis-aov, echo=TRUE, eval=FALSE}
-aov_vis <- aov(security_spending ~ as.factor(inequality)*as.factor(visibility), 
-               data = ineq_vis_data, type="III")
-```
-
-**H1c.2:** (Planned pairwise comparisons), the hi-inequality/visible income condition will have higher rates of security consumption than all other conditions (i.e., **a)** hi-inequality/invisible income, **b)** no-inequality/visible income, & **c)** no-inequality/invisible income).
-
-```{r vis-tukey, echo=TRUE, eval=FALSE}
-stats::TukeyHSD(aov_vis)
-```
-
-**H1c.3:** (Mediation step 1) In the model `m_vis_med1`, coefficients for **a)** income inequality and **b)** the inequality\*visibility interaction each will have a significant positive effect on participants' perceived likelihood of their partner attacking.
-
-```{r vis-mediat-predict, eval=FALSE, echo=TRUE}
-#predicting mediator
-m_vis_med1 <- lm(likely_attack ~ inequality*visibility, data = ineq_vis_data)
-```
-
-**H1c.4:** (Mediation step 2) In the model `m_vis_likely_security`, participants' perceived likelihood of their partner attacking will have a significantly positive effect on security spending.
-
-```{r vis-likely-security, eval=FALSE, echo=TRUE}
-# test for relationship between p. attack likelihood and security spending
-m_vis_likely_security <- lm(security_spending ~ likely_attack, data = ineq_vis_data)
-```
-
-**H1c.5:** (Moderated mediation) The indirect effects of inequality on security consumption, through perceived likelihood of partner attack, will be largest when participants believe that their partners are aware of both players' incomes (i.e., when incomes are transparent/visible). In the model `vis_modmed_test`, the indirect effect/ACME (Average Causal Mediation Effect [total effect - direct effect]) will be significantly larger when incomes are visible (visibility=1) than when they are invisible (visibility=0)
-
-```{r vis-mediat-dv, eval=FALSE, echo=TRUE}
-# model with mediator: likely_attack (or perceived likelihood of partner attacking)
-m_vis_med2 <- lm(security_spending ~ inequality*visibility + likely_attack, 
-                 data = ineq_vis_data)
-```
-
-```{r vis-mod-med, eval=FALSE, echo = TRUE}
-# see https://ademos.people.uic.edu/Chapter15.html#41_create_the_necessary_regression_models
-library(mediation)
-mediate <- mediation::mediate
-# ACME: Average Causal Mediation Effect [total effect - direct effect]
-# ADE: Average Direct Effect [total effect - indirect effect]
-# Total Effect: Direct (ADE) + Indirect (ACME)
-# Prop. Mediated: Conceptually ACME / Total effect 
-#(This tells us how much of the total effect our indirect effect is ?explaining?)
-# specify mediation at high visibility
-m_vis_modmed_hivis <- mediate(m_vis_med1, m_vis_med2,    
-                           covariates = list(visibility = 1), boot = TRUE,   
-                           boot.ci.type = "bca", sims = 2000, treat="inequality",
-                           mediator="likely_attack")
-plot(m_vis_modmed_hivis, xlim = 0:1)
-summary(m_vis_modmed_hivis) 
-# Specify mediation at low visibility
-m_vis_modmed_lowvis <- mediate(m_vis_med1, m_vis_med2,    
-                           covariates = list(visibility = 0), boot = TRUE,   
-                           boot.ci.type = "bca", sims = 2000, treat="inequality",
-                           mediator="likely_attack")
-plot(m_vis_modmed_lowvis, xlim = 0:1)
-summary(m_vis_modmed_lowvis) 
-```
-
-```{r vis-modmed-test, eval=FALSE, echo = TRUE}
-modmed_testvis <- mediate(m_vis_modmed_hivis, m_vis_modmed_lowvis, boot = TRUE,  
-                            boot.ci.type = "bca", sims = 2000, treat="inequality",
-                          mediator="likely_attack")   
-#We don't specify anything about the moderator in this code yet
-vis_modmed_test <- test.modmed(modmed_testvis, covariates.1 = list(visibility = 0),   
-            covariates.2 = list(visibility = 1), sims = 2000)
-#Here we specify both levels of the moderator that we want to test
-vis_modmed_test
-```
 
 (ref:modmed) Hypothesized pattern of moderated mediation
 
 ```{r concept-modmed, echo=FALSE, out.width='100%', fig.cap="(ref:modmed)"}
-knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/inequality_security/figures/ineqsec_concepmodmed.jpg")
+knitr::include_graphics(here::here("figures", "ineqsec_concepmodmed.jpg"))
 ```
 
 
 ```{r detail-modmed, echo=FALSE, out.width='100%', fig.cap="(ref:modmed)"}
-knitr::include_graphics("C:/Users/dalla/Google Drive/project_files/inequality_security/figures/ineqsec_modmed_detail.jpg")
-```
-
-
-## Study 1d
-
-### Study 1d Hypotheses
-
-**H1d.1:** (linear/anova): In the **a)** *significant* two-way model `m_merit`, coefficients for **b)** income inequality and **c)** the inequality\*merit interaction each will have a significantly positive effect on security spending.
-
-```{r merit-aov, echo=TRUE, eval=FALSE}
-aov_merit <- aov(security_spending ~ as.factor(inequality)*as.factor(merit), 
-               data = ineq_merit_data, type="III")
-```
-
-**H1d.2:** (Planned pairwise comparisons), the hi-inequality/random income condition will have higher rates of security consumption than all other conditions (i.e., **a)** hi-inequality/merit income, **b)** no-inequality/random income, & **c)** no-inequality/merit income).
-
-```{r merit-tukey, echo=TRUE, eval=FALSE}
-stats::TukeyHSD(aov_merit)
-```
-
-**H1d.3:** (Mediation step 1) In the model `m_vis_med1`, coefficients for **a)** income inequality and **b)** the inequality\*merit interaction each will have a significant positive effect on participants' perceived likelihood of their partner attacking.
-
-```{r merit-mediat-predict, eval=FALSE, echo=TRUE}
-#predicting mediator
-m_merit_med1 <- lm(likely_attack ~ inequality*merit, data = ineq_merit_data)
-```
-
-**H1d.4:** (Mediation step 2) In the model `m_merit_likely_security`, participants' perceived likelihood of their partner attacking will have a significantly positive effect on security spending.
-
-```{r merit-likely-security, eval=FALSE, echo=TRUE}
-# test for relationship between p. attack likelihood and security spending
-m_merit_likely_security <- lm(security_spending ~ likely_attack, data = ineq_merit_data)
-```
-
-**H1d.5:** (Moderated mediation) The indirect effects of inequality on security consumption, through perceived likelihood of partner attack, will be largest when positions are allocated randomly (versus when roles are allocated based on merit). In the model `merit_modmed_test`, the indirect effect/ACME (Average Causal Mediation Effect [total effect - direct effect]) will be significantly larger when roles are random (merit=0) than when allocated based on merit (merit=1)
-
-```{r merit-mediat-dv, eval=FALSE, echo=TRUE}
-# model with mediator: likely_attack (or perceived likelihood of partner attacking)
-m_merit_med2 <- lm(security_spending ~ inequality*merit + likely_attack, 
-                 data = ineq_merit_data)
-```
-
-```{r merit-mod-med, eval=FALSE, echo = TRUE}
-# see https://ademos.people.uic.edu/Chapter15.html#41_create_the_necessary_regression_models
-library(mediation)
-mediate <- mediation::mediate
-# ACME: Average Causal Mediation Effect [total effect - direct effect]
-# ADE: Average Direct Effect [total effect - indirect effect]
-# Total Effect: Direct (ADE) + Indirect (ACME)
-# Prop. Mediated: Conceptually ACME / Total effect 
-#(This tells us how much of the total effect our indirect effect is ?explaining?)
-# specify mediation at high visibility
-m_merit_modmed_himerit <- mediate(m_merit_med1, m_merit_med2,    
-                           covariates = list(merit = 1), boot = TRUE,   
-                           boot.ci.type = "bca", sims = 2000, treat="inequality",
-                           mediator="likely_attack")
-plot(m_merit_modmed_himerit, xlim = 0:1)
-summary(m_merit_modmed_himerit) 
-# Specify mediation at low visibility
-m_merit_modmed_lowmerit <- mediate(m_merit_med1, m_merit_med2,    
-                           covariates = list(merit = 0), boot = TRUE,   
-                           boot.ci.type = "bca", sims = 2000, treat="inequality",
-                           mediator="likely_attack")
-plot(m_merit_modmed_lowmerit, xlim = 0:1)
-summary(m_merit_modmed_lowmerit) 
-```
-
-```{r merit-modmed-test, eval=FALSE, echo = TRUE}
-modmed_testmerit <- mediate(m_merit_modmed_himerit, m_merit_modmed_lowmerit, 
-                            boot = TRUE,  boot.ci.type = "bca", sims = 2000, 
-                            treat="inequality", mediator="likely_attack")   
-#We don't specify anything about the moderator in this code yet
-merit_modmed_test <- test.modmed(modmed_testmerit, covariates.1 = list(merit = 0),   
-            covariates.2 = list(merit = 1), sims = 2000)
-#Here we specify both levels of the moderator that we want to test
-merit_modmed_test
-```
-
-## Study 1e
-
-### Study 1e Hypotheses
-
-The third experiment will keep a constant presence of inequality, but manipulate whether the partner is a member of an ingroup or outgroup, and whether the incomes are distributed randomly, by an **ingroup third-party**.
-
-**H1e.1:** (lm/anova) In the **a)** *significant* two-way model `m_group`, coefficients for **b)** partner's group membership and **c)** the interaction between group membership and agentic wealth distribution will be significant.
-
-```{r group-aov, echo=TRUE, eval=FALSE}
-aov_group <- aov(security_spending ~ as.factor(agentic)*as.factor(outgroup), 
-               data = ineq_group_data, type="III")
-```
-
-**H1e.2:** (Planned pairwise comparisons) The agentic wealth distribution/outgroup condition will have higher rates of security consumption than all other conditions (i.e., **a)** agentic/ingroup, **b)** random/outgroup, & **c)** random/ingroup.
-
-```{r group-tukey, echo=TRUE, eval=FALSE}
-stats::TukeyHSD(aov_group)
-```
-
-**H1e.3:** (Mediation step 1) ) In the model `m_group_med1`, coefficients for **b)** partner's group membership and **c)** the interaction between partner's group membership and agentic wealth distribution will have a significant positive effect on participants' perceived likelihood of their partner attacking.
-
-```{r group-mediat-predict, eval=FALSE, echo=TRUE}
-#predicting mediator
-m_group_med1 <- lm(likely_attack ~ outgroup*agentic, data = ineq_group_data)
-```
-
-**H1e.4:** (Mediation step 2) In the model `m_group_likely_security`,participants' perceived likelihood of their partner attacking will have a significantly positive effect on security spending.
-
-```{r group-likely-security, eval=FALSE, echo=TRUE}
-# test for relationship between p. attack likelihood and security spending
-m_group_likely_security <- lm(security_spending ~ likely_attack, data = ineq_group_data)
-```
-
-**H1e.5:** (Moderated mediation) The indirect effects of partner's group membership on security consumption, through perceived likelihood of partner attack, will be largest when positions are allocated randomly (versus when roles are allocated by another participant). In the model `group_modmed_test`, the indirect effect/ACME (Average Causal Mediation Effect [total effect - direct effect]) will be significantly larger when roles are random (outgroup=0) than when allocated based on a participant's choice (outgroup=1)
-
-```{r group-mediat-dv, eval=FALSE, echo=TRUE}
-# model with mediator: likely_attack (or perceived likelihood of partner attacking)
-m_group_med2 <- lm(security_spending ~ agentic*outgroup + likely_attack, 
-                 data = ineq_merit_data)
-```
-
-```{r group-mod-med, eval=FALSE, echo = TRUE}
-# see https://ademos.people.uic.edu/Chapter15.html#41_create_the_necessary_regression_models
-m_group_modmed_outgroup <- mediate(m_group_med1, m_group_med2,    
-                           covariates = list(outgroup = 1), boot = TRUE,   
-                           boot.ci.type = "bca", sims = 2000, treat="inequality",
-                           mediator="likely_attack")
-plot(m_group_modmed_outgroup, xlim = 0:1)
-summary(m_group_modmed_outgroup) 
-# Specify mediation at low visibility
-m_group_modmed_ingroup <- mediate(m_group_med1, m_group_med2,    
-                           covariates = list(outgroup = 0), boot = TRUE,   
-                           boot.ci.type = "bca", sims = 2000, treat="inequality",
-                           mediator="likely_attack")
-plot(m_group_modmed_ingroup, xlim = 0:1)
-summary(m_group_modmed_ingroup) 
-```
-
-```{r group-modmed-test, eval=FALSE, echo = TRUE}
-modmed_testgroup <- mediate(m_group_modmed_outgroup, m_group_modmed_ingroup, 
-                            boot = TRUE,  boot.ci.type = "bca", sims = 2000, 
-                            treat="inequality", mediator="likely_attack")   
-#We don't specify anything about the moderator in this code yet
-group_modmed_test <- test.modmed(modmed_testgroup, covariates.1 = list(outgroup = 0),   
-            covariates.2 = list(outgroup = 1), sims = 2000)
-#Here we specify both levels of the moderator that we want to test
-group_modmed_test
-```
-
-
-## Study 2
-
-Model specification for multilevel analysis
-
-```{r ordinal, eval=F, echo=T}
-library(ordinal)
-
-# null model with weights
-mw_ord_null <- clmm(ordered(security_winz) ~ 1 + (1|country), data = iv_2005_mod, 
-                    weights = individual_weight)
-
-mw_ord <- clmm(ordered(security_winz) ~ 
-                 gini_2004_6_cent + gdppc_2004_6_scale + victim_nation_winz +
-                 age_cent + employed + male + police_effective + income_quartile +
-                 num_victim_5yr_winz + (1|country), 
-               data = iv_2005_mod, weights = individual_weight)
-
-anova(mw_ord_null, mw_ord)
-
-summary(mw_ord)
-
-# null model
-m_ord_null <- clmm(ordered(security_winz) ~ 1 + (1|country), data = iv_2005_mod)
-
-m_ord <- clmm(ordered(security_winz) ~ gini_2004_6_cent + gdppc_2004_6_scale + 
-                age_cent + employed + male + police_effective + income_quartile + 
-                num_victim_5yr_winz + (1|country), data = iv_2005_mod)
-
-anova(m_ord_null, m_ord)
-
-summary(m_ord)
-
+knitr::include_graphics(here::here("figures", "ineqsec_modmed_detail.jpg"))
 ```
