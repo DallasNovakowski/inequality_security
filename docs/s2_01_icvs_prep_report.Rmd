@@ -78,18 +78,12 @@ reduced_var <- c(utility_var,household_var,demo_var,prev_var,victim_var,corrupt_
 icvs_data <- icvs_data[,reduced_var]
 ```
 
-The International Crime Victims Survey (ICVS) is a great dataset. Big,
-easy enough to access, and it's well documented. The identifiers and
-labels are available in the dataset, as well as an accompanying codebook
-updated to the 2005 sweep of the ICVS. There is also a version of the
-questionnaire that participants see, which has been helpful in
-interpreting the items in plain language, in addition to clearing up
-some inconsistencies in the codebook.
+The International Crime Victims Survey (ICVS) is a great dataset. Big, easy enough to access, and it's well documented. The identifiers and labels are available in the dataset, as well as an accompanying codebook updated to the 2005 sweep of the ICVS. There is also a version of the questionnaire that participants see, which has been helpful in interpreting the items in plain language, in addition to clearing up some inconsistencies in the codebook.
 
 # **At a Glance**
 
 ```{r source scripts, warning=F, message=FALSE, echo=FALSE}
- source("C:/Users/dalla/Google Drive/project_files/inequality_security/scripts/icvs_scripts.r", local = knitr::knit_global())
+source(here::here("scripts", "icvs_scripts.r"), local = knitr::knit_global())
 ```
 
 ```{r ncols and nrow, warning=F, message=FALSE, include = TRUE}
@@ -479,7 +473,18 @@ responders_2005$num_victim_5yr <- rowSums(responders_2005[,vic_var_drop])
 summary(responders_2005$num_victim_5yr)
 
 # combined hist and dens(smoothed)
-ggplot(responders_2005, aes(x = num_victim_5yr))  +  geom_histogram(binwidth= 1, alpha=.7, fill="#40B0A6", colour='grey') + geom_density(adjust=6, aes(y=..count..)) + theme_minimal() + geom_vline(aes(xintercept=mean(num_victim_5yr)),color="#40B0A6", linetype="dashed", size=1 ) + ggtitle("Number of victimizations over 5 years")
+ggplot(responders_2005, aes(x = num_victim_5yr))  +  geom_histogram(
+  binwidth = 1,
+  alpha = .7,
+  fill = "#40B0A6",
+  colour = 'grey') +
+# + geom_density(adjust = 6, aes(y = ..count..)) + theme_minimal() 
+ geom_vline(
+  aes(xintercept = mean(num_victim_5yr)),
+  color = "#B03F49",
+  linetype = "dashed",
+  size = 1
+) + ggtitle("Number of victimizations over 5 years")
 
 skewness(responders_2005$num_victim_5yr)
 
@@ -746,9 +751,7 @@ One of the major benefits of an international study like this is being able to i
 
 # Creating four ICVS datasets with different inclusion criteria
 
-First, the one we will use in the manuscript. A moderate inclusion of
-variables with police effectiveness, income quartile, and assault (with
-this last one just being used for a new victimization variable)
+First, the one we will use in the manuscript. A moderate inclusion of variables with police effectiveness, income quartile, and assault (with this last one just being used for a new victimization variable)
 
 ```{r iv liberal inclusion data sets}
 iv_2005 <- iv_2005 %>% 
@@ -1149,7 +1152,9 @@ pwt_lib1[,c("gdppc_2004_6_scale")] <- scale(pwt_lib1[,c("gdppc_2004_6")])
 
 # ggplot(pwt_2004_6, aes(x = gdppc_2004_6)) + geom_density()
 
-ggplot(pwt_2004_6, aes(x = gdppc_2004_6))  +  geom_histogram(alpha=.7, fill="#40B0A6", colour='grey') + geom_density( aes(y=..count..)) + theme_minimal() + geom_vline(aes(xintercept=mean(gdppc_2004_6)),color="#40B0A6", linetype="dashed", size=1 ) + ggtitle("Histogram of average GDP per Capita over 2004-2006")
+ggplot(pwt_2004_6, aes(x = gdppc_2004_6))  +  geom_histogram(alpha=.7, fill="#40B0A6", colour='grey') + 
+# + geom_density( aes(y=..count..)) + theme_minimal() 
+geom_vline(aes(xintercept=mean(gdppc_2004_6)),color="#B03F49", linetype="dashed", size=1 ) + ggtitle("Histogram of average GDP per Capita over 2004-2006")
 
 
 ```
@@ -1167,6 +1172,25 @@ data_list <- swiid_iv %>% reduce(inner_join, by = "country")
 data_list$av_gini <- data_list %>%   
   dplyr::select(starts_with("gini_2004_6.")) %>%
   rowMeans()
+
+# data_list$av_gini_cent <- data_list %>%   
+#   dplyr::select(starts_with("gini_2004_6_cent.")) %>%
+#   rowMeans()
+# 
+# 
+# data_list$av_gini_winz <- data_list %>%   
+#   dplyr::select(starts_with("gini_2004_6_winz.")) %>%
+#   rowMeans()
+# 
+# data_list$av_gini_wc <- data_list %>%   
+#   dplyr::select(starts_with("gini_2004_6_wc.")) %>%
+#   rowMeans()
+# 
+# data_list$av_gini_ws <- data_list %>%   
+#   dplyr::select(starts_with("gini_2004_6_ws.")) %>%
+#   rowMeans()
+
+# "av_gini_cent","av_gini_winz","av_gini_wc","av_gini_ws"
 
 data_list <- data_list[,c("country", "av_gini")]
 
@@ -1200,7 +1224,7 @@ data_list[,c("gdppc_2004_6_scale")] <- scale(data_list[,c("gdppc_2004_6")])
 
 
 ```{r national transformations}
-# creating nation-level data for variable-maximizing countries
+# creating nation-level data for variable-moderate countries
 data_list_mod <- data_list %>%
   filter(country != "Japan" & country != "Peru"  & country != "Iceland") 
 
@@ -1271,20 +1295,28 @@ data_list_lib1[,c("gdppc_2004_6_scale")] <- scale(data_list_lib1[,c("gdppc_2004_
 
 ```{r append single nation data, eval=T}
 # append nation-level data for cluster-maximizing data
-iv_2005 <- data_list %>%
+iv_2005_2 <- data_list %>%
   left_join(iv_2005, by = c("country"))
+
+gd <- iv_2005_2 %>% 
+        filter(!is.na(num_victim_5yr)) %>%
+        group_by(country) %>% 
+        summarise(gdppc_2004_6 = mean(gdppc_2004_6),
+                  gdppc_2004_6_winz = mean(gdppc_2004_6_winz),
+                  gdppc_2004_6_cent = mean(gdppc_2004_6_cent),
+                  num_victim_5yr  = mean(num_victim_5yr),
+                  num_victim_5yr_winz = mean(num_victim_5yr_winz),
+                  gini_2004_6  = mean(av_gini),
+                  gini_2004_6_cent = mean(gini_2004_6_cent)
+                  gini_2004_6_winz = mean(gini_2004_6_winz)
+                  )
 
 # append nation-level data for variable-maximizing data
 iv_2005_mod2 <- data_list_mod %>%
   left_join(iv_2005_mod, by = c("country"))
 
-iv_2005_lib <- data_list_lib %>%
-  left_join(iv_2005_lib, by = c("country"))
 
-iv_2005_lib1 <- data_list_lib1 %>%
-  left_join(iv_2005_lib1, by = c("country"))
-
-gd <- iv_2005_mod2 %>% 
+gd_mod <- iv_2005_mod2 %>% 
         filter(!is.na(num_victim_5yr)) %>%
         group_by(country) %>% 
         summarise(gdppc_2004_6 = mean(gdppc_2004_6),
@@ -1298,15 +1330,23 @@ gd <- iv_2005_mod2 %>%
                   gini_winz = mean(gini_2004_6_winz)
                   )
 
-rm(iv_2005_mod2)
+# iv_2005_lib <- data_list_lib %>%
+#   left_join(iv_2005_lib, by = c("country"))
+# 
+# iv_2005_lib1 <- data_list_lib1 %>%
+#   left_join(iv_2005_lib1, by = c("country"))
+
+
+rm(iv_2005_mod2,iv_2005_2)
 ```
 
 
 ```{r merging and saving}
 rm(data_2005, victim_2005,responders_2005, pwt, swiid, swiid_responders,swiid_spread, icvs_data)
 
-save(iv_2005, iv_2005_lib, iv_2005_lib1, iv_2005_mod, sweep5_nrow, sweep5_countries, vic_var_assault, vic_var_drop, prevention_min2, gd,pre_weightscreen_n, pre_weightscreen_k, post_weightscreen_n, post_weightscreen_k, responders_2005_countries, iv_2005_countries, iv_2005_mod_countries, iv_2005_lib_countries, iv_2005_lib1_countries, cleaned_countries, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/iv_2005.RData")
+save(sweep5_nrow, sweep5_countries, vic_var_assault, vic_var_drop, prevention_min2, gd, gd_mod, pre_weightscreen_n, pre_weightscreen_k, post_weightscreen_n, post_weightscreen_k, responders_2005_countries, iv_2005_countries, iv_2005_mod_countries, iv_2005_lib_countries, iv_2005_lib1_countries, cleaned_countries, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/iv_2005.RData")
 
+save(iv_2005, iv_2005_lib, iv_2005_lib1, iv_2005_mod, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/icvs_solo_datafiles.RData")
 
 # icvs_joined <- swiid_2004_6 %>%
 #   map(. %>% left_join(pwt_2004_6, by = c("country"))) %>%
@@ -1316,11 +1356,15 @@ save(iv_2005, iv_2005_lib, iv_2005_lib1, iv_2005_mod, sweep5_nrow, sweep5_countr
 
 iv_joined <- swiid_iv %>%
   map(. %>% left_join(pwt_iv, by = c("country"))) %>%
-  map(. %>% left_join(iv_2005_lib, by = c("country")))
+  map(. %>% left_join(iv_2005, by = c("country")))
 
 save(iv_joined, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/iv_joined.RData")
 
-rm(iv_2005, iv_joined, swiid_iv)
+iv_joined1 <- iv_joined[[1]]
+
+save(iv_joined1, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/icvs_joined_samples.RData")
+
+rm(iv_2005, iv_joined, iv_joined1, swiid_iv)
 
 mod_joined <- swiid_mod %>%
   map(. %>% left_join(pwt_mod, by = c("country"))) %>%
@@ -1329,9 +1373,11 @@ mod_joined <- swiid_mod %>%
 save(mod_joined, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/mod_joined.RData")
 
 mod_joined1 <- mod_joined[[1]]
-save(mod_joined1, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/mod_joined1.RData")
+# save(mod_joined1, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/mod_joined1.RData")
 
-rm(iv_2005_mod, mod_joined, swiid_mod)
+cgwtools::resave(mod_joined1, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/icvs_joined_samples.RData")
+
+rm(iv_2005_mod, mod_joined, mod_joined1, swiid_mod)
 
 
 lib_joined <- swiid_lib %>%
@@ -1340,7 +1386,11 @@ lib_joined <- swiid_lib %>%
 
 save(lib_joined, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/lib_joined.RData")
 
-rm(iv_2005_lib, lib_joined, swiid_lib)
+lib_joined1 <- lib_joined[[1]]
+cgwtools::resave(lib_joined1, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/icvs_joined_samples.RData")
+
+
+rm(iv_2005_lib, lib_joined, lib_joined, swiid_lib)
 
 
 lib1_joined <- swiid_lib1 %>%
@@ -1348,6 +1398,10 @@ lib1_joined <- swiid_lib1 %>%
   map(. %>% left_join(iv_2005_lib1, by = c("country")))
 
 save(lib1_joined, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/lib1_joined.RData")
+
+lib1_joined1 <- lib1_joined[[1]]
+cgwtools::resave(lib1_joined1, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/icvs_joined_samples.RData")
+
 
 rm(iv_2005_lib1, lib1_joined, swiid_lib1)
 
