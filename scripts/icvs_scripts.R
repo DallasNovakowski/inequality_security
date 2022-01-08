@@ -1,6 +1,21 @@
 library(kableExtra)
 library(na.tools) # for all_na function
 
+# Data cleaning
+
+sav_clean <- function(data){
+  data <- data %>% 
+    mutate_all(as_factor) %>%   # convert all variables from chr+lbl to fct type          
+    set_names(data %>%       # convert variable names to informative labels
+                sjlabelled::get_label() %>% # pull labels from original tibble
+                enframe() %>%               # convert list of column names to a new tibble
+                na_if("") %>%               # if variable label is empty string, convert to NA
+                dplyr::mutate(value = coalesce(value, name)) %>%  # fill in NA with original if missing
+                pull(value)) %>%            # extract new variable name into a character vector
+    janitor::clean_names()      # clean names to be all lowercase, replacing spaces with "_"     
+  return(data)
+}
+
 kable_summary <- function(x){
   kable(summary(x)) %>%
     kable_styling(full_width = F)}
