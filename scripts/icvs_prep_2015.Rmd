@@ -58,7 +58,7 @@ icvs_data <- icvs_data %>%
 ```
 
 ```{r source scripts, warning=F, message=FALSE, echo=FALSE}
- source("C:/Users/dalla/Google Drive/project_files/icvs_inequality/scripts/icvs_scripts.r", local = knitr::knit_global())
+ source(here::here("scripts", "icvs_scripts.r"), local = knitr::knit_global())
 ```
 
 ```{r unlabeled,message=FALSE, echo=FALSE}

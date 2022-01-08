@@ -30,7 +30,7 @@ var_na <- function(data,selection){
 library(rlang)
 hist_plot <- function(mydf, myycol, mytitle) {
   ggplot2::ggplot(data= mydf,aes({{myycol}})) + geom_histogram(fill="#00C0AFAA", colour='grey') + 
-    geom_vline(aes(xintercept=mean({{myycol}})),color="#40B0A6", linetype="dashed", size=1 ) +
+    geom_vline(aes(xintercept=mean({{myycol}})),color="#B03F49", linetype="dashed", size=1 ) +
     ggtitle(mytitle) + theme_minimal()
 }
 
