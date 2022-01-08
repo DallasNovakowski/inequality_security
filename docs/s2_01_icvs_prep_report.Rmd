@@ -2,6 +2,7 @@
 title: "icvs_prep_report"
 output:
   html_document:
+        df_print: paged
 bibliography: references.bib
 ---
 
@@ -26,24 +27,17 @@ library(moments) # skewness and kurtosis
 #surveytoolbox::extract_vallab()
 #raw_classes <- as.character(lapply(lapply(icvs_data, class),tail,1))
 
+source(here::here("scripts", "icvs_scripts.r"), local = knitr::knit_global())
+
 icvs_data <- read_sav("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/ICVS2005_3.sav")  # Reading data
 
-setnames(icvs_data, old=c("I002A","I002B"), new=c("sweep_year", "sweep_num"), skip_absent=TRUE)
+icvs_data <- sav_clean(icvs_data)
+
+setnames(icvs_data, old=c("i002a","i002b"), new=c("sweep_year", "sweep_num"), skip_absent=TRUE)
 
 raw_classes <- sapply(sapply(icvs_data, class),tail,1)
 
-icvs_data <- icvs_data %>% 
-  mutate_all(as_factor) %>%   # convert all variables from chr+lbl to fct type          
-  set_names(icvs_data %>%       # convert variable names to informative labels
-              sjlabelled::get_label() %>% # pull labels from original tibble
-              enframe() %>%               # convert list of column names to a new tibble
-              na_if("") %>%               # if variable label is empty string, convert to NA
-              dplyr::mutate(value = coalesce(value, name)) %>%  # fill in NA with original if missing
-              pull(value)) %>%            # extract new variable name into a character vector
-  janitor::clean_names()      # clean names to be all lowercase, replacing spaces with "_"     
-
 cleaned_classes <- sapply(sapply(icvs_data, class),tail,1)
-
 
 utility_var<-c(names(icvs_data)[1:29])
 
@@ -81,10 +75,6 @@ icvs_data <- icvs_data[,reduced_var]
 The International Crime Victims Survey (ICVS) is a great dataset. Big, easy enough to access, and it's well documented. The identifiers and labels are available in the dataset, as well as an accompanying codebook updated to the 2005 sweep of the ICVS. There is also a version of the questionnaire that participants see, which has been helpful in interpreting the items in plain language, in addition to clearing up some inconsistencies in the codebook.
 
 # **At a Glance**
-
-```{r source scripts, warning=F, message=FALSE, echo=FALSE}
-source(here::here("scripts", "icvs_scripts.r"), local = knitr::knit_global())
-```
 
 ```{r ncols and nrow, warning=F, message=FALSE, include = TRUE}
 nrow(icvs_data)
@@ -158,21 +148,15 @@ is left separately for this study
 
 # **Data wrangling**
 
-There are many different years and versions of the survey; not every
-case, sweep, or questionnaire will yield the data we're looking for.
+There are many different years and versions of the survey; not every case, sweep, or questionnaire will yield the data we're looking for.
 
-If we're doing international comparisons, the most important first
-consideration is the distribution of responses by sweep year. We need to
-have cases be (roughly) comparable based on the year. For example, it
-would be unfair to compare norway in 2005 to lithuania in 1989.
+If we're doing international comparisons, the most important first consideration is the distribution of responses by sweep year. We need to have cases be (roughly) comparable based on the year. For example, it would be unfair to compare norway in 2005 to lithuania in 1989.
 
 ```{r more country info, warning=F, message=FALSE, echo=FALSE}
 kable_summary(icvs_data$sweep_year)
 ```
 
-We can see that there are five major sweeps of data collection, each
-potentially spanning a couple years. There is also a specific EU sweep,
-overlapping the 5th sweep.
+We can see that there are five major sweeps of data collection, each potentially spanning a couple years. There is also a specific EU sweep, overlapping the 5th sweep.
 
 Next, it's worthwhile seeing what kinds of questionnaires people get, in
 case there are any meaningful differences
@@ -461,7 +445,8 @@ responders_2005 <-
              !is.na(burglar_5yrs) &
              !is.na(attempt_5yrs) &
              !is.na(robbery_5yrs) &
-             !is.na(pers_theft_5yrs) & !is.na(motortheft_5yrs)
+             !is.na(pers_theft_5yrs) & 
+             !is.na(motortheft_5yrs)
          ))
 
 summary(responders_2005[,vic_var_drop])
@@ -1055,13 +1040,7 @@ As described in Solt (2020), the SWIID maximizes the comparability of available 
 
 ## Living standards
 
-For a nation-level index of living standards, We'll use the Penn World
-Tables 10.0 [@feenstra2015a]. The PWT is devised to provide real GDP
-comparisons across countries and over time on the expenditure side. The
-PWT uses prices collected by the International Comparisons Program to
-construct purchasing-power-parity exchange rates. The PWT converts GDP
-at national prices to a common currency -- U.S. dollars -- making them
-comparable across countries
+For a nation-level index of living standards, We'll use the Penn World Tables 10.0 [@feenstra2015a]. The PWT is devised to provide real GDP comparisons across countries and over time on the expenditure side. The PWT uses prices collected by the International Comparisons Program to construct purchasing-power-parity exchange rates. The PWT converts GDP at national prices to a common currency -- U.S. dollars -- making them comparable across countries
 
 We can see a breakdown of GDP per capita here:
 
@@ -1307,7 +1286,7 @@ gd <- iv_2005_2 %>%
                   num_victim_5yr  = mean(num_victim_5yr),
                   num_victim_5yr_winz = mean(num_victim_5yr_winz),
                   gini_2004_6  = mean(av_gini),
-                  gini_2004_6_cent = mean(gini_2004_6_cent)
+                  gini_2004_6_cent = mean(gini_2004_6_cent),
                   gini_2004_6_winz = mean(gini_2004_6_winz)
                   )
 
@@ -1326,8 +1305,8 @@ gd_mod <- iv_2005_mod2 %>%
                   num_victim_5yr_winz = mean(num_victim_5yr_winz),
                   num_victim_5yr_assault = mean(num_victim_5yr_assault),
                   num_victim_5yr_assault_winz = mean(num_victim_5yr_assault_winz),
-                  gini_2004_6  = mean(av_gini),
-                  gini_winz = mean(gini_2004_6_winz)
+                  gini_2004_6_cent  = mean(av_gini),
+                  gini_2004_6_winz = mean(gini_2004_6_winz)
                   )
 
 # iv_2005_lib <- data_list_lib %>%
@@ -1406,12 +1385,6 @@ cgwtools::resave(lib1_joined1, file = "C:/Users/dalla/Google Drive/offline_data_
 rm(iv_2005_lib1, lib1_joined, swiid_lib1)
 
 
-# icvs_joined <-  icvs_joined %>%
-#   map(. %>% filter(., !is.na(num_victim_5yr)))
-# rm(icvs_data, pwt, swiid, data_2005)
-
-
-# join_sample <- icvs_joined[[1]]
 # rm(list = ls())
 ```
 
