@@ -1,0 +1,454 @@
+---
+title: "ICVS exploration"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    number_sections: true
+    toc: true
+    toc_float: true
+bibliography: references.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse) # pipe
+library(purrr) # map function
+library(car) #qqPlot
+library(survey)
+# library(nloptr) # for bobyqa used in svy2lme
+
+load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/iv_2005.RData")
+
+load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/icvs_joined_samples.RData")
+
+load(file = here::here("output","icvs_output.RData"))
+
+source(here::here("scripts", "icvs_scripts.r"), local = knitr::knit_global())
+source(here::here("scripts", "s2_icvs_sample_models.r"), local = knitr::knit_global())
+```
+
+# Analysis procedure
+
+The following describes two survey sweeps of the International Crime Victimization Survey conducted across 2004-6. At first, this data had `r sweep5_nrow` respondents and `r sweep5_countries` countries. After a exclusion process maximizing the number of countries and observations, there were
+
+31 countries with 85,085 participants, with a minimum of 790 participants per country.
+
+Analyzing archival data, the so-called "garden of forking paths [\@gelman2014] allows a researcher to pick and choose those data and analyses that best suit their preferred story [\@simmons2011]. As such, transparently showcasing the different analysis paths is an important measure to help reduce the encroachment of model selection bias.
+
+As mentioned in the manuscript, certain variable inclusions (e.g., perceived police effectiveness) requires dropping certain countries of Japan, Peru, and Iceland (`mod_joined1`: k = `r sum(summary(as.factor(mod_joined1$country))>0)`, and n = `r format(nrow(mod_joined1), big.mark = ",", scientific = FALSE)`.
+
+By comparison, excluding these three variables yields a sample of k = `r sum(summary(as.factor(iv_joined1$country))>0)` countries and a total n = `r format(nrow(iv_joined1), big.mark = ",", scientific = FALSE)` participants. The reported analyses will focus on the former, smaller sample specification, but this descriptives section (and supplementary analyses) examine whether a reduced model (i.e., excluding assaults, income quartile, and perceived police effectiveness) change between these sample subsets.
+
+# Exploration
+
+Starting with scatterplots. Nation Values with a cook's distance of 4 times the mean cook's distance values are flagged
+
+```{r iv-descriptives}
+# Fixed effect variables in model
+summary(iv_joined1[,c("total_security","num_victim_5yr", "age_cent", "employed", "male")])
+
+summary(gd[,c("gini_2004_6", "gdppc_2004_6")])
+```
+
+```{r security summary}
+summary(iv_joined1$total_security)
+
+normality_stats(iv_joined1$total_security)
+```
+
+## Larger dataset
+
+To give a clearer picture of the data being excluded, data exploration will first be presented for the more complete dataset, then presented with the smaller subset.
+
+### Influential observations
+
+```{r influence screen, warning=F, message=FALSE, echo=FALSE}
+gd$country <- as.character(gd$country)
+
+victim_age <- ggplot(iv_joined1, aes(x = age_cent, y = num_victim_5yr)) +
+    geom_point(alpha = .02, position = "jitter", color = "#40B0A6") + geom_smooth(alpha = .25, color = "red", span = 1.25) + geom_smooth(method = "lm", alpha = .25) + theme_minimal()+ ggtitle("Age & victimization")
+
+
+gini_gdp_full <- gd %>% 
+  mutate(cooks = cooks.distance(lm(gini_2004_6 ~ gdppc_2004_6)),
+         outlier_country = ifelse(cooks > 4*mean(cooks), country, NA)) %>%
+  ggplot(aes(x = gini_2004_6, y = gdppc_2004_6, label = outlier_country)) +
+  geom_point(position = "jitter") + geom_smooth(alpha = .25, color = "red", span = 1.25) + geom_smooth(method = "lm", alpha = .25) + ggtitle("Gini & GDP - Full") + theme_minimal() + coord_cartesian(xlim = c(20, 65), ylim = c(-10000, 85000)) + ggrepel::geom_label_repel()
+
+
+# victim GINI plot with outliers
+victim_gini_full <- gd %>% 
+  mutate(cooks = cooks.distance(lm(num_victim_5yr ~ gini_2004_6)),
+         outlier_country = ifelse(cooks > 4*mean(cooks), country, NA)) %>%
+  ggplot(aes(x = gini_2004_6, y = num_victim_5yr, label = outlier_country)) +
+  geom_point(position = "jitter") + geom_smooth(alpha = .25, color = "red", span = 1.5) + geom_smooth(method = "lm", alpha = .25) + ggtitle("Victimization & Gini - Full") + theme_minimal() + coord_cartesian(xlim = c(20, 65), ylim = c(.25, 1.125)) + ggrepel::geom_label_repel()
+
+
+# victim GDP plot with outliers
+victim_gdp_full <- gd %>% 
+  mutate(cooks = cooks.distance(lm(num_victim_5yr ~ gdppc_2004_6)),
+         outlier_country = ifelse(cooks > 4*mean(cooks), country, NA)) %>%
+  ggplot(aes(x = gdppc_2004_6, y = num_victim_5yr, label = outlier_country)) +
+  geom_point(position = "jitter") + geom_smooth(alpha = .25, color = "red", span = 1.25) + geom_smooth(method = "lm", alpha = .25) + ggtitle("Victimization & GDP - Full") + theme_minimal() + coord_cartesian(xlim = c(0, 85000), ylim = c(.25, 1.125)) + ggrepel::geom_label_repel(label.size = 0.02)
+
+
+gridExtra::grid.arrange(victim_age, victim_gini_full,victim_gdp_full, gini_gdp_full, nrow = 2, ncol=2)
+
+```
+
+### Model-based exploration
+
+Now there are obviously some heavy tails in this data.
+
+```{r estimation preview2, warning=T, message=FALSE}
+# call basic unweighted model
+summary(lme1)
+```
+
+Further seen in the normality statistics for the residuals - high skewness and kurtosis
+
+```{r model skewness kurtosis,  warning=F, message=FALSE}
+moments::skewness(resid(lme1))
+moments::kurtosis(resid(lme1))
+```
+
+Indeed, this model's residuals are definitely not normally-distributed, with a skewness of `r round(moments::skewness(resid(lme1)),2)`, and a kurtosis of *`r round(moments::kurtosis(resid(lme1)),2)`.* However, this is not yet the time to examine the residual plots - we need to explore and treat any potential influential observations that might be exacerbating
+
+> Note that this is based on simple aggregates. It is not based on empirical Bayesian estimates Doesn't take sampling variation due to sampling of into account Therefore a rough guide, but only rough
+
+#### Cook's distance ( R package influence.ME )
+
+```{r cooksd model, warning=F, message=FALSE, fig.show="hold", out.width="50%"}
+# influential cases (Cook's Distance. Any values over 1 are likely to be significant outliers)
+cooksD <- cooks.distance(lme1)
+summary(cooksD)
+```
+
+```{r cooksd lv2, warning=F, message=FALSE, echo=FALSE, fig.show="hold", out.width="50%"}
+# look for influential observations in nation-level
+plot(cooksD, main="Model-wide Cook's D * BEWARE Y AXIS", ylim=c(0,.01))
+abline(h = 4/nrow(iv_joined1), lty = 2, col = "steelblue") # add cutoff line
+abline(h = 4*mean(cooksD, na.rm=T), col="red") 
+
+
+# nation_cook <- cooks.distance(lm(gini_2004_6 ~ gdppc_2004_6, gd))
+# 
+# plot(nation_cook, main="Nation-level (Gini ~ GDP) Cook's D", ylim=c(0,1))
+# abline(h = 4/nrow(gd), lty = 2, col = "steelblue") # add cutoff line
+# abline(h = 4*mean(nation_cook, na.rm=T), col="red") 
+# text(x=1:length(nation_cook)+1, y=nation_cook, labels=ifelse(nation_cook>4*mean(nation_cook, na.rm=T), gd$country,""), col="red")
+
+victim_nation_cook <- cooks.distance(lm(num_victim_5yr ~ gini_2004_6 + gdppc_2004_6, gd))
+
+plot(victim_nation_cook, main="Cook's D, Victimization ~ Gini + GDP", ylim=c(0,1))
+abline(h = 4/nrow(gd), lty = 2, col = "steelblue") # add cutoff line
+abline(h = 4*mean(victim_nation_cook, na.rm=T), col="red") 
+text(x=1:length(victim_nation_cook)+1, y=victim_nation_cook, labels=ifelse(victim_nation_cook>4*mean(victim_nation_cook, na.rm=T), gd$country,""), col="red") 
+
+ 
+ # lablist.x<-gd$country
+# axis(1, at=seq(1, 31, by=1), labels = lablist.x)
+# text(x = seq(0, 31, by=1),par("usr")[3] - 0.45, labels = lablist.x, srt = 45, pos = 2, xpd = FALSE)
+
+
+ 
+ # add labels
+# 
+# axis(1, by=1, at = 1:31, labels = gd$country)
+
+# 
+# gd %>% 
+#   mutate(cooks = cooks.distance(lm(gini_2004_6 ~ gdppc_2004_6)),
+#          outlier_country = ifelse(cooks > 4/nrow(.), country, NA)) %>% 
+#   ggplot(aes(x = gini_2004_6, y = gdppc_2004_6, label = outlier_country)) +
+#   geom_point() + ggrepel::geom_label_repel()
+
+```
+
+A model-wide Cook's D shows that any given observation has a small influence on the entire model - to be expected with such a large sample. This is why it's important to break the analysis of influential variables into multiple levels
+
+We can see that level-2 analysis yields much larger Cook's D values. The cooks distance values are all well under 1. Importantly, this is the same for the nation-level variables; they have a smaller sample size - and are thus the more susceptible to influential observations.
+
+**However, there are a few observations at nation-level that exceed the 4/n threshold, and some that exceed 0.5. Generally, there are changes in the slope, but ultimately the direction doesn't change**
+
+## Handling influential observations - Winzorization
+
+Since these influential observations are not a mistake - but rather truly extreme data, we will not delete the data, but instead winzorize these extreme values.
+
+```{r winzorize descriptives, warning=F, message=FALSE, echo=FALSE, fig.show="hold", out.width="50%"}
+
+
+# iv_joined1[["num_victim_5yr_winz"]] <-  DescTools::Winsorize(iv_joined1[["num_victim_5yr"]])
+# 
+# 
+# iv_joined1[["gdppc_2004_6_winz"]] <-  DescTools::Winsorize(iv_joined1[["gdppc_2004_6"]])
+# 
+# iv_joined1[["gdppc_2004_6_wc"]] <-  iv_joined1[["gdppc_2004_6_winz"]] - mean(iv_joined1[["gdppc_2004_6_winz"]])
+# 
+# iv_joined1[["gdppc_2004_6_scale"]] <- scale(iv_joined1[["gdppc_2004_6"]])
+# 
+# iv_joined1[["gdppc_2004_6_ws"]] <- scale(iv_joined1[["gdppc_2004_6_winz"]])
+# 
+# 
+# iv_joined1[["security_winz"]] <-  DescTools::Winsorize(iv_joined1$total_security)
+# 
+
+iv_joined1[,c("num_victim_5yr", "num_victim_5yr_winz", "gdppc_2004_6", "gdppc_2004_6_winz", "gini_2004_6_cent", "gini_2004_6_winz")] %>%
+  summary()
+
+gd[,c("gdppc_2004_6", "gdppc_2004_6_winz", "gini_2004_6", "gini_2004_6_winz")] %>%
+  summary()
+
+
+```
+
+Dramatic changes to the max values, less-so for the mean values (with the exception of number of victimizations)
+
+```{r winzorize histograms, warning=F, message=FALSE, echo=FALSE}
+
+gridExtra::grid.arrange(
+
+
+hist_plot(iv_joined1,num_victim_5yr,"Regular number of victimizations"),
+hist_plot(iv_joined1,num_victim_5yr_winz,"Winzorized number of victimizations"),
+
+hist_plot(iv_joined1,total_security,"Regular security consumption"),
+hist_plot(iv_joined1,security_winz,"Winzorized security consumption"),
+
+
+hist_plot(gd,gdppc_2004_6,"Regular GDP"),
+hist_plot(gd,gdppc_2004_6_winz,"Winzorized GDP"),
+
+hist_plot(gd,gini_2004_6,"Regular Gini"),
+hist_plot(gd,gini_2004_6_winz,"Winzorized Gini"),
+
+nrow = 4, ncol=2)
+
+```
+
+### Multicolinnearity
+
+-   **Check**: VIF/tolerances
+-   **Fix** remove values \>= 5
+
+```{r VIF1, warning=F, message=FALSE}
+performance::check_collinearity(lme1)
+
+#car::vif(lme1) # display VIF values
+```
+
+## Focal dataset
+
+```{r descriptives}
+# Fixed effect variables in model
+summary(mod_joined1[,c("num_victim_5yr", "age_cent", "employed", "male")])
+```
+
+```{r mod-descriptives, echo=F}
+summary(mod_joined1[,c("num_victim_5yr", "age_cent", "employed", "male")])
+
+mod_joined1[,vic_var_assault] <- lapply(mod_joined1[,vic_var_assault], factor)
+
+summary(mod_joined1[,vic_var_assault])
+
+mod_joined1[,prevention_min2][is.na(mod_joined1[,prevention_min2])] <- 0
+mod_joined1[,prevention_min2] <- lapply(mod_joined1[,prevention_min2], factor)
+
+summary(mod_joined1[,prevention_min2]) %>%
+  kbl(booktabs = T) %>%
+  kable_styling(latex_options = c("striped"))
+
+summary(gd_mod[,c("gini_2004_6", "gdppc_2004_6")])
+```
+
+### Influential observations
+
+```{r mod-influence screen, warning=F, message=FALSE, echo=FALSE}
+
+gd_mod$country <- as.character(gd_mod$country)
+
+
+victim_age <- ggplot(mod_joined1, aes(x = age_cent, y = num_victim_5yr)) +
+    geom_point(alpha = .02, position = "jitter", color = "#40B0A6") + geom_smooth(alpha = .25, color = "red", span = 1.25) + geom_smooth(method = "lm", alpha = .25) + theme_minimal()+ ggtitle("Age & victimization")
+
+
+gini_gdp_full <- gd_mod %>% 
+  mutate(cooks = cooks.distance(lm(gini_2004_6 ~ gdppc_2004_6)),
+         outlier_country = ifelse(cooks > 4*mean(cooks), country, NA)) %>%
+  ggplot(aes(x = gini_2004_6, y = gdppc_2004_6, label = outlier_country)) +
+  geom_point(position = "jitter") + geom_smooth(alpha = .25, color = "red", span = 1.25) + geom_smooth(method = "lm", alpha = .25) + ggtitle("Gini & GDP - Full") + theme_minimal() + coord_cartesian(xlim = c(20, 65), ylim = c(-10000, 85000)) + ggrepel::geom_label_repel()
+
+
+# victim GINI plot with outliers
+victim_gini_full <- gd_mod %>% 
+  mutate(cooks = cooks.distance(lm(num_victim_5yr ~ gini_2004_6)),
+         outlier_country = ifelse(cooks > 4*mean(cooks), country, NA)) %>%
+  ggplot(aes(x = gini_2004_6, y = num_victim_5yr, label = outlier_country)) +
+  geom_point(position = "jitter") + geom_smooth(alpha = .25, color = "red", span = 1.5) + geom_smooth(method = "lm", alpha = .25) + ggtitle("Victimization & Gini - Full") + theme_minimal() + coord_cartesian(xlim = c(20, 65), ylim = c(.25, 1.125)) + ggrepel::geom_label_repel()
+
+
+# victim GDP plot with outliers
+victim_gdp_full <- gd_mod %>% 
+  mutate(cooks = cooks.distance(lm(num_victim_5yr ~ gdppc_2004_6)),
+         outlier_country = ifelse(cooks > 4*mean(cooks), country, NA)) %>%
+  ggplot(aes(x = gdppc_2004_6, y = num_victim_5yr, label = outlier_country)) +
+  geom_point(position = "jitter") + geom_smooth(alpha = .25, color = "red", span = 1.25) + geom_smooth(method = "lm", alpha = .25) + ggtitle("Victimization & GDP - Full") + theme_minimal() + coord_cartesian(xlim = c(0, 85000), ylim = c(.25, 1.125)) + ggrepel::geom_label_repel(label.size = 0.02)
+
+
+
+ 
+# victim_gini_full <- ggplot(gd, aes(x = gini_2004_6, y = num_victim_5yr)) +
+#     geom_point() + geom_smooth(alpha = .25, color = "red", span = 1.25) + geom_smooth(method = "lm", alpha = .25) + 
+#     theme_minimal() + ggtitle("Victimization & Gini - Full")  + coord_cartesian(xlim = c(20, 65), ylim = c(.25, 1.25))
+
+# 
+# 
+# victim_gdp_full <- ggplot(gd, aes(x = gdppc_2004_6, y = num_victim_5yr)) +
+#     geom_point() + geom_smooth(alpha = .25, color = "red", span = 1.25) + geom_smooth(method = "lm", alpha = .25) + 
+#     theme_minimal() + ggtitle("Victimization & GDP - Full")  + coord_cartesian(xlim = c(1500, 85000), ylim = c(.25, 1.25))
+
+gridExtra::grid.arrange(victim_age, victim_gini_full,victim_gdp_full, gini_gdp_full, nrow = 2, ncol=2)
+
+```
+
+### Variable exploration
+
+### Model-based exploration
+
+Now there are obviously some heavy tails in this data.
+
+```{r basic-mod-summ}
+# call basic unweighted model
+summary(lme_mod1)
+```
+
+Further seen in the normality statistics for the residuals - high skewness and kurtosis
+
+```{r mod-model skewness kurtosis,  warning=F, message=FALSE}
+moments::skewness(resid(lme_mod1))
+moments::kurtosis(resid(lme_mod1))
+```
+
+#### Cook's distance ( R package influence.ME )
+
+```{r mod-cooksd model, warning=F, message=FALSE, fig.show="hold", out.width="50%"}
+# influential cases (Cook's Distance. Any values over 1 are likely to be significant outliers)
+cooksD <- cooks.distance(lme_mod1)
+summary(cooksD)
+```
+
+```{r mod-cooksd lv2, warning=F, message=FALSE, echo=FALSE, fig.show="hold", out.width="50%"}
+# look for influential observations in nation-level
+plot(cooksD, main="Model-wide Cook's D * BEWARE Y AXIS", ylim=c(0,.01))
+abline(h = 4/nrow(mod_joined1), lty = 2, col = "steelblue") # add cutoff line
+abline(h = 4*mean(cooksD, na.rm=T), col="red") 
+
+
+# nation_cook <- cooks.distance(lm(gini_2004_6 ~ gdppc_2004_6, gd))
+# 
+# plot(nation_cook, main="Nation-level (Gini ~ GDP) Cook's D", ylim=c(0,1))
+# abline(h = 4/nrow(gd), lty = 2, col = "steelblue") # add cutoff line
+# abline(h = 4*mean(nation_cook, na.rm=T), col="red") 
+# text(x=1:length(nation_cook)+1, y=nation_cook, labels=ifelse(nation_cook>4*mean(nation_cook, na.rm=T), gd$country,""), col="red")
+
+victim_nation_cook <- cooks.distance(lm(num_victim_5yr ~ gini_2004_6 + gdppc_2004_6, gd_mod))
+
+plot(victim_nation_cook, main="Cook's D, Victimization ~ Gini + GDP", ylim=c(0,1))
+abline(h = 4/nrow(gd_mod), lty = 2, col = "steelblue") # add cutoff line
+abline(h = 4*mean(victim_nation_cook, na.rm=T), col="red") 
+text(x=1:length(victim_nation_cook)+1, y=victim_nation_cook, labels=ifelse(victim_nation_cook>4*mean(victim_nation_cook, na.rm=T), gd_mod$country,""), col="red") 
+
+ 
+ # lablist.x<-gd$country
+# axis(1, at=seq(1, 31, by=1), labels = lablist.x)
+# text(x = seq(0, 31, by=1),par("usr")[3] - 0.45, labels = lablist.x, srt = 45, pos = 2, xpd = FALSE)
+
+
+ 
+ # add labels
+# 
+# axis(1, by=1, at = 1:31, labels = gd$country)
+
+# 
+# gd %>% 
+#   mutate(cooks = cooks.distance(lm(gini_2004_6 ~ gdppc_2004_6)),
+#          outlier_country = ifelse(cooks > 4/nrow(.), country, NA)) %>% 
+#   ggplot(aes(x = gini_2004_6, y = gdppc_2004_6, label = outlier_country)) +
+#   geom_point() + ggrepel::geom_label_repel()
+
+```
+
+## Handling influential observations - Winzorization
+
+Since these influential observations are not a mistake - but rather truly extreme data, we will not delete the data, but instead winzorize these extreme values.
+
+```{r mod-winzorize descriptives, warning=F, message=FALSE, echo=FALSE, fig.show="hold", out.width="50%"}
+
+# mod_joined1[["num_victim_5yr_winz"]] <-  DescTools::Winsorize(mod_joined1[["num_victim_5yr"]])
+# 
+# mod_joined1[["gdppc_2004_6_winz"]] <-  DescTools::Winsorize(mod_joined1[["gdppc_2004_6"]])
+# 
+# mod_joined1[["gdppc_2004_6_wc"]] <-  mod_joined1[["gdppc_2004_6_winz"]] - mean(mod_joined1[["gdppc_2004_6_winz"]])
+# 
+# mod_joined1[["gdppc_2004_6_scale"]] <- scale(mod_joined1[["gdppc_2004_6"]])
+# 
+# mod_joined1[["gdppc_2004_6_ws"]] <- scale(mod_joined1[["gdppc_2004_6_winz"]])
+# 
+# 
+# mod_joined1[["security_winz"]] <-  DescTools::Winsorize(mod_joined1$total_security)
+
+
+mod_joined1[,c("num_victim_5yr", "num_victim_5yr_winz", "gdppc_2004_6", "gdppc_2004_6_winz", "gini_2004_6_cent", "gini_2004_6_winz")] %>%
+  summary()
+```
+
+```{r mod-winzorize histograms, warning=F, message=FALSE, echo=FALSE}
+gridExtra::grid.arrange(
+
+hist_plot(mod_joined1,num_victim_5yr,"Regular number of victimizations"),
+hist_plot(mod_joined1,num_victim_5yr_winz,"Winzorized number of victimizations"),
+
+hist_plot(mod_joined1,total_security,"Histogram of security consumption"),
+hist_plot(mod_joined1,security_winz,"Histogam of Winzorized security consumption"),
+
+
+hist_plot(gd_mod,gdppc_2004_6,"Regular GDP"),
+hist_plot(gd_mod,gdppc_2004_6_winz,"Winzorized GDP"),
+
+hist_plot(gd_mod,gini_2004_6,"Regular Gini"),
+hist_plot(gd_mod,gini_winz,"Winzorized Gini"),
+
+nrow = 4, ncol=2)
+
+```
+
+```{r hist-info, warning=F, message=FALSE, fig.show='hide'}
+hist_plot(mod_joined1, total_security, "Histogram of Total Security")
+ggsave(here::here("figures", "security_hist.png"),
+       height = 3)
+
+hist_plot(mod_joined1, num_victim_5yr_assault, "Histogram of victimizations over past 5 years")
+ggsave(here::here("figures", "victim_hist.png"),
+       height = 3)
+```
+
+### Multicolinnearity
+
+-   **Fix** remove values \>= 5
+
+```{r mod-VIF1, warning=F, message=FALSE}
+performance::check_collinearity(lme_mod1)
+
+#car::vif(lme_mod1) # display VIF values
+```
+
+# Limitations
+
+The most notable weakness is that this is data from WEIRD countries. Other, less WEIRD countries (e.g., phillipines, nigeria, india) are better represented throughout sweeps 2 to 4
+
+-   Unaccounted third variables (e.g., corruption)
+
+Small clusters, limited representativeness.
+
+# References
