@@ -308,7 +308,7 @@ Indeed, this is dependent variable is definitely not normal, with a skewness of 
 
 With high sample sizes, their analyses found that even dramatic violations of normality assumptions (gaussian and binomial distributions) had no impact on Type I errors
 
-```{r other distributions, warning=F, message=FALSE, echo=FALSE, results='hide'}
+```{r poigam, warning=F, message=FALSE, echo=FALSE, results='hide'}
 # https://www.juliapilowsky.com/2018/10/19/a-practical-guide-to-mixed-models-in-r/
 
 # # unexpected missingness exclusion

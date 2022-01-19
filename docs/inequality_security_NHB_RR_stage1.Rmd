@@ -72,9 +72,11 @@ r_refs("r-references.bib")
 # trackdown::update_file(here::here("docs","inequality_security_NHB_RR_stage1.Rmd"),hide_code=T)
   
 load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/iv_2005.RData")
+load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/icvs_solo_datafiles.RData")
 
 load(here::here("output", "icvs_output.RData"))
 load(here::here("output", "pretest_output.RData"))
+
 
 source(here::here("scripts", "manuscript_funs.r"), local = knitr::knit_global())
 ```
@@ -95,11 +97,11 @@ Income and wealth inequalities have risen sharply in the US in the past 30 years
 
 Two accounts have been proposed to explain how population-level inequality influences risk-taking in individuals. Both of which follow from risk-sensitivity theory, which predicts that organisms will take risks when more predictable strategies cannot meet the organism's goals (e.g., starvation thresholds). Accordingly, inequality fosters risk-taking by increasing the distance between individuals and their goals. First, inequality increases risk-taking through *absolute deprivation*; unequal societies tend to have more poverty, and poor people are more likely to take risks to meet their basic needs [@pridemore2008]. Second, risk-taking can be a response to envy (or *relative deprivation*), where even well-off individuals feel disadvantaged when compared to others, then take risks in an attempt to keep up with peers and a socially-defined reference point [@mishra2017].
 
-Despite evidence for inequality's role in increasing risk-taking, simulation, cross-country, and panel data suggest that inequality also fosters a special case of risk aversion: low social trust [@knack1997; @zak2001; @berggren2006; @leigh2006; @bjørnskov2007; @wilkinson2010; @elgar2010; @barone2016; @decourson2021]. For instance, @barone2016 found that among OECD countries, inequality is associated with lower country-level trust, as computed from the Wolrd Values Survey. Several theoretical streams have emerged to explain how inequality reduces trust. Each of these explanations are limited to certain contexts; for example, ranging from changes in intergroup contact, opportunity costs of vigilance, and incentives for antisocial behaviour [reviewed in @jordahl2007].
+Despite evidence for inequality's role in increasing risk-taking, simulation, cross-country, and panel data suggest that inequality also fosters a special case of risk aversion: low social trust [@knack1997; @zak2001; @berggren2006; @leigh2006; @bjørnskov2007; @wilkinson2010; @elgar2010; @barone2016; @decourson2021]. For instance, @barone2016 found that among OECD countries, inequality is associated with lower country-level trust, as computed from the World Values Survey. Several theoretical streams have emerged to explain how inequality reduces trust. Each of these explanations are limited to certain contexts; for example, ranging from changes in intergroup contact, opportunity costs of vigilance, and incentives for antisocial behaviour [reviewed in @jordahl2007].
 
 Currently, the most rigorous investigation of how inequality impacts distrust in populations is found in a simulation study by @decourson2021. They found that in unequal environments, worse-off individuals will tend to be in poverty, and will try to exploit cooperative groups (as suggested by risk-sensitivity theory), leading others in a population to eventually avoid cooperation altogether. @decourson2021's theory is explicitly focused on poverty (i.e. absolute deprivation). However, in many instances, poverty and inequality do not co-occur. For instance, some workplaces and neighborhoods have little to no absolute deprivation, but they can still exhibit substantial stratification; in such a circumstance, @decourson2021's compositional model of inequality would not predict any reduced trust. We argue that considerations of others' *relative deprivation* can help to extend this inequality-trust theory to other important contexts.
 
-People appear to demonstrate an aversion to being the subject of social comparisons and feelings of envy. Data from small-scale preindustrial societies suggests that many individuals hold "evil eye beliefs;" superstitions that a mere envious glance can cause material harm. Moreover, these beliefs are most prevalent in societies with high wealth inequality [@gershman2015a]. Likewise, a major feature of scandinavian culture is the "Jante Law" (or Janteloven/Jantelagen), which explicitly discourages individual superiority, ambition, and nonconformity. [e.g., "You musn't think you are anything special;" @sandemose1936]. Anglo-Saxon societies refer to the 'cutting down' of 'tall poppies', and in Asian cultures, 'the nail that stands out gets hammered down'
+People appear to demonstrate an aversion to being the subject of social comparisons and feelings of envy. Data from small-scale preindustrial societies suggests that many individuals hold "evil eye beliefs;" superstitions that a mere envious glance can cause material harm. Moreover, these beliefs are most prevalent in societies with high wealth inequality [@gershman2015]. Likewise, a major feature of scandinavian culture is the "Jante Law" (or Janteloven/Jantelagen), which explicitly discourages individual superiority, ambition, and nonconformity. [e.g., "You musn't think you are anything special;" @sandemose1936]. Anglo-Saxon societies refer to the 'cutting down' of 'tall poppies', and in Asian cultures, 'the nail that stands out gets hammered down'
 
 If envious peers are more likely to act spitefully and take risks, being able to anticipate or detect disparities among peers may be helpful in protecting oneself from harmful behaviours. These patterns of envy aversion seem adaptive when considering the risk- and conflict- inducing effects of inequality. Indeed, theories have been proposed that predict a "fear-of-envy" equilibrium, where concerns over partner's destructive envy can reduce people's likelihood to engage in wealth-creating behaviours [@gershman2014; @brams2005].
 
@@ -151,7 +153,6 @@ When predicting security spending, A pretest of n=`r screened_n` crowdsourced (P
 
 <!-- participants has already been conducted to find which values of base successful thefts and security prices yielded a favourable distribution in security consumption, while avoiding ceiling/floor effects. After examining the data (Figure @ref(fig:pretest-splitplot)), baseline probabilities of successful thefts and security price had  -->
 
-
 ### Measurement and variables (Study 1)
 
 Throughout these experiments, participants will be asked to choose how many units of a security product they wish to consume, ranging from 0 to 50. For the purposes of analysis and interpretation, security spending will serve as the final dependent variable. Security spending will be computed by multiplying the number of security units consumed by the good's per-unit cost, in this case, \$0.02.
@@ -180,7 +181,6 @@ Given the unknown size of the hypothesized effect, this study will target an eff
 
 Figures \@ref(fig:design) and \@ref(fig:powerplot) display the pattern of means and per-condition sample size thresholds to obtain 95% power. Additionally, see Tables \@ref(tab:anovaexact) and \@ref(tab:pairwiseexact) for the power and effect sizes of the ANOVA and pairwise comparisons, respectively.
 
-
 <!-- distance values  of 4 times the sample's mean cook's distance. -->
 
 #### Hypotheses (Study 1c)
@@ -194,7 +194,6 @@ For a visual breakdown of hypotheses, see Figures \@ref(fig:concept-modmed) and 
 ##### Moderated mediation (Study 1c)
 
 #### (Analysis plan - Study 1c)
-
 
 ### Study 1d: Meritocracy
 
@@ -257,14 +256,14 @@ Including all three of these variables yields k = `r sum(summary(iv_2005_mod$cou
 Security consumption (*M* = `r mean(iv_2005_mod$total_security)`, *SD* = `r sd(iv_2005_mod$total_security)`) has been computed by, summing respondents' self-reported ownership of `r as.english(length(prevention_min2))` different preventative measures: `r paste(prevention_min2, collapse = ', ')`. This variable excludes several security items in the ICVS due to missing data, such as owning a watch dog, having surveillance arrangements with neighbors, and purchasing insurance against criminal activities.
 
 <!-- a burglar alarm, special door locks, special grills, a high perimeter fence, and caretaker security. -->
-format(cell_n_01*4,big.mark = ",", scientific = FALSE)
-#### Predictor variables
 
-The focal model will include predictor variables at country- and individual-levels: at the nation level, 1) nation-level inequality (gini - disposable income; *M* = `r mean(gd$gini_2004_6)`, *SD* = `r sd(gd$gini_2004_6)` expenditure-side GDP per capita (matched purchasing power parity; *M* = `r format(round(mean(gd$gdppc_2004_6)),big.mark = ",", scientific = FALSE)`, *SD* = `r format(round(sd(gd$gdppc_2004_6)),big.mark = ",", scientific = FALSE)`), and 3) nation-level self-reported crime victimization (*M* = `r mean(gd$num_victim_5yr_assault)`, *SD* = `r sd(gd$num_victim_5yr_assault)`); and at the respondent level: 1) age , (five-year increments; *M* = `r mean(iv_2005_mod$age_num)`, *SD* = `r sd(iv_2005_mod$age_num)`), 2) gender (`r round(summary(iv_2005_mod$gender)["female"]/nrow(iv_2005_mod)*100,0)`% female), 3) employed (`r round(summary(iv_2005_mod$employed)[1]/nrow(iv_2005_mod)*100,0)`% employed), 4) income quartile (*M* = `r mean(iv_2005_mod$income_quartile)`, *SD* = `r sd(iv_2005_mod$income_quartile)`), 5) relationship status (`r round(summary(iv_2005_mod$partnered)[1]/nrow(iv_2005_mod)*100,0)`% partnered), 6) number of individual victimization experiences (*M* = `r mean(iv_2005_mod$num_victim_5yr_assault)`, *SD* = `r sd(iv_2005_mod$num_victim_5yr_assault)`), and 7) perceived police effectiveness (*M* = `r mean(iv_2005_mod$police_effective)`, *SD* = `r sd(iv_2005_mod$police_effective)`, range = `r min(iv_2005_mod$police_effective)`-`r max(iv_2005_mod$police_effective)`).
+format(cell_n\_01\*4,big.mark = ",", scientific = FALSE) \#\#\#\# Predictor variables
+
+The focal model will include predictor variables at country- and individual-levels: at the nation level, 1) nation-level inequality (gini - disposable income; *M* = `r mean(gd_mod$gini_2004_6)`, *SD* = `r sd(gd_mod$gini_2004_6)` expenditure-side GDP per capita (matched purchasing power parity; *M* = `r format(round(mean(gd_mod$gdppc_2004_6)),big.mark = ",", scientific = FALSE)`, *SD* = `r format(round(sd(gd_mod$gdppc_2004_6)),big.mark = ",", scientific = FALSE)`), and 3) nation-level self-reported crime victimization (*M* = `r mean(gd_mod$num_victim_5yr_assault)`, *SD* = `r sd(gd_mod$num_victim_5yr_assault)`); and at the respondent level: 1) age , (five-year increments; *M* = `r mean(iv_2005_mod$age_num)`, *SD* = `r sd(iv_2005_mod$age_num)`), 2) gender (`r round(summary(iv_2005_mod$gender)["female"]/nrow(iv_2005_mod)*100,0)`% female), 3) employed (`r round(summary(iv_2005_mod$employed)[1]/nrow(iv_2005_mod)*100,0)`% employed), 4) income quartile (*M* = `r mean(iv_2005_mod$income_quartile)`, *SD* = `r sd(iv_2005_mod$income_quartile)`), 5) relationship status (`r round(summary(iv_2005_mod$partnered)[1]/nrow(iv_2005_mod)*100,0)`% partnered), 6) number of individual victimization experiences (*M* = `r mean(iv_2005_mod$num_victim_5yr_assault)`, *SD* = `r sd(iv_2005_mod$num_victim_5yr_assault)`), and 7) perceived police effectiveness (*M* = `r mean(iv_2005_mod$police_effective)`, *SD* = `r sd(iv_2005_mod$police_effective)`, range = `r min(iv_2005_mod$police_effective)`-`r max(iv_2005_mod$police_effective)`).
 
 "%female","%employed", "partnered
 
-See Table \@ref(tab:s2desc-tab) for descriptive statistics 
+See Table \@ref(tab:s2desc-tab) for descriptive statistics
 
 As an index of inequality, the Gini coefficient is most intuitively defined as the average difference in income between all pairs in a population, divided by twice the average income in the population. The SWIID consists of 100 separate dataframes, with varying gini values to reflect the values' uncertainty (i.e., larger standard errors) when making comparisons across different countries or time periods.
 
@@ -292,11 +291,9 @@ As a proof of concept, the proposed analyses have been conducted on individuals'
 
 In this case, `r #model_nonconvergence` of 100 analyzed dataframes failed to converge (preventing calculation of standard errors). As such, mixed ordinal regression without frequency weighting was conducted, and had no convergence issues.
 
-
 ### Full descriptions must be provided of any outcome-neutral criteria that must be met for successful testing of the stated hypotheses.
 
 Such quality checks might include the absence of floor or ceiling effects in data distributions, positive controls, or other quality checks that are orthogonal to the experimental hypotheses.
-
 
 \newpage
 
@@ -324,8 +321,6 @@ Interactive demos of experimental games can be accessed at [(https://security-pr
 
 \newpage
 
-
-
 # Acknowledgements
 
 The funders had no role in study design, data collection and analysis, decision to publish or preparation of the manuscript.
@@ -342,25 +337,23 @@ The authors declare no competing interests.
 
 # Figures & Figure captions
 
-
 (ref:pretest-splitplot) Means (95% CI) and distributions for pretest. n=`r screened_n`, within-subjects
 
 ```{r pretest-splitplot, echo=FALSE, out.width='100%', fig.cap="(ref:pretest-splitplot)"}
 knitr::include_graphics(here::here("figures", "spending_pretest_splitplot.png"))
 ```
 
+(ref:design) Study design for a priori power analysis for two-level experiments (Study 1a and b). Note: Max possible value is \$1.00; bars indicate +/-1 *SD*
 
-
-(ref:design) Study design for a priori power analysis for two-level experiments (Study 1a and b). Note: Max possible value is \$1.00; bars indicate +/-1 *SD* 
 ```{r l2-design, echo=FALSE, out.width='100%', fig.cap="(ref:design)"}
 knitr::include_graphics(here::here("figures", "l2_design_plot.png"))
 ```
 
 (ref:powerplot2) Per-condition sample size thresholds for 95% power in main effect of inequality for two-level experiments (Study 1a and b). Assuming two-sided testing.
+
 ```{r powerplot2, echo=FALSE, out.width='100%', fig.cap='(ref:powerplot2)'}
 knitr::include_graphics(here::here("figures", "l2powerplot.png"))
 ```
-
 
 ```{r design, echo=FALSE, out.width='100%', fig.cap="(ref:design)"}
 knitr::include_graphics(here::here("figures", "power_design_plot.png"))
@@ -374,15 +367,13 @@ knitr::include_graphics(here::here("figures", "power_design_plot.png"))
 knitr::include_graphics(here::here("figures", "01powerplot.png"))
 ```
 
-
-
 (ref:icvs-security-hist) Histogram for number of security measures (max = `r length(prevention_min2)`). Dotted Line indicates mean (*M* =`r mean(iv_2005_mod$total_security)`
 
 ```{r icvs-security-hist, echo=FALSE, out.width='100%', fig.cap="(ref:icvs-security-hist)"}
 knitr::include_graphics(here::here("figures", "security_hist.png"))
 ```
 
-(ref:icvs-victim-hist) Histogram for number of victimization experiences (max = `r length(vic_var_assault)`). Dotted Line indicates mean (*M* =`r mean(iv_2005_mod$vic_var_assault)`.
+(ref:icvs-victim-hist) Histogram for number of victimization experiences (max = `r length(vic_var_assault)`). Dotted Line indicates mean (*M* =`r mean(iv_2005_mod$num_victim_5yr_assault)`.
 
 ```{r icvs-victim-hist, echo=FALSE, out.width='100%', fig.cap="(ref:icvs-victim-hist)"}
 knitr::include_graphics(here::here("figures", "victim_hist.png"))
@@ -394,8 +385,10 @@ knitr::include_graphics(here::here("figures", "victim_hist.png"))
 knitr::include_graphics(here::here("figures", "ordinal_dotwhisker.png"))
 ```
 
+```{=tex}
 \newpage
 \newpage
+```
 # Tables
 
 ```{r design-table}
@@ -421,7 +414,6 @@ kd <- knitr::kable(design, caption = 'Design table',
 
 landscape(kd, margin = NULL)
 ```
-
 
 ```{r l2anovaexact}
 l2_01_exact$main_results$power <- round(l2_01_exact$main_results$power,2)
@@ -452,15 +444,14 @@ row.names(security_01_exact$pc_results) <- gsub(x = row.names(security_01_exact$
 knitr::kable(round(security_01_exact$pc_results,2), caption = 'Power of pairwise comparisons for 2x2 factorial designs (t-test)', booktabs = TRUE)
 ```
 
-
 ```{r s2desc-tab}
 s2desc_columns <- c("Variable",	"Mean",	"SD")
 
 Variable <- c("gini","gdp","nation-level victimization","age","income quartile", "individual victimizations","police effectiveness","security consumed")
 Mean <-
-  c(round(mean(gd$gini_2004_6),2),
-    format(round(mean(gd$gdppc_2004_6)), big.mark = ",", scientific = FALSE),
-    round(mean(gd$num_victim_5yr_assault),2),
+  c(round(mean(gd_mod$gini_2004_6),2),
+    format(round(mean(gd_mod$gdppc_2004_6)), big.mark = ",", scientific = FALSE),
+    round(mean(gd_mod$num_victim_5yr_assault),2),
     round(mean(iv_2005_mod$age_num),2),
     round(mean(iv_2005_mod$income_quartile),2),
     round(mean(iv_2005_mod$num_victim_5yr_assault),2),
@@ -468,9 +459,9 @@ Mean <-
     round(mean(iv_2005_mod$total_security),2)
     )
 SD <-
-  c(round(sd(gd$gini_2004_6),2),
-    format(round(sd(gd$gdppc_2004_6)), big.mark = ",", scientific = FALSE),
-    round(sd(gd$num_victim_5yr_assault),2),
+  c(round(sd(gd_mod$gini_2004_6),2),
+    format(round(sd(gd_mod$gdppc_2004_6)), big.mark = ",", scientific = FALSE),
+    round(sd(gd_mod$num_victim_5yr_assault),2),
     round(sd(iv_2005_mod$age_num),2),
     round(sd(iv_2005_mod$income_quartile),2),
     round(sd(iv_2005_mod$num_victim_5yr_assault),2),
@@ -502,13 +493,11 @@ tidy_ci %>%
 
 # Supplementary information
 
-
 (ref:modmed) Hypothesized pattern of moderated mediation
 
 ```{r concept-modmed, echo=FALSE, out.width='100%', fig.cap="(ref:modmed)"}
 knitr::include_graphics(here::here("figures", "ineqsec_concepmodmed.jpg"))
 ```
-
 
 ```{r detail-modmed, echo=FALSE, out.width='100%', fig.cap="(ref:modmed)"}
 knitr::include_graphics(here::here("figures", "ineqsec_modmed_detail.jpg"))
