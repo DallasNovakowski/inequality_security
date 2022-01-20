@@ -165,7 +165,7 @@ The first experiment will manipulate high versus low inequality in a hypothetica
 
 #### A priori power analysis (Study 1a)
 
-Using mean and standard deviation values of security expenditure (*M*=`r base_mean`, *SD*=`r base_sd`) from the pretest, an a priori power analysis has been conducted using r package SuperPower [@lakens2021], with `r nsims` simulations. Given the unknown size of the hypothesized effect, this study will target an effect size of partial $\eta^2$ = .01. To achieve 95% power, studies must have a minimum of n = `r l2cell_n_01` participants per cell, or a study-wide total of n=`r format(l2cell_n_01*2,big.mark = ",", scientific = FALSE)`. Figures \@ref(fig:l2-design) and \@ref(fig:powerplot2) display the pattern of means and per-condition sample sizethresholds to obtain 95% power. Additionally, see Tables \@ref(tab:l2anovaexact) and \@ref(tab:l2pairwiseexact) for the power and effect sizes of the ANOVA and pairwise comparisons, respectively.
+Using mean and standard deviation values of security expenditure (*M*=`r base_mean`, *SD*=`r base_sd`) from the pretest, an a priori power analysis has been conducted using r package SuperPower [@lakens2021], with `r nsims` simulations. Given the unknown size of the hypothesized effect, this study will target an effect size of partial $\eta^2$ = .01. To achieve 95% power, studies must have a minimum of n = `r l2cell_n_01` participants per cell, or a study-wide total of n=`r format(l2cell_n_01*2,big.mark = ",", scientific = FALSE)`. Figures \@ref(fig:l2-design) and \@ref(fig:powerplot2) display the pattern of means and per-condition sample size thresholds to obtain 95% power. Additionally, see Tables \@ref(tab:l2anovaexact) and \@ref(tab:l2pairwiseexact) for the power and effect sizes of the ANOVA and pairwise comparisons, respectively.
 
 ### Study 1b: Inequality with real payoffs
 
@@ -253,15 +253,18 @@ Including all three of these variables yields k = `r sum(summary(iv_2005_mod$cou
 
 #### Outcome variable
 
-Security consumption (*M* = `r mean(iv_2005_mod$total_security)`, *SD* = `r sd(iv_2005_mod$total_security)`) has been computed by, summing respondents' self-reported ownership of `r as.english(length(prevention_min2))` different preventative measures: `r paste(prevention_min2, collapse = ', ')`. This variable excludes several security items in the ICVS due to missing data, such as owning a watch dog, having surveillance arrangements with neighbors, and purchasing insurance against criminal activities.
+```{r prev-var-recode, echo = FALSE}
+prevention_min2 <- dplyr::recode(prevention_min2, "prev_burglar_alarm" = "burglar alarm", "prev_special_door_locks" = "special door locks", "prev_special_grills" = "window grills", "prev_high_fence" = "high perimeter fence", "prev_caretaker_security" = "presence of a caretaker who provides security")
+
+```
+
+Security consumption (*M* = `r mean(iv_2005_mod$total_security)`, *SD* = `r sd(iv_2005_mod$total_security)`) has been computed by, summing respondents' self-reported ownership of `r as.english(length(prevention_min2))` different preventative measures: `r glue::glue_collapse(x = prevention_min2, ", ", last = ", and ")`. This variable excludes several security items in the ICVS due to missing data, such as owning a watch dog, having surveillance arrangements with neighbors, and purchasing insurance against criminal activities.
 
 <!-- a burglar alarm, special door locks, special grills, a high perimeter fence, and caretaker security. -->
 
-format(cell_n\_01\*4,big.mark = ",", scientific = FALSE) \#\#\#\# Predictor variables
+#### Predictor variables
 
 The focal model will include predictor variables at country- and individual-levels: at the nation level, 1) nation-level inequality (gini - disposable income; *M* = `r mean(gd_mod$gini_2004_6)`, *SD* = `r sd(gd_mod$gini_2004_6)` expenditure-side GDP per capita (matched purchasing power parity; *M* = `r format(round(mean(gd_mod$gdppc_2004_6)),big.mark = ",", scientific = FALSE)`, *SD* = `r format(round(sd(gd_mod$gdppc_2004_6)),big.mark = ",", scientific = FALSE)`), and 3) nation-level self-reported crime victimization (*M* = `r mean(gd_mod$num_victim_5yr_assault)`, *SD* = `r sd(gd_mod$num_victim_5yr_assault)`); and at the respondent level: 1) age , (five-year increments; *M* = `r mean(iv_2005_mod$age_num)`, *SD* = `r sd(iv_2005_mod$age_num)`), 2) gender (`r round(summary(iv_2005_mod$gender)["female"]/nrow(iv_2005_mod)*100,0)`% female), 3) employed (`r round(summary(iv_2005_mod$employed)[1]/nrow(iv_2005_mod)*100,0)`% employed), 4) income quartile (*M* = `r mean(iv_2005_mod$income_quartile)`, *SD* = `r sd(iv_2005_mod$income_quartile)`), 5) relationship status (`r round(summary(iv_2005_mod$partnered)[1]/nrow(iv_2005_mod)*100,0)`% partnered), 6) number of individual victimization experiences (*M* = `r mean(iv_2005_mod$num_victim_5yr_assault)`, *SD* = `r sd(iv_2005_mod$num_victim_5yr_assault)`), and 7) perceived police effectiveness (*M* = `r mean(iv_2005_mod$police_effective)`, *SD* = `r sd(iv_2005_mod$police_effective)`, range = `r min(iv_2005_mod$police_effective)`-`r max(iv_2005_mod$police_effective)`).
-
-"%female","%employed", "partnered
 
 See Table \@ref(tab:s2desc-tab) for descriptive statistics
 
@@ -271,7 +274,13 @@ As an index of inequality, the Gini coefficient is most intuitively defined as t
 
 The PWT-selected GDP values are adjusted for Purchasing Power Parity, "to compare relative living standards across countries at a single point in time" [@feenstra2015]. Nations' GDP values were divided by their population sizes to yield a per-capita GDP value, which will be used for these analyses.
 
-Self-reported crime victimization will likewise be computed as a count variable for the following items: `r paste(vic_var_assault, collapse = ', ')`, summing `r as.english(length(vic_var_assault))` binary items on respondent's experiences of victimization. This variable will be represented twice in the analyses - once as a nation-average value, and again for the individual respondent.
+```{r vic-var-recode, echo = FALSE}
+vic_var_assault <- dplyr::recode(vic_var_assault, "cartheft_5yrs" = "car thefts", "motortheft_5yrs" = "motor vehicle thefts", "bicyctheft_5yrs" = "bicycle thefts", "burglar_5yrs" = "burglaries", "attempt_5yrs" = "attempted burglaries", "robbery_5yrs" = "robberies", "pers_theft_5yrs" = "thefts", "assault_5yrs"="physical assaults")
+```
+
+Self-reported crime victimization will likewise be computed as a count variable for the following items:
+
+`r glue::glue_collapse(x = vic_var_assault, ", ", last = ", and ")`, summing `r as.english(length(vic_var_assault))` binary items on respondent's experiences of victimization. This variable will be represented twice in the analyses - once as a nation-average value, and again for the individual respondent.
 
 ### Proposed analysis pipeline, including all preprocessing steps, precise description of all planned analyses
 
