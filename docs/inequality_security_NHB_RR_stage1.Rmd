@@ -74,6 +74,8 @@ r_refs("r-references.bib")
 load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/iv_2005.RData")
 load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/icvs_solo_datafiles.RData")
 
+
+
 load(here::here("output", "icvs_output.RData"))
 load(here::here("output", "pretest_output.RData"))
 
@@ -107,9 +109,9 @@ If envious peers are more likely to act spitefully and take risks, being able to
 
 This project will operate under the assumption that the purchase and use of security products is a consumer manifestation of distrust. Currently, most research on the inequality-trust relationship is based on attitudinal measures (REF). While informative tools for otherwise unobservable internal states, these psychological measures provide little information on how trust and distrust manifest in people's behaviours. Security products may thus be informative because security products are one of the few goods that confer little intrinsic value to consumers. Whereas vacations are inherently satisfying, the costs of burglar alarms, sturdy locks, and security cameras are often only worthwhile *if consumers expect that other agents may cause them harm*.
 
-This project aims to test an envy aversion model of distrust and security consumption, which predicts that **H1)** inequality increases distrust (and consequently security consumption) because people expect disadvantaged peers to experience envy. In order to isolate the mechanism of envy, we will also test the prediction that **H2)** effects of inequality on distrust will be smaller when incomes are not visible.
+This project aims to test an envy aversion model of distrust and security consumption, which predicts that **H1)** inequality increases security consumption because people expect disadvantaged peers to experience envy. In order to isolate the mechanism of envy, we will also test the prediction that **H2)** effects of inequality on distrust will be smaller when incomes are not visible.
 
-This theory of envy avoidance also addresses the role of fairness in shaping the type of envy an individual experiences. Benign envy is associated with a motivation to improve oneself, and occurs when an individual believes that the envied person's advantage is deserved . By contrast, malicious envy is characterized by a desire to harm the comparison target, and is elicited when the individual believes that their environment is unfair [@vandeven2012]. Participants are are more likely to engage in helping behaviours when they believe that their partner is frustrated by the disparity and harboring antagonistic motivations [i.e., experiencing malicious envy; @vandeven2010]. Conversely, participants who earned an advantaged position (which is associated with benign envy) tend to be less generous [@hoffman1994]. As such, this project will also test the prediction that **H3)** Inequality will have a smaller effect on security consumption when incomes are earned, and that **H4)** Individuals will consume more security when inequality is the result of group-based favoritism.
+This theory of envy avoidance also addresses the role of fairness in shaping the type of envy an individual experiences. Benign envy is associated with a motivation to improve oneself, and occurs when an individual believes that the envied person's advantage is deserved . By contrast, malicious envy is characterized by a desire to harm the comparison target, and is elicited when the individual believes that their environment is unfair [@vandeven2012]. Participants are are more likely to engage in helping behaviours when they believe that their partner is frustrated by the disparity and harboring antagonistic motivations [i.e., experiencing malicious envy; see @vandeven2010]. Conversely, participants who earned an advantaged position (which is associated with benign envy) tend to be less generous [@hoffman1994]. As such, this project will also test the prediction that **H3)** Inequality will have a smaller effect on security consumption when incomes are earned, and that **H4)** Individuals will consume more security when inequality is the result of group-based favoritism.
 
 This theory of envy aversion makes similar directional predictions as some existing inequality-distrust theories, but makes these predictions under more generalized circumstances. Even in the absence of absolute poverty, larger material incentives for antisocial behaviour, or different opportunity costs, this model would still predict that inequality increases distrust and security consumption, out of the person's efforts to protect themselves against envious reactions. The mechanism of envy aversion is specific to predicting reduced trust towards less wealthy individuals among a reference group. This theory will be tested through a multimethod project of five experiments (Study 1) and one multilevel analysis using the International Crime Victimization Survey [Study 2; @vankesteren2010] to examine the relationship between economic inequality and individual consumption of products that protect users against their neighbors.
 
@@ -123,7 +125,7 @@ Timeline for completion of the study and proposed resubmission date if Stage 1 r
 
 ## Ethics information
 
-All procedures for this project have been approved by the University of Calgary Conjoint Faculties Research Ethics Board (REB 20-1860). For the experimental studies, informed consent was obtained for all participants, who, unless otherwise noted, will be compensated at a rate of \$12.48 CAD/hour.
+All procedures for this project have been approved by the University of Calgary Conjoint Faculties Research Ethics Board (REB 20-1860). For the experimental studies, informed consent will be obtained for all participants, who, unless otherwise noted, will be compensated at a rate of \$12.48 CAD/hour.
 
 For multilevel analyses, the International Crime Victimization Survey, Standardized World Income Inequality Database, and Penn World Tables are publicly-available archival datasets. As such, ethics approval and informed consent was obtained, and compensation disbursed, by the original researchers.
 
@@ -141,7 +143,7 @@ After data collection, participants will be screened based on two attention chec
 
 The Prolific-recruited participants will complete the studies on oTree [@chen2016], an open-source platform for conducting single- and multiplayer experiments and surveys. oTree studies are written largely in html, python, and javascript, which can be saved and shared in their raw code form, allowing for easy sharing, reproduction, and modification of protocols.
 
-The experiments will be conducted in the context of two-player economic game, called the security game [@tambe2011]. In this modification of the security game, participants are paired with an anonymous partner, with each being given an endowment of funds. Then, participants are told that their partner will have the opportunity to try to steal money from them (with failed thievery attempts instead making the partner lose money). After learning this information, participants can spend some of their money on security products, with each unit of security visibly reducing the probability of a successful thievery attempt.
+The experiments will be conducted in the context of two-player economic game, called the security game [@tambe2011]. In this modification of the security game, participants are paired with an anonymous partner, with each being given an endowment of funds (e.g., \$2 each). Then, participants are told that their partner will have the opportunity to try to steal money from them (e.g., \$1 at a 50% chance of success, with failed thievery attempts instead making the partner lose \$1). After learning this information, participants can spend some of their money on security products (e.g., \$0.02 per unit), with each unit of security visibly reducing the probability of a successful thievery attempt (1% reduction per unit).
 
 The security game experiments will take place across five studies, testing the effects of inequality on security consumption (1a), and with real monetary payoffs (1b). Then, experiments will manipulate the visibility of incomes in addition to inequality (1c), and go on to manipulate (hypothetical) stake sizes (1d). The last two experiments will assess the effects of inequality when endowments are due to one's own efforts (versus random; 1e), and whether apparent group-based discrimination increases security consumption under conditions of inequality (1f). In each study, participants will be randomly assigned to a between-subjects conditions.
 
@@ -149,7 +151,7 @@ Economic games examining self-protection are not new. Most notably, @mcevily2012
 
 ### Pilot data (Study 1)
 
-A on n=`r screened_n` crowdsourced (Prolific) participants was conducted to calibrate the price of security (\$0.02 vs. \$0.04) and the baseline likelihood of successful thefts (50%, 60%, 75%). A mixed found no significant effects of baseline likelihood of successful thefts `r inline_extract(pretest_model,"as.numeric(prob)")` nor security price `r inline_extract(pretest_model,"cost")`; Figure \@ref(fig:pretest-splitplot)). This project will use a baseline 50% chance of successful thefts, and each unit of security costing \$0.02. This condition also seems to produce the least skewed data, at `r round(base_skew,2)` (e.g., compared to skew = `r round(skew_groups["75_02"],2)` when probability is 75% and price \$0.02). The pretest had two attention checks and one comprehension check.
+A on n=`r screened_n` crowdsourced (Prolific) participants was conducted to calibrate the price of security (\$0.02 vs. \$0.04) and the baseline likelihood of successful thefts (50%, 60%, 75%). A mixed model found no significant effects of baseline likelihood of successful thefts `r inline_extract(pretest_model,"as.numeric(prob)")` nor security price `r inline_extract(pretest_model,"cost")`; Figure \@ref(fig:pretest-splitplot)). This project will use a baseline 50% chance of successful thefts, and each unit of security costing \$0.02. This condition also seems to produce the least skewed data, at `r round(base_skew,2)` (e.g., compared to skew = `r round(skew_groups["75_02"],2)` when probability is 75% and price \$0.02). The pretest had two attention checks and one comprehension check.
 
 <!-- participants has already been conducted to find which values of base successful thefts and security prices yielded a favourable distribution in security consumption, while avoiding ceiling/floor effects. After examining the data (Figure @ref(fig:pretest-splitplot)), baseline probabilities of successful thefts and security price had  -->
 
@@ -179,21 +181,13 @@ A 2x2 experiment will manipulate high versus low inequality, and visible versus 
 
 Given the unknown size of the hypothesized effect, this study will target an effect size of partial $\eta^2$ = .01. To achieve 95% power, studies must have a minimum of `r cell_n_01` participants per cell, or a study-wide total of n=`r format(cell_n_01*4,big.mark = ",", scientific = FALSE)`. This large sample size is necessary given the possibility of a "no-way" interaction, where only one condition is significantly different from the remainder. In this case, the simple effect of inequality is nullified depending on the moderator. @simonsohn2015 discusses how, in a no-way interaction, samples require at least twice as many subjects per cell as a study that simply aims to show the simple effect.
 
-Figures \@ref(fig:design) and \@ref(fig:powerplot) display the pattern of means and per-condition sample size thresholds to obtain 95% power. Additionally, see Tables \@ref(tab:anovaexact) and \@ref(tab:pairwiseexact) for the power and effect sizes of the ANOVA and pairwise comparisons, respectively.
+For a visual breakdown of hypotheses, see Figures \@ref(fig:concept-modmed) and \@ref(fig:detail-modmed). Figures \@ref(fig:design) and \@ref(fig:powerplot) display the pattern of means and per-condition sample size thresholds to obtain 95% power. Additionally, see Tables \@ref(tab:anovaexact) and \@ref(tab:pairwiseexact) for the power and effect sizes of the ANOVA and pairwise comparisons, respectively.
 
 <!-- distance values  of 4 times the sample's mean cook's distance. -->
-
-#### Hypotheses (Study 1c)
 
 ```{r vis-define-model, eval = FALSE, echo=FALSE}
 m_vis <- lm(security_spending ~ inequality*visibility, data = ineq_vis_data)
 ```
-
-For a visual breakdown of hypotheses, see Figures \@ref(fig:concept-modmed) and \@ref(fig:detail-modmed)
-
-##### Moderated mediation (Study 1c)
-
-#### (Analysis plan - Study 1c)
 
 ### Study 1d: Stake Size
 
@@ -203,11 +197,9 @@ The same inequality*visibility experiment will be conducted as in Study 1c, with
 
 Groups will always be characterized by inequality through some type of currency, whether wealth, income, or status. Indeed, a popular idea is that inequality propels individuals towards productive behaviours (REF). In this line, the presence of inequality is less of an issue compared to the distributional fairness in how the inequality was produced. The next two experiments will test whether distributional fairness moderates the effect of inequality on security consumption. Study 1e again varies inequality (hi/none), but also manipulates whether one's income is allocated **randomly or based on task performance**.
 
-competing hypothesis: deserved superiority will lead to a greater desire to retain relative positioning --\> more consumption - could nullify or reverse
+<!--# competing hypothesis: deserved superiority will lead to a greater desire to retain relative positioning –> more consumption - could nullify or reverse -->
 
-#### Hypotheses
-
-Study 1e will test the hypothesis that a meritocratic distribution of wealth will mitigate the positive effect of inequality on security spending. This hypothesis closely mirrors Study 1c. Study 1e also requires the same amount of statistical power to detect a "no-way" interaction. Using the results from Study 1c's power analysis, Study 1e will seek to test for an effect size of partial $\eta^2$ = .01, with 95% power, with a study-wide total of n=`r format(cell_n_01*4,big.mark = ",", scientific = FALSE)`.
+Study 1e will test the hypothesis that a meritocratic distribution of wealth will mitigate the positive effect of inequality on security spending. This hypothesis closely mirrors Study 1c. Study 1e also requires the same amount of statistical power to detect a "no-way" interaction. Using the results from Study 1c's power analysis, Study 1e will seek to test for an effect size of $\eta_{p}^2$ = .01, with 95% power, with a study-wide total of n=`r format(cell_n_01*4,big.mark = ",", scientific = FALSE)`.
 
 ```{r merit-define-model, eval = FALSE, echo=FALSE}
 m_merit <- lm(security_spending ~ inequality*merit, data = ineq_merit_data)
@@ -215,11 +207,7 @@ m_merit <- lm(security_spending ~ inequality*merit, data = ineq_merit_data)
 
 ### Study 1f: Group membership
 
-As described in the literature review to Study 1e, fairness appears to have its roots in avoiding partiality. Since Study 1e directly compares meritocratic versus random allocation of resources, it does not answer the more fundamental question: do people consume more security goods when inequality is more clearly discriminatory and unfair?
-
-#### Hypotheses
-
-Study 1f will keep a constant presence of inequality, but manipulate whether the partner is a member of an ingroup or outgroup, and whether the incomes are distributed randomly, by an **ingroup third-party**.
+As described in the literature review to Study 1e, fairness appears to have its roots in avoiding partiality. Since Study 1e directly compares meritocratic versus random allocation of resources, it does not answer the more fundamental question: do people consume more security goods when inequality is more clearly discriminatory and unfair? Study 1f will keep a constant presence of inequality, but manipulate whether the partner is a member of an ingroup or outgroup, and whether the incomes are distributed randomly, by an **ingroup third-party**.
 
 ```{r group-define-model, eval = FALSE, echo=FALSE}
 m_group <- lm(security_spending ~ agentic*outgroup, data = ineq_merit_data)
@@ -239,11 +227,11 @@ The relationship between country-level inequality and the consumption of securit
 
 ### Study 2 - Proposed sample characteristics (Sampling plan)
 
-First, indicators of security consumption have been accessed from the International Crime Victimization survey [ICVS, @vankesteren2010], which has surveyed over 300,000 people across `r cleaned_countries` different countries on householders' experiences with crime, policing, crime prevention, and feelings of unsafety. Second, nation-level inequality in disposable income was accessed through the Standardized World Income Inequality Database [SWIID, @solt2020]. The SWIID has been designed to maximize the comparability of income inequality data while maintaining the widest possible coverage across countries and over time. Lastly, countries' expenditure-side real GDP and populations were retrieved from the Penn World Table, [PWT; version 10.0; @feenstra2015].
+First, indicators of security consumption have been accessed from the International Crime Victimization survey [ICVS, @vankesteren2010], which has surveyed over 300,000 people across `r cleaned_countries` different countries on householders' experiences with crime, policing, crime prevention, and feelings of unsafety. Second, nation-level inequality in disposable income was accessed through the Standardized World Income Inequality Database [SWIID, @solt2020]. The SWIID has been designed to maximize the comparability of income inequality data while maintaining the widest possible coverage across countries and over time. Lastly, countries' expenditure-side real GDP and populations were retrieved from the [Penn World Table, PWT; version 10.0; see @feenstra2015].
 
-Although the above datasets extend across multiple years, the current analysis will be limited to observations across 2004-2006. These observations were collected across two distinct sweeps in the ICVS, with one being specific to the European Union. Imposing this restriction yields a sufficient initial number of cases (`r format(sweep5_nrow, big.mark = ",", scientific = FALSE)`) and countries (`r sweep5_countries`) before screening, combined with relative recency of data.
+Although the above datasets extend across multiple years, the current analysis will be limited to observations across 2004-2006. These observations were collected across two distinct sweeps in the ICVS, with one being specific to the European Union. Imposing this restriction yields a sufficient initial number of cases (`r format(sweep5_nrow, big.mark = ",", scientific = FALSE)`) and countries (`r sweep5_countries`) before screening, combined with relative recency of data. By contrast, all data collected by the ICVS between 2010 and 2015 only totals only twelve countries, before screening.
 
-Observations were excluded for participants that refused response on any analysis-relevant measures. Likewise, observations were dropped that had country-wide missing responses on any predictor and outcome measures. Such countries being dropped from analyses include Switzerland (missing security items), Hong Kong (missing age), and Estonia (missing experiences of motortheft).
+Observations were excluded for participants that refused response on any analysis-relevant measures. Likewise, observations were dropped that had country-wide missing responses on any predictor and outcome measures. Such countries being dropped from analyses include Switzerland (missing security items), Hong Kong (missing age), and Estonia (missing relationship status<!--# and experiences of motortheft -->).
 
 Notably, the number of participants and countries dropped from analyses can be heavily impacted by the selection of variables targeted for analyses. For instance, including perceived police effectiveness in any analyses would require dropping the countries of Japan, Peru, and Iceland. Likewise, including participants' experiences of assault would require removing Peru. Lastly, analyzing participants' income quartiles requires removing Japan.
 
@@ -262,13 +250,13 @@ prevention_min2 <- dplyr::recode(prevention_min2, "prev_burglar_alarm" = "burgla
 
 ```
 
-Security consumption (*M* = `r mean(iv_2005_mod$total_security)`, *SD* = `r sd(iv_2005_mod$total_security)`) has been computed by, summing respondents' self-reported ownership of `r as.english(length(prevention_min2))` different preventative measures: `r glue::glue_collapse(x = prevention_min2, ", ", last = ", and ")`. This variable excludes several security items in the ICVS due to missing data, such as owning a watch dog, having surveillance arrangements with neighbors, and purchasing insurance against criminal activities.
+Security consumption (*M* = `r mean(iv_2005_mod$total_security)`, *SD* = `r sd(iv_2005_mod$total_security)`) has been computed by summing respondents' self-reported ownership of `r as.english(length(prevention_min2))` different preventative measures: `r glue::glue_collapse(x = prevention_min2, ", ", last = ", and ")`. This variable excludes several security items in the ICVS due to missing data, such as owning a watch dog, having surveillance arrangements with neighbors, and purchasing insurance against criminal activities.
 
 <!-- a burglar alarm, special door locks, special grills, a high perimeter fence, and caretaker security. -->
 
 #### Predictor variables
 
-The focal model will include predictor variables at country- and individual-levels: at the nation level, 1) nation-level inequality (gini - disposable income), 2) expenditure-side GDP per capita (matched purchasing power parity), and 3) nation-level self-reported crime victimization; and at the respondent level: 1) age, (five-year increments) 2) gender (`r round(summary(iv_2005_mod$gender)["female"]/nrow(iv_2005_mod)*100,0)`% female), 3) employed (`r round(summary(iv_2005_mod$employed)[1]/nrow(iv_2005_mod)*100,0)`% employed), 4) income quartile, 5) relationship status (`r round(summary(iv_2005_mod$partnered)[1]/nrow(iv_2005_mod)*100,0)`% partnered), 6) number of individual victimization experiences, and 7) perceived police effectiveness, range = `r min(iv_2005_mod$police_effective)`-`r max(iv_2005_mod$police_effective)`). See Table \@ref(tab:s2desc-tab) for remaining descriptive statistics
+The focal model will include predictor variables at country- and individual-levels: at the nation level, 1) nation-level inequality (gini - disposable income), 2) expenditure-side GDP per capita (matched purchasing power parity), and 3) nation-level self-reported crime victimization; and at the respondent level: 1) age (five-year increments), 2) gender (`r round(summary(iv_2005_mod$gender)["female"]/nrow(iv_2005_mod)*100,0)`% female), 3) employed (`r round(summary(iv_2005_mod$employed)[1]/nrow(iv_2005_mod)*100,0)`% employed), 4) income quartile, 5) relationship status (`r round(summary(iv_2005_mod$partnered)[1]/nrow(iv_2005_mod)*100,0)`% partnered), 6) number of individual victimization experiences, and 7) perceived police effectiveness, range = `r min(iv_2005_mod$police_effective)`-`r max(iv_2005_mod$police_effective)`). See Table \@ref(tab:s2desc-tab) for remaining descriptive statistics.
 
 As an index of inequality, the Gini coefficient is most intuitively defined as the average difference in income between all pairs in a population, divided by twice the average income in the population. The SWIID consists of 100 separate dataframes, with varying gini values to reflect the values' uncertainty (i.e., larger standard errors) when making comparisons across different countries or time periods.
 
@@ -286,9 +274,7 @@ Self-reported crime victimization will likewise be computed as a count variable 
 
 Since the ICVS, SWIID, and PWT are publicly available, preprocessing and inclusion/exclusion steps have already been implemented, and are available in the sourced and attached code. A notable preprocessing steps is that gini and gdp values were averaged across 2004-2006 into a single index, to reflect the years where the survey sweeps were conducted.
 
-After a conservative exclusion process for missing data, survey sweeps conducted across 2004-6 yielded `r sum(summary(iv_2005$country)>0)` countries and a total `r format(nrow(iv_2005), big.mark = ",", scientific = FALSE)` participants, with a minimum of `r min(summary(iv_2005$country)[summary(iv_2005$country)!= 0])` participants per country. An exclusion strategy maximizing the number of variables yields `r sum(summary(iv_2005_mod$country)>0)` countries, and `r format(nrow(iv_2005_mod), big.mark = ",", scientific = FALSE)` participants. This exclusion criteria drops the responses from countries of Japan, Peru, and Iceland.
-
-Analyses will be predict security consumption as an ordinal variable (0: no security consumption, 1: one unit of security consumption, 2: two or more units of security consumption), using a cumulative link mixed model. The outcome variable exhibits excessive skewness, and is not suitable to a linear model. Likewise, despite security consumption being a count variable of multiple binary occurrences, it is unlikely to meet the assumptions for a poisson process, which assumes that the maximum value stretches out indefinitely.
+Analyses will be predict security consumption as an ordinal variable (0: no security consumption, 1: one unit of security consumption, 2: two units, or 3: three or more units consumed), using a cumulative link mixed model. The outcome variable exhibits excessive skewness, and is not suitable to a linear model. Likewise, despite security consumption being a count variable of multiple binary occurrences, it is unlikely to meet the assumptions for a poisson process, which assumes that the maximum value stretches out indefinitely.
 
 The coefficient estimates and standard errors will be extracted through simulations. Using `smvrnorm` function from the `stevemisc` package, the distributions for fixed-effects estimates will be generated from 100 dataframes, which each consist of coefficients and variance/covariance matrices from a model. These distributions will be used to calculate point estimates and standard errors for each fixed effect.
 
@@ -298,15 +284,15 @@ If the weighted model fails to converge, the model will be conducted without fre
 
 As a proof of concept, the proposed analyses have been conducted on individuals' victimization experiences, which, like security behaviours, is operationalized as a summed variable of multiple binary items, resulting in a similar distribution to security behaviours (see Figures \@ref(fig:icvs-security-hist) and \@ref(fig:icvs-victim-hist)). In this case, `r model_nonconvergence` of 100 analyzed dataframes failed to converge (preventing calculation of standard errors). As such, mixed ordinal regression without frequency weighting was conducted, and had no convergence issues.
 
-### Full descriptions must be provided of any outcome-neutral criteria that must be met for successful testing of the stated hypotheses.
-
-Such quality checks might include the absence of floor or ceiling effects in data distributions, positive controls, or other quality checks that are orthogonal to the experimental hypotheses.
+<!--# Full descriptions must be provided of any outcome-neutral criteria that must be met for successful testing of the stated hypotheses.Such quality checks might include the absence of floor or ceiling effects in data distributions, positive controls, or other quality checks that are orthogonal to the experimental hypotheses. -->
 
 \newpage
 
 # Data availability statement
 
-Raw data can be accessed at [\<\<https://github.com/DallasNovakowski/inequality_security\>\>](https://github.com/DallasNovakowski/security_game){.uri}.
+Raw data can be accessed at [\<https://github.com/DallasNovakowski/inequality_security\>](https://github.com/DallasNovakowski/security_game){.uri}. Archival sources available at the following links: [Penn World Tables (PWT; for GDP)](https://www.rug.nl/ggdc/productivity/pwt/?lang=en),
+[The Standardized World Income Inequality Database (SWIID - for inequality)](https://fsolt.org/swiid/), and
+[International Crime Victims Survey (ICVS - for crime and security measures)](https://easy.dans.knaw.nl/ui/datasets/id/easy-dataset:44578).
 
 # Code availability statement
 
