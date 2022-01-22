@@ -425,10 +425,10 @@ estonia missing motortheft
 probably drop assaults and sexual offences
 
 ```{r sum victim, message=F}
-vic_var_drop <- names(select(victim_2005,-c("assault_5yrs","sexoff_5yrs")))
+vic_var_drop <- names(select(victim_2005,-c("assault_5yrs","sexoff_5yrs","motortheft_5yrs")))
 
 
-vic_var_assault <- names(select(victim_2005,-c("sexoff_5yrs")))
+vic_var_assault <- names(select(victim_2005,-c("sexoff_5yrs","motortheft_5yrs")))
 
 # currently keeping
 summary(victim_2005[,vic_var_drop])
@@ -445,8 +445,7 @@ responders_2005 <-
              !is.na(burglar_5yrs) &
              !is.na(attempt_5yrs) &
              !is.na(robbery_5yrs) &
-             !is.na(pers_theft_5yrs) & 
-             !is.na(motortheft_5yrs)
+             !is.na(pers_theft_5yrs)
          ))
 
 summary(responders_2005[,vic_var_drop])
@@ -473,15 +472,7 @@ ggplot(responders_2005, aes(x = num_victim_5yr))  +  geom_histogram(
 
 skewness(responders_2005$num_victim_5yr)
 
-# create dataframe averaging victimization within each country
-cdata <- plyr::ddply(responders_2005, c("country"), summarise,
-               victim_nation_mean = mean(num_victim_5yr))
 
-cdata$victim_nation_winz <- DescTools::Winsorize(cdata$victim_nation_mean)
-
-# append full dataset with country-level means of victimizatoin
-responders_2005 <- cdata %>%
-  left_join(responders_2005, by = c("country"))
 
 # iv_2005$extreme <- if (iv_2005[,"country"]) 1 else 2
 
@@ -634,9 +625,7 @@ length(summary(iv_2005$country)[summary(iv_2005$country)!= 0])
 
 responders_2005_countries <- names(summary(responders_2005$country)[0!= summary(responders_2005$country)])
 
-iv_2005_countries <- names(summary(iv_2005$country)[0!= summary(iv_2005$country)])
 
-setdiff(responders_2005_countries, iv_2005_countries)
 
 
 iv_2005$male <- factor(iv_2005$male)
@@ -651,6 +640,11 @@ iv_2005[,c("age_num", "male", "employed", "partnered", "police_effective", "inco
 iv_2005 <- filter(iv_2005, !is.na(partnered))
 
 summary(iv_2005$country)[summary(iv_2005$country)!= 0]
+
+iv_2005_countries <- names(summary(iv_2005$country)[0!= summary(iv_2005$country)])
+
+setdiff(responders_2005_countries, iv_2005_countries)
+
 
 iv_2005[,c("age_num", "male", "employed", "partnered", "police_effective", "income_quartile")] %>%
  summary()
@@ -740,6 +734,10 @@ First, the one we will use in the manuscript. A moderate inclusion of variables 
 iv_2005 <- iv_2005 %>% 
         filter(!is.na(total_security))
 
+
+
+
+
 # Base, maximizing cluster number
 # iv_2005[,c("age_cent")] <- iv_2005[,c("age_num")] - mean(iv_2005[,c("age_num")]) 
 # iv_2005[,c("age_s")] <- scale(iv_2005[,c("age_num")])
@@ -758,7 +756,7 @@ sum(summary(iv_2005_mod$country)>0)
 
 ```{r victimization with assault}
 #assigns list of names for victimization variables
-vic_var_assault <- names(select(victim_2005,-c("sexoff_5yrs")))
+vic_var_assault <- names(select(victim_2005,-c("sexoff_5yrs", "motortheft_5yrs")))
 
 na_tally(iv_2005_mod,country,vic_var_assault) %>%
       dplyr::bind_rows(dplyr::summarise(.,
@@ -766,22 +764,18 @@ na_tally(iv_2005_mod,country,vic_var_assault) %>%
                       across(where(is.logical), sum),
                       across(where(is.character), ~"Total")))
 
+
+
 # need to get rid of estonia for missingness
 iv_2005_mod$num_victim_5yr_assault <- rowSums(iv_2005_mod[,vic_var_assault])
+
+iv_2005_mod <- iv_2005_mod[!is.na(iv_2005_mod$num_victim_5yr_assault),]
 
 summary(iv_2005_mod$num_victim_5yr_assault)
 
 iv_2005_mod$num_victim_5yr_assault_winz <- DescTools::Winsorize(iv_2005_mod$num_victim_5yr_assault)
 
-# create dataframe averaging victimization within each country
-assault_data <- plyr::ddply(iv_2005_mod, c("country"), summarise,
-               victim_nation_assault = mean(num_victim_5yr_assault),
-               victim_nation_assault_winz = mean(num_victim_5yr_assault_winz))
 
-assault_data$victim_nation_assault_winz <- DescTools::Winsorize(assault_data$victim_nation_assault)
-
-iv_2005_mod <- assault_data %>%
-  left_join(iv_2005_mod, by = c("country"))
 
 ```
 
@@ -873,6 +867,55 @@ iv_2005 <- datasets[[1]]
 iv_2005_mod  <- datasets[[2]]
 iv_2005_lib  <- datasets[[3]]
 iv_2005_lib1  <- datasets[[4]]
+
+
+# create dataframe averaging victimization within each country
+cdata <- plyr::ddply(iv_2005, c("country"), summarise,
+               victim_nation_mean = mean(num_victim_5yr))
+
+cdata$victim_nation_winz <- DescTools::Winsorize(cdata$victim_nation_mean)
+
+# append full dataset with country-level means of victimizatoin
+iv_2005 <- cdata %>%
+  left_join(iv_2005, by = c("country"))
+
+# create dataframe averaging victimization within each country
+assault_data <- plyr::ddply(iv_2005_mod, c("country"), summarise,
+               victim_nation_assault = mean(num_victim_5yr_assault),
+               victim_nation_assault_winz = mean(num_victim_5yr_assault_winz),
+               victim_nation = mean(num_victim_5yr),
+               victim_nation_winz = mean(num_victim_5yr)
+               )
+
+assault_data$victim_nation_assault_winz <- DescTools::Winsorize(assault_data$victim_nation_assault)
+
+iv_2005_mod <- assault_data %>%
+  left_join(iv_2005_mod, by = c("country"))
+
+
+# create dataframe averaging victimization within each country
+assault_data <- plyr::ddply(iv_2005_lib, c("country"), summarise,
+               victim_nation_assault = mean(num_victim_5yr_assault),
+               victim_nation_assault_winz = mean(num_victim_5yr_assault_winz),
+               victim_nation = mean(num_victim_5yr),
+               victim_nation_winz = mean(num_victim_5yr)
+               )
+
+assault_data$victim_nation_assault_winz <- DescTools::Winsorize(assault_data$victim_nation_assault)
+
+iv_2005_lib <- assault_data %>%
+  left_join(iv_2005_lib, by = c("country"))
+
+
+# create dataframe averaging victimization within each country
+cdata <- plyr::ddply(iv_2005_lib1, c("country"), summarise,
+               victim_nation_mean = mean(num_victim_5yr))
+
+cdata$victim_nation_winz <- DescTools::Winsorize(cdata$victim_nation_mean)
+
+# append full dataset with country-level means of victimizatoin
+iv_2005_lib1 <- cdata %>%
+  left_join(iv_2005_lib1, by = c("country"))
 
 
 iv_2005_lib[,c("num_victim_5yr", "num_victim_5yr_winz", "security_winz", "age_num","feel_safe_dark", "safe_dark_cent", "break_in_threat", "age_cent", "break_in_threat_cent", "police_eff_cent", "police_effective")] %>%

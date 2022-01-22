@@ -13,7 +13,9 @@ inline_extract <- function(model,coef_name){
   
   # print(c(test_stat, df, pval, estimate, se))
   
-  paste("*t*","(",round(df,0),")"," = ", round(test_stat,2), ", *p* ", pval, ", *b* = ", round(estimate,3), ", SE = ", round(se,3) , ", CI(95%) = [", round(ci_lo,3), ", ", round(ci_hi,3),"]",  sep="")
+  paste("*t*","(",round(df,0),")"," = ", round(test_stat,2), ", *p* ", 
+        pval, ", *b* = ", round(estimate,3), ", SE = ", round(se,3) , 
+        ", CI(95%) = [", round(ci_lo,3), ", ", round(ci_hi,3),"]",  sep="")
 }
 
 

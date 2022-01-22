@@ -4,7 +4,7 @@ load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/iv_2005
 
 library(tidyverse)
 
-source(here::here("scripts", "icvs_scripts.r"), local = knitr::knit_global())
+source(here::here("scripts", "s2_01_icvs_scripts.r"), local = knitr::knit_global())
 
 
 # Creating four ICVS datasets with different inclusion criteria
@@ -411,7 +411,9 @@ gd_mod <- iv_2005_mod2 %>%
             gini_2004_6_winz = mean(gini_2004_6_winz)
   )
 
-#gd, gd_mod,
+
+cgwtools::resave(gd,gd_mod, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/iv_2005.RData")
+
 
 # iv_2005_lib <- data_list_lib %>%
 #   left_join(iv_2005_lib, by = c("country"))
@@ -492,7 +494,6 @@ cgwtools::resave(lib1_joined1, file = "C:/Users/dalla/Google Drive/offline_data_
 
 rm(lib1_joined1)
 
-cgwtools::resave(gd,gd_mod, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/iv_2005.RData")
 
 
 gc()

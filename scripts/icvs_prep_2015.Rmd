@@ -19,6 +19,8 @@ library(data.table)
 library(knitr)
 library(readxl) # read xls file
 
+source(here::here("scripts", "s2_01_icvs_scripts.r"), local = knitr::knit_global())
+
 #sjPlot::view_df(icvs_data)
 #names_and_labels <- icvs_data %>%
 #  surveytoolbox::varl_tb()
@@ -27,7 +29,7 @@ library(readxl) # read xls file
 #surveytoolbox::extract_vallab()
 #raw_classes <- as.character(lapply(lapply(icvs_data, class),tail,1))
 
-icvs_data <- read_sav("C:/Users/dalla/Google Drive/data_files/icvs_pwt_swiid/data/ICVS2015_2b.sav")  # Reading data
+icvs_data <- read_sav("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/ICVS2015_2b.sav")  # Reading data
 
 # names(icvs_data)
 # 
@@ -57,9 +59,7 @@ icvs_data <- icvs_data %>%
 
 ```
 
-```{r source scripts, warning=F, message=FALSE, echo=FALSE}
- source(here::here("scripts", "icvs_scripts.r"), local = knitr::knit_global())
-```
+
 
 ```{r unlabeled,message=FALSE, echo=FALSE}
 # i005b identifies the national surveys conducted
@@ -151,6 +151,10 @@ no luck
 ```{r nation-identifying}
 icvs_data$country <- as.factor(icvs_data$country)
 
+
+icvs_data$country<- recode(icvs_data$country, "SAR China"= "Hong Kong",
+                           "USA" = "United States", "RSA" = "South Africa")
+
 data_2005 <- icvs_data %>%
   filter(sweep == "5th sweep -2004-2006" | sweep == "EU ICS 2005") 
 
@@ -208,6 +212,7 @@ data_2005$country <- ifelse(is.na(data_2005$country),ifelse(data_2005$questionna
 
 data_2005$country <- as.factor(data_2005$country)
 
+
 summary(data_2005$country)
 ```
 
@@ -215,8 +220,7 @@ This treatment gives the same values as 2005.sav
 
 
 
-# Uk transformations
-
+## Uk transformations
 
 ```{r non adjusted countries}
 summary(data_2005$country)[c("United Kingdom","England & Wales", "England", "Northern Ireland", "Scotland", "Ireland")]
@@ -230,9 +234,6 @@ Unfortunately, smaller regions seem less likely to systematically collect data. 
 ```{r adjusting countries}
 # substituting specific british isles regions with UK
 data_2005$country[data_2005$country %in% c("England & Wales", "England", "Northern Ireland", "Scotland")] <- "United Kingdom"
-
-data_2005$country<- recode(data_2005$country, "SAR China"= "Hong Kong",
-                           "USA" = "United States", "RSA" = "South Africa")
 ```
 
 
@@ -244,4 +245,20 @@ sum(summary(data_2005$country)>0)
 Notably, Ireland is not part of the UK, so has better data coverage and is left separately for this study
 
 
+# data_2015
 
+```{r 2015-creation}
+data_2015 <- icvs_data %>%
+  filter(sweep == "Carribean 2014" |sweep == "Asia 2015 onwards")
+
+unique(data_2015$country)
+```
+
+```{r 2010-creation}
+data_2010 <- icvs_data %>%
+  filter(sweep == "Carribean 2014" |sweep == "Asia 2015 onwards" | sweep == "6th sweep -2010")
+
+unique(data_2010$country)
+```
+
+at most, the recent data only gives us `r length(unique(data_2010$country))` countries
