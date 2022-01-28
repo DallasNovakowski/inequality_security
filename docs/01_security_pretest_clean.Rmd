@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 
 library(plyr)
-library(tidyverse)
+
 library(readxl)
 library(here)
 
@@ -20,6 +20,8 @@ library(ggplot2)
 library(Hmisc)
 library(RColorBrewer)
 library(reshape2)
+library(ggpubr) # stat_pvalue_manual
+library(tidyverse)
 
 #for raincloud plots
 source("https://gist.githubusercontent.com/benmarwick/2a1bb0133ff568cbe28d/raw/fb53bd97121f7f9ce947837ef1a4c65a73bffb3f/geom_flat_violin.R")
@@ -324,6 +326,10 @@ data$iu_total <-
 data$dospert_total <-
   rowSums(data[, dospert_vars], na.rm = TRUE) * NA ^ (rowSums(!is.na(data[, dospert_vars])) == 0)
 
+data$consumed_total <-
+  rowMeans(data[, consumed_vars], na.rm = TRUE) * NA ^ (rowMeans(!is.na(data[, consumed_vars])) == 0)
+# 
+# cor.test(data$consumed_total)
 ```
 
 
@@ -543,7 +549,9 @@ raincloud_theme = theme(
   axis.title.x = element_text(size = 16),
   axis.title.y = element_text(size = 16),
   axis.text = element_text(size = 14),
-  axis.text.x = element_text(angle = 45, vjust = 0.5),
+  axis.text.x = element_text(
+    # angle = 45, 
+    vjust = 0.5),
   legend.title = element_text(size = 16),
   legend.text = element_text(size = 16),
   legend.position = "right",
@@ -706,56 +714,101 @@ geom_split_violin <- function (mapping = NULL,
 ```{r spending}
 # split violin - adapted from https://debruine.github.io/post/plot-comparison/
 
-spending_summary_data <- data_long %>%
-  group_by(prob, cost) %>%
-  summarise(
-    mean = mean(security_spending),
-    min = mean(security_spending) - qnorm(0.975) * sd(security_spending) /
-      sqrt(n()),
-    max = mean(security_spending) + qnorm(0.975) * sd(security_spending) /
-      sqrt(n())
-  )
+# spending_summary_data <- data_long %>%
+#   group_by(prob, cost) %>%
+#   dplyr::summarise(
+#     mean = mean(security_spending),
+#     min = mean(security_spending) - qnorm(0.975) * sd(security_spending) /
+#       sqrt(n()),
+#     max = mean(security_spending) + qnorm(0.975) * sd(security_spending) /
+#       sqrt(n())
+#   )
+# 
+# 
+# spending_pretest_splitplot <- data_long %>%
+#   ggplot(aes(
+#     y = security_spending,
+#     x = as.factor(prob),
+#     fill = as.factor(cost)
+#   )) +
+#   geom_split_violin(
+#     color = "black",
+#     trim = TRUE,
+#     alpha = 0.5,
+#     width = 1,
+#     # position = position_dodge2(width = 2,preserve = "single")
+#   ) +
+#   geom_pointrange(
+#     data = spending_summary_data,
+#     aes(as.factor(prob), mean, ymin = min, ymax = max),
+#     color = "black",
+#     alpha = 0.5,
+#     shape = 20,
+#     # 95,
+#     position = position_dodge(width = 0.5),
+#     show.legend = FALSE
+#   ) + 
+#   geom_text(aes(label = security_spending, group =as.factor(cost)), position = position_dodge(width = 0.5)) +
+#   # geom_boxplot(color = "black",
+#   #            width = 0.1,
+#   #            alpha = .1,
+#   #            position = position_dodge(width=0.5)) +
+#   ylab("$ spent on security") +
+#   xlab("Starting probability of successful thefts") +
+#   labs(fill = "Security price (¢)") +
+#   ylim(0, 1) +
+#   scale_fill_manual(values = cbPalette) +
+#   scale_colour_manual(values = cbPalette) +
+#   scale_x_discrete(labels = c("50" = "50%", "60" = "60%",
+#                               "75" = "75%")) +
+#   theme_bw() +
+#   raincloud_theme
+# 
+# spending_pretest_splitplot 
 
 
-spending_pretest_splitplot <- data_long %>%
-  ggplot(aes(
-    y = security_spending,
-    x = as.factor(prob),
-    fill = as.factor(cost)
-  )) +
-  geom_split_violin(
+spending_pretest_splitplot <- spending_summary_data %>%
+    ggplot(aes(
+        y = mean,
+        x = as.factor(prob),
+        fill = as.factor(cost)
+    ))  +
+    geom_split_violin(data = data_long,aes(
+        y = security_spending,
+        x = as.factor(prob),
+        fill = as.factor(cost)
+    ),
     color = "black",
     trim = TRUE,
     alpha = 0.5,
     width = 1,
-    # position = position_nudge(x = -.005)
-  ) +
-  geom_pointrange(
-    data = spending_summary_data,
-    aes(as.factor(prob), mean, ymin = min, ymax = max),
-    color = "black",
-    alpha = 0.5,
-    shape = 20,
-    # 95,
-    position = position_dodge(width = 0.25),
-    show.legend = FALSE
-  ) +
-  # geom_boxplot(color = "black",
-  #            width = 0.1,
-  #            alpha = .1,
-  #            position = position_dodge(width=0.5)) +
+    ) + geom_pointrange(
+        aes(as.factor(prob), mean, ymin = min, ymax = max),
+        color = "black",
+        alpha = 0.5,
+        shape = 20,
+        # 95,
+        position = position_dodge(width = 0.6),
+        show.legend = FALSE
+    ) + 
+  
+  # geom_label_repel(aes(label = paste(round(mean,2)), group =as.factor(cost)), fill="white", position = position_dodge(width = 0.7))+
+    geom_label(
+    #   # label.size = .1,
+    #   # label.padding = unit(0.25, "lines"),
+    #   # size=2.5,
+      aes(label = paste(round(mean,2)), group =as.factor(cost),vjust=-1.25), fill="white", position = position_dodge(width = 0.7))+
+  scale_fill_grey(start = 0.9, end = 0.3)  +
+  theme_bw() +
+  raincloud_theme +
   ylab("$ spent on security") +
   xlab("Starting probability of successful thefts") +
   labs(fill = "Security price (¢)") +
   ylim(0, 1) +
-  scale_fill_manual(values = cbPalette) +
-  scale_colour_manual(values = cbPalette) +
   scale_x_discrete(labels = c("50" = "50%", "60" = "60%",
-                              "75" = "75%")) +
-  theme_bw() +
-  raincloud_theme
-
+                              "75" = "75%"))
 spending_pretest_splitplot
+
 
 ggsave(here::here("figures", "spending_pretest_splitplot.png"),
        height = 3)

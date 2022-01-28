@@ -34,6 +34,47 @@ A major benefit of having run a pilot study is getting information on mean and s
 
 # Two-level
 
+```{r}
+library(pwr)
+
+#The `alternative` argument says we think the alternative is “greater” than the null, not just different.
+power_ttest_security <- pwr.t.test(d=(0.6798-base_mean)/base_sd,power=.95,sig.level=.05,
+           type="two.sample",alternative="greater")
+
+
+eta01_power_ttest_security<- pwr.t.test(d=(0.7419-base_mean)/base_sd,power=.95,sig.level=.05,
+           type="two.sample",alternative="greater")
+
+
+
+power_ttest_security
+
+cgwtools::resave(power_ttest_security,eta01_power_ttest_security, file = here::here("output", "pretest_output.RData"))
+
+# Is there a way to convert partial eta^2 to cohen's d for repeated measures designs? I ask because I am conducting a meta-analysis and need to convert the studies' results into a common effect size. I read that it can be calculated in 2 steps: first cohen's f and then cohen's d.
+#(1) cohen's f can be calculated from partial eta^2 as follows:
+#cohen's f = sqrt(partialeta^2/1-partialeta^2)
+#(2) cohen's f can be converted to cohen's d as follows:
+#cohen's d = f*2
+
+
+# d_to_peta <- function(d,n){
+#   (d^2*n)/(d^2*n+n-1)
+# }
+
+d_to_peta <- function(d){
+  f = (d/2)
+  f^2/(f^2+1)
+}
+ 
+d_to_peta(power_ttest_security$d) 
+  
+
+```
+
+
+
+
 ```{r l2design, warning=FALSE}
 # m_units = 37.1
 # detecting .01 partial η2, with 95% power
@@ -97,7 +138,7 @@ security_05_design <- ANOVA_design(design = "2b*2b",
                    mu = c(0.908, base_mean, base_mean, base_mean), 
                    sd = base_sd, 
                    # r = 0.8, 
-                   labelnames = c("inequality", "yes", "no", "income_visible", "yes", "no"),
+                   labelnames = c("inequality", "yes", "no", "undeserved", "yes", "no"),
                    plot = TRUE)
 
 
@@ -146,8 +187,9 @@ security_01_design <- ANOVA_design(design = "2b*2b",
                    mu = c(0.7419, base_mean, base_mean, base_mean), 
                    sd = base_sd, 
                    # r = 0.8, 
-                   labelnames = c("inequality", "yes", "no", "income_visible", "yes", "no"))
+                   labelnames = c("inequality", "yes", "no", "undeserved", "yes", "no"))
 ```
+
 
 ```{r powerplot 01, warning=FALSE, echo=FALSE}
 security_01_powerplot <- plot_power(security_01_design, min_n = 20, max_n = 500, desired_power = 95)
@@ -220,7 +262,7 @@ security_02_design <- ANOVA_design(design = "2b*2b",
                    mu = c(0.7959, base_mean, base_mean, base_mean), 
                    sd = base_sd, 
                    # r = 0.8, 
-                   labelnames = c("inequality", "yes", "no", "income_visible", "yes", "no"))
+                   labelnames = c("inequality", "yes", "no", "undeserved", "yes", "no"))
 ```
 
 ```{r powerplot 02, warning=FALSE, echo=FALSE}

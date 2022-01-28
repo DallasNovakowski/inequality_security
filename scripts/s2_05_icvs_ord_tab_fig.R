@@ -11,6 +11,8 @@ load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/icvs_jo
 
 load(here::here("data","m100_sims.RData"))
 
+load(here::here("output","icvs_output.RData"))
+
 load(file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/m100_sims.RData")
 
 
@@ -56,8 +58,7 @@ m100_tidy %>%
        x = "Coefficient Estimate")
 
 #save the dot whisker plot
-ggsave(here::here("figures", "ordinal_dotwhisker.png"),
-       height = 3)
+ggsave(here::here("figures", "ordinal_dotwhisker.png"))
 
 # create regression result tibble for making a a table
 tidy_ci <- m100_tidy %>%
@@ -84,6 +85,10 @@ tidy_ci <- subset(tidy_ci, select = -c(ci95_lo,ci95_hi))
 
 tidy_ci <- tidy_ci %>% relocate(CI95, .before = z_score)
 
+tidy_ci$df <- m_ord_mod1$dims$df.residual
+
+tidy_ci <- tidy_ci %>% relocate(df, .before = estimate)
+
 # 
 # tidy_ci %>%
 #   kbl(booktabs = T) %>%
@@ -93,9 +98,6 @@ tidy_ci <- tidy_ci %>% relocate(CI95, .before = z_score)
 cgwtools::resave(tidy_ci, file = here::here("output","icvs_output.RData"))
 
 # save(tidy_ci, file = here::here("output", "icvs_output.RData"))
-
-
-
 
 # For minimized variable set - mod dataset
 

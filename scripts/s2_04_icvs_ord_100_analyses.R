@@ -17,14 +17,6 @@ set.seed(1234)
 #used for dotwhisker plots
 load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/icvs_joined_samples.RData")
 
-vict_ass_mord_min <- ordered(num_victim_5yr_assault_winz) ~ gini_2004_6_cent + gdppc_2004_6_scale +
-  age_cent + employed + male + (1 | country)
-
-victim_ass_mord_max <- ordered(num_victim_5yr_assault_winz) ~ gini_2004_6_cent + gdppc_2004_6_scale +
-  age_cent + employed + male + police_effective + income_quartile + (1 | country)
-
-cgwtools::resave(vict_ass_mord_min,victim_ass_mord_max,file = here::here("output","icvs_output.RData"))
-
 
 # takes about an hour
 m100_ord <- mod_joined %>% map(~ ordinal::clmm(victim_ass_mord_max, data = .x))
@@ -66,7 +58,7 @@ cgwtools::resave(m100_sims, file = here::here("output","m100_sims.RData"))
 
 rm(m100_ord)
 
-m100_ord_min <- mod_joined %>% map(~ ordinal::clmm(vict_ass_mord_min, data = .x))
+m100_ord_min <- mod_joined %>% map(~ ordinal::clmm(victim_ass_mord_min, data = .x))
 
 
 m100_min_coef <- m100_ord_min %>%
@@ -113,7 +105,7 @@ rm(m100_ord_min)
 
 
 # weighted ordinal regression
-mw100_ord <- mod_joined %>% map(~ ordinal::clmm(vict_ass_mord_min, data = .x, weights = individual_weight))
+mw100_ord <- mod_joined %>% map(~ ordinal::clmm(victim_ass_mord_min, data = .x, weights = individual_weight))
 
 save(mw100_ord, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/mw100_ord.RData")
 
