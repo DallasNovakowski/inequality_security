@@ -45,8 +45,8 @@ ineq_data$likely_envy <- rowSums(ineq_data
 
 
 # Acceptable if mean alpha >= .7
-# Otherwise, try dropping each item until >= .7 is achieved
-# If no >= .7 solution found, forego mediaiton analyses
+# Otherwise, iteratively dropping each item until >= .7 is achieved, minimum three items acceptable
+# If no >= .7 solution found, forego mediation analyses
 ltm::cronbach.alpha(ineq_data$likely_envy,CI=TRUE)
 ```
 
@@ -56,6 +56,8 @@ ineq_data %>%
   group_by(inequality) %>%
   identify_outliers(security_spending)
 
+# If outliers present, winzorize
+
 #shapiro normality by group
 ineq_data %>%
   group_by(inequality) %>%
@@ -63,7 +65,11 @@ ineq_data %>%
 
 ggqqplot(ineq_data, x = "security_spending", facet.by = "inequality")
 
+# Due to large samples, no alternative method will be used in the case of nonnormality
+
 ineq_data %>% levene_test(security_spending ~ as.factor(inequality))
+
+# If levene's is significant, use welch's t-test
 
 #welch's
 ineq_t_test <- ineq_data %>% 
@@ -175,6 +181,9 @@ outliers_merit <- ineq_merit_data %>%
   group_by(merit, inequality) %>%
   identify_outliers(security_spending)
 
+# If outliers present, winzorize
+
+
 # Build the linear model
 lm_merit  <- lm(security_spending ~ as.factor(inequality)*as.factor(merit),
              data = ineq_merit_data)
@@ -186,24 +195,28 @@ qq_merit <- ggqqplot(residuals(lm_merit))
 shap_merit <- shapiro_test(residuals(lm_merit))
 
 #normality by groups
-shap_group_merit <- ineq_merit_data %>%
+shap_g_merit <- ineq_merit_data %>%
   group_by(merit, inequality) %>%
   shapiro_test(security_spending)
 
 # qqplot by group
-qq_group_merit <- ggqqplot(ineq_merit_data,
+qq_g_merit <- ggqqplot(ineq_merit_data,
                            "security_spending", ggtheme = theme_bw()) +
   facet_grid(inequality ~ merit)
 
+# Due to large samples, no alternative method will be used in the case of nonnormality
+
 levene_merit <- ineq_merit_data %>% levene_test(security_spending ~ 
     as.factor(inequality)*as.factor(merit))
+
+# Due to large samples, no alternative method will be used in the case of heterogeneity of variance
 
 
 # https://easystats.github.io/effectsize/articles/effectsize.html
 # see above for 95%ci for eta squared
 ```
 
-```{r anova-lm, echo = FALSE}
+```{r merit-anova-lm, echo = FALSE}
 # Method 1: stats::lm & car::Anova 
 #fit model
 lm_merit <- lm(security_spending ~ inequality*merit, data = ineq_merit_data)
@@ -213,13 +226,12 @@ car_lm_merit <- Anova(lm_merit)
 
 #Summarize model
 car_lm_sum <- anova_summary(car_lm_merit) 
-
 ```
 
 **H2)**: `r h2`. Or more precisely, **H2.1)**: `r h2.1`
 
-```{r anova-aov}
-# Method 2: stats::aov
+```{r merit-anova-aov}
+# Method 2: stats::aov  Best one to use because the aov object goes on to mesh with tukey_hsd()
 # fit model 
 aov_merit <- aov(security_spending ~ inequality*merit, 
                data = ineq_merit_data)
@@ -230,7 +242,7 @@ car_aov_merit <- Anova(aov_merit)
 car_aov_sum <- anova_summary(car_aov_merit)
 ```
 
-```{r anova-anovatest, echo=FALSE}
+```{r merit-anova-anovatest, echo=FALSE}
 # Method 3: rstatix::anova_test
 anova_merit <- ineq_merit_data %>% anova_test(security_spending ~ 
                                                 inequality*merit
@@ -333,9 +345,53 @@ merit_modmed_test
 
 **H3):** `r h3`. Or more precisely, **H3.1):** `r h3.1`
 
+```{r group-assumptions}
+outliers_merit <- ineq_group_data %>%
+  group_by(outgroup, inequality) %>%
+  identify_outliers(security_spending)
+
+# If outliers present, winzorize
+
+# Build the linear model
+lm_group  <- lm(security_spending ~ as.factor(inequality)*as.factor(outgroup),
+             data = ineq_group_data)
+
+# Due to large samples, no alternative method will be used in the case of nonnormality
+
+# Create a QQ plot of residuals
+qq_group <- ggqqplot(residuals(lm_group))
+
+#shapiro normality
+shap_merit <- shapiro_test(residuals(lm_merit))
+
+#normality by groups
+shap_g_merit <- ineq_group_data %>%
+  group_by(outgroup, inequality) %>%
+  shapiro_test(security_spending)
+
+# qqplot by group
+qq_g_group <- ggqqplot(ineq_group_data,
+                           "security_spending", ggtheme = theme_bw()) +
+  facet_grid(inequality ~ outgroup)
+
+# Due to large samples, no alternative method will be used in the case of nonnormality
+
+levene_group <- ineq_group_data %>% levene_test(security_spending ~ 
+    as.factor(inequality)*as.factor(outgroup))
+
+# Due to large samples, no alternative method will be used in the case of heterogeneity of variance
+```
+
+
 ```{r group-aov}
 aov_group <- aov(security_spending ~ as.factor(agentic)*as.factor(outgroup), 
                data = ineq_group_data, type="III")
+
+#analyze model
+car_aov_group <- Anova(aov_group)
+
+#Summarize model
+car_aov_group_sum <- anova_summary(car_aov_group)
 ```
 
 For pairwise comparisons, **H3.2):** `r h3.2`
@@ -406,34 +462,3 @@ group_modmed_test <- test.modmed(modmed_testgroup,
 group_modmed_test
 ```
 
-## Assumptions and hypothesis testing {.unnumbered}
-
-Below is the code for testing ANOVA assumptions
-
-```{r anova-check, eval=FALSE, echo=T}
-# Normality plots
-ggqqplot(residuals(m_vis))
-# Normality by condition
-ggqqplot(ineq_vis_data, "security_spending", ggtheme = theme_bw()) +
-  facet_grid(inequality ~ visibility)
-# Normality test - significant with large samples
-shapiro_test(residuals(m_vis))
-# levene test for homogeneity of variance
-ineq_vis_data %>% levene_test(security_spending ~ inequality*visibility)
-```
-
-The code for testing ANOVA hypotheses
-
-```{r statistical-test, eval=FALSE, echo=T}
-res.aov <- ineq_vis_data %>% 
-  rstatix::anova_test(security_spending ~ inequality*visibility)
-# test main effects at different levels
-ineq_vis_data %>%
-  group_by(visibility) %>%
-  rstatix::anova_test(security_spending ~ inequality, error = m_vis)
-ineq_vis_data %>% 
-  emmeans_test(
-    security_spending ~ inequality, p.adjust.method = "bonferroni",
-    model = m_vis
-    )
-```
