@@ -1,0 +1,116 @@
+---
+title: "Supplementary Materials"
+author: "Dallas Novakowski"
+date: "28/01/2022"
+fontsize: 12pt
+output:   
+  # bookdown::gitbook   # not displaying images (likely due to lack of index?)
+  bookdown::pdf_document2
+toc: false
+---
+
+```{r, child=c('s1_03_hypot_analyses.Rmd')}
+
+```
+
+\clearpage
+
+# Supp. Figures {.unnumbered}
+
+(ref:pretest-splitplot) Means (95% CI) and distributions for Study 1 pretest. n=`r screened_n`, within-subjects, *p*s \> .49
+
+```{r pretest-splitplot,eval = TRUE, include=TRUE, echo=FALSE, out.width='100%', fig.cap="(ref:pretest-splitplot)"}
+knitr::include_graphics(here::here("figures", "spending_pretest_splitplot.png"))
+```
+
+(ref:design) Study design for a priori power analysis for two-level experiments (Study 1a, b, & c). Note: Max possible value is \$1.00; bars indicate +/-1 *SD*
+
+```{r l2-design,eval = TRUE,include=TRUE, echo=FALSE, out.width='100%', fig.cap="(ref:design)"}
+knitr::include_graphics(here::here("figures", "l2_design_plot.png"))
+```
+
+(ref:powerplot2) Per-condition sample size thresholds for 95% power in main effect of inequality for two-level experiments (Study 1a, b, & c). Assuming two-sided testing.
+
+```{r powerplot2,eval = TRUE, include=TRUE, echo=FALSE, out.width='100%', fig.cap='(ref:powerplot2)'}
+knitr::include_graphics(here::here("figures", "l2powerplot.png"))
+```
+
+```{r design,eval = TRUE, include=TRUE, echo=FALSE, out.width='100%', fig.cap="(ref:design)"}
+knitr::include_graphics(here::here("figures", "power_design_plot.png"))
+```
+
+<!-- is a "no-way interaction:" that the effect of inequality will be nullified when incomes are invisible. The hypothesis of a no-way interaction suggests firstly that sample sizes must twice the size of an equivalent study just testing a simple effect; secondly, our core hypothesis rests on all three coefficients being significant [d]in the following model: -->
+
+(ref:powerplot) Per-condition sample size thresholds for 95% power in main and interactive effects. Assuming two-sided testing.
+
+```{r powerplot,eval = TRUE, include=TRUE, echo=FALSE, out.width='100%', fig.cap='(ref:powerplot)'}
+knitr::include_graphics(here::here("figures", "01powerplot.png"))
+```
+
+(ref:icvs-security-hist) Histogram for number of security measures (max = `r length(prevention_min2)`). Dotted Line indicates mean (*M* =`r round(mean(iv_2005_mod$total_security),2)`)
+
+```{r icvs-security-hist,eval = TRUE, include=TRUE, echo=FALSE, out.width='100%', fig.cap="(ref:icvs-security-hist)"}
+knitr::include_graphics(here::here("figures", "security_hist.png"))
+```
+
+(ref:icvs-victim-hist) Histogram for number of victimization experiences (max = `r length(vic_var_assault)`). Dotted Line indicates mean (*M* =`r round(mean(iv_2005_mod$num_victim_5yr_assault),2)`).
+
+```{r icvs-victim-hist,eval = TRUE, include=TRUE, echo=FALSE, out.width='100%', fig.cap="(ref:icvs-victim-hist)"}
+knitr::include_graphics(here::here("figures", "victim_hist.png"))
+```
+
+(ref:icvs-victim-dotwhisk) Dot-whisker plot for (pilot) ordinal regression coefficients predicting victimization experiences. See Table \@ref(tab:s2-victim-table) for more detailed results
+
+```{r icvs-victim-dotwhisk,eval = TRUE, include=TRUE, echo=FALSE, out.width='100%', fig.cap="(ref:icvs-victim-dotwhisk)"}
+knitr::include_graphics(here::here("figures", "ordinal_dotwhisker.png"))
+```
+
+```{r concept-modmed,eval = TRUE, include=TRUE, echo=FALSE, out.width='100%', fig.cap="(ref:modmed)"}
+knitr::include_graphics(here::here("figures", "ineqsec_concepmodmed.jpg"))
+```
+
+(ref:modmed) Hypothesized pattern of moderated mediation
+
+```{r detail-modmed,eval = TRUE, include=TRUE, echo=FALSE, out.width='100%', fig.cap="(ref:modmed)"}
+knitr::include_graphics(here::here("figures", "ineqsec_modmed_detail.jpg"))
+```
+
+\clearpage
+
+# Supp. Tables {.unnumbered}
+
+\clearpage
+
+```{r l2anovaexact, echo=FALSE, eval = TRUE, include=TRUE}
+l2_01_exact$main_results$power <- round(l2_01_exact$main_results$power,2)
+l2_01_exact$main_results$non_centrality <- round(l2_01_exact$main_results$non_centrality,2)
+knitr::kable(round(l2_01_exact$main_results,4), caption = 'Power of main effect for 2-level design (Studies 1a,b,c)', booktabs = TRUE)
+```
+
+```{r l2pairwiseexact,echo=FALSE,  eval = TRUE, include=TRUE}
+row.names(l2_01_exact$pc_results) <- gsub(x = row.names(l2_01_exact$pc_results), pattern = "yes", replacement = "1")
+row.names(l2_01_exact$pc_results) <- gsub(x = row.names(l2_01_exact$pc_results), pattern = "no", replacement = "0")
+row.names(l2_01_exact$pc_results) <- gsub(x = row.names(l2_01_exact$pc_results), pattern = "inequality", replacement = "ineq")
+row.names(l2_01_exact$pc_results) <- gsub(x = row.names(l2_01_exact$pc_results), pattern = "p_", replacement = "")
+knitr::kable(round(l2_01_exact$pc_results,2), caption = 'Power of pairwise comparisons for 2-level design (t-test; Studies 1a,b,c)', booktabs = TRUE)
+```
+
+```{r anovaexact,echo=FALSE,  eval = TRUE, include=TRUE}
+security_01_exact$main_results$power <- round(security_01_exact$main_results$power,2)
+security_01_exact$main_results$non_centrality <- round(security_01_exact$main_results$non_centrality,2)
+knitr::kable(round(security_01_exact$main_results,4), caption = 'Power of main and interaction effects for 2x2 factorial designs (Studies 1d, e)', booktabs = TRUE)
+```
+
+```{r pairwiseexact,echo=FALSE, eval = TRUE,  include=TRUE}
+row.names(security_01_exact$pc_results) <- gsub(x = row.names(security_01_exact$pc_results), pattern = "yes", replacement = "1")
+row.names(security_01_exact$pc_results) <- gsub(x = row.names(security_01_exact$pc_results), pattern = "no", replacement = "0")
+row.names(security_01_exact$pc_results) <- gsub(x = row.names(security_01_exact$pc_results), pattern = "inequality", replacement = "ineq")
+row.names(security_01_exact$pc_results) <- gsub(x = row.names(security_01_exact$pc_results), pattern = "undeserved", replacement = "undes")
+row.names(security_01_exact$pc_results) <- gsub(x = row.names(security_01_exact$pc_results), pattern = "p_", replacement = "")
+knitr::kable(round(security_01_exact$pc_results,2), caption = 'Power of pairwise comparisons for 2x2 factorial designs (t-test; Studies 1d, e)', booktabs = TRUE)
+```
+
+```{r s2-victim-table,echo=FALSE,  eval = TRUE, include=TRUE}
+tidy_ci %>%
+  kbl(booktabs = T, caption = 'Results for (pilot) multilevel analysis, predicting victimization')
+```
