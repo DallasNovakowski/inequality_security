@@ -3,88 +3,66 @@ title             : "The Relationship between Inequality and <br> Consumption of
 shorttitle        : "Inequality and Security Consumption"
 date: "`r Sys.Date()`"
 
-header-includes:
-- \usepackage{pdflscape}
-- \newcommand{\blandscape}{\begin{landscape}}
-- \newcommand{\elandscape}{\end{landscape}}
-
 author: 
     - Dallas Novakowksi^[University of Calgary, Haskayne school of Business, Corresponding author, dallas.novakowski1@ucalgary.ca]
         #   - Conceptualization
     #   - Writing - Original Draft Preparation
     #   - Writing - Review & Editing
     #   - Analysis
-
     - Mehdi Mourali^[University of Calgary, Haskayne school of Business]    
 
-# authornote: |
-# #  Add complete departmental affiliations for each author here. Each new line herein must be indented, like this line.
-# 
-# #  Enter author note here.
+# https://tinyurl.com/ybremelq for nature guideline for summary paragraph
 
 abstract: |
   A growing body of evidence suggests that economic inequality causes humans to take more risks and engage in aggressive behaviours. In a 'winner-takes-all' environment, risky activities such as gambling, lying, and crime can be a person's only means of keeping up with competitors and accessing contested resources. There is comparatively little research investigating whether people anticipate risk-taking and conflict from their neighbors in unequal environments. An informative context for examining the distrust-inducing effects of inequality is the security market, which offers goods that protect customers from the actions of malicious agents. For instance, barred windows are purchased because they (purportedly) protect consumers from break-ins. Given the costly nature of these security products, security consumption can only be worthwhile if a consumer expects that other people have harmful intentions.
 
   The proposed research will examine whether inequality will increase consumers' willingness to purchase security products through two studies: 1) experimental manipulations of inequality and distributional fairness in an economic game context, and 2) multilevel analyses of the effects of nation-level inequality (k = 28) on individuals' consumption of security goods (n = 52,908).
 
-#   <!-- https://tinyurl.com/ybremelq -->
 #   
 # keywords          : "inequality, security, consumption, trust, distrust, multilevel analysis, International Crime Victimization Survey"
 # wordcount         : "X"
-# 
-# floatsintext      : yes
-# figurelist        : no
-# tablelist         : no
-# footnotelist      : no
-# linenumbers       : yes
-# mask              : no
-# draft             : no
-# figsintext        : yes
-
-# csl                 : "C:\Users\dalla\Zotero\styles\human-nature.csl"
-
-# documentclass     : "apa7"
-# classoption       : "man"
-# output            : papaja::apa6_pdf
 
 output:   
-  # bookdown::gitbook   # not displaying images (likely due to lack of index?)
-  bookdown::pdf_document2
+  bookdown::pdf_book
     # keep_tex: yes   # useful for troubleshooting and journal submissions 
 
-# template: bookdown-article.template.tex
-
-linestretch: 1.5
 
 bibliography: references.bib
-
 csl: nature.csl
 
 latex_engine: pdflatex
-# classoption: landscape
+linestretch: 1.5
 fontsize: 12pt
 indent: true
 include-before:   
   - '`\newpage{}`{=latex}'  #Creates a page break in between title page and toc.
+
+header-includes:
+- \usepackage{pdflscape}
+- \newcommand{\blandscape}{\begin{landscape}}
+- \newcommand{\elandscape}{\end{landscape}}
+-  \newcommand{\beginsupplement}{
+    \setcounter{table}{0}  
+    \renewcommand{\thetable}{S\arabic{table}} 
+    \setcounter{figure}{0} 
+    \renewcommand{\thefigure}{S\arabic{figure}}
+  }
 ---
 
 ```{r setup, include = FALSE}
-library("papaja")
 library(tidyverse)
 library(kableExtra)
 library(english)
 
-r_refs("r-references.bib")
-
 #trackdown::download_file(file="docs/05_icvs_NHB_RR_stage1.Rmd")
 # trackdown::update_file(here::here("docs","inequality_security_NHB_RR_stage1.Rmd"),hide_code=T)
   
-load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/iv_2005.RData")
-load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/icvs_solo_datafiles.RData")
+load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/iv_2005.RData") # icvs objects
+load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/icvs_solo_datafiles.RData")  # loads indidividual dataframes for different icvs configurations
 
-load(here::here("output", "icvs_output.RData"))
-load(here::here("output", "pretest_output.RData"))
-load(here::here("output", "manuscript_objects.RData"))
+load(here::here("output", "icvs_output.RData")) #icvs models, tidy tables, convergence stats
+load(here::here("output", "pretest_output.RData"))    # Experiment power analyses and pretest output 
+load(here::here("output", "manuscript_objects.RData"))  # design tables and hypotheses
 
 source(here::here("scripts", "manuscript_funs.r"), local = knitr::knit_global())
 # source(here::here("scripts","hypotheses.R"), local = knitr::knit_global())
@@ -94,6 +72,7 @@ source(here::here("scripts", "manuscript_funs.r"), local = knitr::knit_global())
 # Seed for random number generation
 set.seed(1234)
 knitr::opts_chunk$set(cache.extra = knitr::rand_seed, echo = FALSE)
+
 ```
 
 \newpage
@@ -116,11 +95,11 @@ People appear to demonstrate an aversion to being the subject of social comparis
 
 If envious peers are more likely to act spitefully and take risks, being able to anticipate or detect disparities among peers may be helpful in protecting oneself from harmful behaviours. These patterns of envy aversion seem adaptive when considering the risk- and conflict- inducing effects of inequality. Indeed, theories have been proposed that predict a "fear-of-envy" equilibrium, where concerns over partner's destructive envy can reduce people's likelihood to engage in wealth-creating behaviours [@gershman2014; @brams2005].
 
-This project will operate under the assumption that the purchase and use of security products is a consumer manifestation of distrust. Currently, most research on the inequality-trust relationship is based on attitudinal measures (REF). While informative tools for otherwise unobservable internal states, these psychological measures provide little information on how trust and distrust manifest in people's behaviours. Security products may thus be informative because security products are one of the few goods that confer little intrinsic value to consumers. Whereas vacations are inherently satisfying, the costs of burglar alarms, sturdy locks, and security cameras are often only worthwhile *if consumers expect that other agents may cause them harm*. This project aims to test an envy aversion model of distrust and security consumption, which predicts that **H1)** `r hypotheses[1]` (see Table \@ref(tab:design-table) for hypotheses and design table) because **H1.1)** people expect disadvantaged peers to experience envy.
+This project will operate under the assumption that the purchase and use of security products is a consumer manifestation of distrust. Currently, most research on the inequality-trust relationship is based on attitudinal measures (REF). While informative tools for otherwise unobservable internal states, these psychological measures provide little information on how trust and distrust manifest in people's behaviours. Security products may thus be informative because security products are one of the few goods that confer little intrinsic value to consumers. Whereas vacations are inherently satisfying, the costs of burglar alarms, sturdy locks, and security cameras are often only worthwhile *if consumers expect that other agents may cause them harm*. This project aims to test an envy aversion model of distrust and security consumption, which predicts that **H1)**: `r hypotheses[1]` (see Table \@ref(tab:design-table) for hypotheses and design table) because **H1.1)** people expect disadvantaged peers to experience envy.
 
-This theory of envy avoidance also addresses the role of fairness in shaping the type of envy an individual experiences. Benign envy is associated with a motivation to improve oneself, and occurs when an individual believes that the envied person's advantage is deserved . By contrast, malicious envy is characterized by a desire to harm the comparison target, and is elicited when the individual believes that their environment is unfair [@vandeven2012]. Participants are are more likely to engage in helping behaviours when they believe that their partner is frustrated by the disparity and harboring antagonistic motivations (i.e., experiencing malicious envy)[@vandeven2010]. Conversely, participants who earned an advantaged position (which is associated with benign envy) tend to be less generous [@hoffman1994]. As such, this project will also test the prediction that **H2)** `r tolower(hypotheses[2])`, and that **H3)** Individuals will consume more security when inequality is the result of group-based favoritism (Table \@ref(tab:design-table)).
+This theory of envy avoidance also addresses the role of fairness in shaping the type of envy an individual experiences. Benign envy is associated with a motivation to improve oneself, and occurs when an individual believes that the envied person's advantage is deserved . By contrast, malicious envy is characterized by a desire to harm the comparison target, and is elicited when the individual believes that their environment is unfair [@vandeven2012]. Participants are are more likely to engage in helping behaviours when they believe that their partner is frustrated by the disparity and harboring antagonistic motivations (i.e., experiencing malicious envy)[@vandeven2010]. Conversely, participants who earned an advantaged position (which is associated with benign envy) tend to be less generous [@hoffman1994]. As such, this project will also test the prediction that **H2)**: `r tolower(hypotheses[2])`, and that **H3)** Individuals will consume more security when inequality is the result of group-based favoritism (Table \@ref(tab:design-table)).
 
-This theory of envy aversion makes similar directional predictions as some existing inequality-distrust theories, but makes these predictions under more generalized circumstances. Even in the absence of absolute poverty, larger material incentives for antisocial behaviour, or different opportunity costs, this model would still predict that inequality increases distrust and security consumption, out of the person's efforts to protect themselves against envious reactions. The mechanism of envy aversion is specific to predicting reduced trust towards less wealthy individuals among a reference group. This theory will be tested through a multimethod project of five experiments (Study 1) and one multilevel analysis using the International Crime Victimization Survey (Study 2) [@vankesteren2010] to examine the relationship between economic inequality and individual consumption of products that protect users against their neighbors.
+This theory of envy aversion makes similar directional predictions as some existing inequality-distrust theories, but makes these predictions under more generalized circumstances. Even in the absence of absolute poverty, larger material incentives for antisocial behaviour, or different opportunity costs, this model would still predict that inequality increases distrust and security consumption, out of the person's efforts to protect themselves against envious reactions. The mechanism of envy aversion is specific to predicting reduced trust towards less wealthy individuals among a reference group. This theory will be tested through a multimethod project of five experiments (Study 1) and one multilevel analysis using the International Crime Victimization Survey (ICVS; Study 2) [@vankesteren2010] to examine the relationship between economic inequality and individual consumption of products that protect users against their neighbors.
 
 # Methods
 
@@ -164,11 +143,11 @@ Given the constraints on the minimum and maximum values for the variables in the
 
 ### Study 1a: Inequality and security spending
 
-The first experiment will manipulate high versus low economic inequality in a hypothetical context, to test whether **H1)** `r tolower(hypotheses[1])` (Table \@ref(tab:design-table)), versus **H1~0~)** no significant effect of inequality. Participants will be asked to imagine that they are paired with another participant, where they will each be assigned to different roles (Blue or Yellow), and endowed with money. In the equal condition, participants will be told that their partner received the same amount of funds as themselves (\$2). In the unequal condition, participants will be told that their partner instead received only \$1. This procedure has a notable strength by controlling the participant's income across levels of inequality (as the partner's money is the only income that changes). Results will be analyzed using an independent-samples t-test.
+The first experiment will manipulate high versus low economic inequality in a hypothetical context, to test whether **H1)**: `r tolower(hypotheses[1])` (Table \@ref(tab:design-table)), versus **H1~0~)**: no significant effect of inequality. Participants will be asked to imagine that they are paired with another participant, where they will each be assigned to different roles (Blue or Yellow), and endowed with money. In the equal condition, participants will be told that their partner received the same amount of funds as themselves (\$2). In the unequal condition, participants will be told that their partner instead received only \$1. Before participants make their security decision, they will be asked four questions on whether they think their partner would be envious of them (e.g., "My partner probably feels envious of me"). These items will be summed and will be used to test whether **H1a)**: `r hyp2_min[1]` versus **H1a~0~)**: no significant indirect effect of anticipated partner envy from inequality to security consumption. This procedure has a notable strength by controlling the participant's income across levels of inequality (as the partner's money is the only income that changes). Results will be analyzed using an independent-samples t-test.
 
 #### A priori power analysis (Study 1a)
 
-Using mean and standard deviation values of security expenditure (*M*=`r round(base_mean,2)`, *SD*=`r round(base_sd,2)`) from the pretest, an a priori power analysis has been conducted using r package pwr (REF). Given the unknown size of the hypothesized effect, this study will target an effect size of cohen's d = .2, a small effect according to statistical convention [@cohen1988]. To achieve 95% power with one tail, studies must have a minimum of n = `r round(power_ttest_security$n,0)` participants per cell, or a study-wide total of n=`r format(round(power_ttest_security$n*2,0),big.mark = ",", scientific = FALSE)`.
+Using mean and standard deviation values of security expenditure (*M*=`r round(base_mean,2)`, *SD*=`r round(base_sd,2)`) from the pretest, an a priori power analysis has been conducted using r package `pwr` (REF). Given the unknown size of the hypothesized effect, this study will target an effect size of cohen's d = .2, a small effect according to statistical convention [@cohen1988]. To achieve 95% power with one tail, studies must have a minimum of n = `r round(power_ttest_security$n,0)` participants per cell, or a study-wide total of n=`r format(round(power_ttest_security$n*2,0),big.mark = ",", scientific = FALSE)`.
 
 ### Study 1b: Inequality with real payoffs
 
@@ -180,7 +159,7 @@ The same inequality experiment will be conducted as in Study 1b, with the except
 
 ### Study 1d: Meritocracy
 
-Groups will always be characterized by inequality through some type of currency, whether wealth, income, or status. Indeed, a popular idea is that inequality propels individuals towards productive behaviours (REF). In this line, the presence of inequality is less of an issue compared to the distributional fairness in how the inequality was produced. The next two experiments will test whether **H2)** `r tolower(hypotheses[2])` (Table \@ref(tab:design-table); versus **H2~0~)** no significant inequality\*merit interaction). Study 1d again varies inequality (yes/no) as the previous studies, but also manipulates whether one's income is allocated *randomly or based on task performance*.
+Groups will always be characterized by inequality through some type of currency, whether wealth, income, or status. Indeed, a popular idea is that inequality propels individuals towards productive behaviours (REF). In this line, the presence of inequality is less of an issue compared to the distributional fairness in how the inequality was produced. The next two experiments will test whether **H2)**: `r tolower(hypotheses[2])` (Table \@ref(tab:design-table); versus **H2~0~)**: no significant inequality\*merit interaction). Study 1d again varies inequality (yes/no) as the previous studies, but also manipulates whether one's income is allocated *randomly or based on task performance*. As a manipulation check, before making their consumption decision, participants will be asked to report whether they believed the incomes were disbursed fairly (e.g.,"The way incomes were given for this game is fair")
 
 For this random vs. merit manipulation, all participants will complete a slider task, where they have one minute to correctly place 24 sliders at the midpoint of various lines that appear on their screens. Participants will then either be told that their incomes were allocated randomly, or because they correctly placed more sliders than their partner. The slider task has been used in several studies to examine the effects of effort in distributional preferences, and has demonstrated that individuals that win their income through performance are less likely to support redistribution of effort-driven income allocations [@cassar2019]. Participants will be excluded from analyses if they complete fewer than 3 sliders, which would both indicate low engagement in the study and likely undermine the credibility of the manipulation. Results will be analyzed using a 2x2 between-subjects ANOVA.
 
@@ -198,27 +177,27 @@ m_merit <- lm(security_spending ~ inequality*merit, data = ineq_merit_data)
 
 ### Study 1e: Group membership
 
-As described in the literature review to Study 1d, fairness appears to have its roots in avoiding partiality. Since Study 1d directly compares meritocratic versus random allocation of resources, it does not answer the more fundamental question: do people consume more security goods when inequality appears to be more discriminatory and unfair? Study 1e will keep a constant presence of inequality, but manipulate whether the partner is a member of an ingroup or outgroup, and whether the incomes are distributed randomly, or by a separate *ingroup individual*. Study 1e will use a 2x2 between subjects ANOVA to test whether **H3)** `r tolower(hypotheses[3])` (Table \@ref(tab:design-table); versus **H3~0~)** no significant outgroup/\*agentic-distribution interaction).
+As described in the literature review to Study 1d, fairness appears to have its roots in avoiding partiality. Since Study 1d directly compares meritocratic versus random allocation of resources, it does not answer the more fundamental question: do people consume more security goods when inequality appears to be more discriminatory and unfair? Study 1e will keep a constant presence of inequality, but manipulate whether the partner is a member of an ingroup or outgroup, and whether the incomes are distributed randomly, or by a separate *ingroup individual*. Study 1e will use a 2x2 between subjects ANOVA to test whether **H3)**: `r tolower(hypotheses[3])` (Table \@ref(tab:design-table); versus **H3~0~)**: no significant outgroup/\*agentic-distribution interaction). Participants will complete the same fairness manipulation check as in Study 1d.
 
 ```{r group-define-model, eval = FALSE, echo=FALSE}
 m_group <- lm(security_spending ~ agentic*outgroup, data = ineq_merit_data)
 ```
 
-## Study 2 -Multilevel Analysis of the International Crime Victimization Survey
+## Study 2 - Multilevel Analysis of the ICVS
 
-The highly-controlled nature of the experiments in Study 1 allow for precise tests of the hypothesized inequality-security consumption relationship. Although they offer real consequences for participants' choices, economic games are highly artificial by design. Insights generated in the security game may not be generalizable to consumers' daily consumption context. To provide a test with greater external validity, this project supplements experimental results with the multilevel analysis of archival data assessing respondents' use of security measures, to test whether **H4)** `r tolower(hypotheses[4])` (Table \@ref(tab:design-table); versus **H4~0~)** no significant outgroup/\*agentic-distribution interaction).
+The highly-controlled nature of the experiments in Study 1 allow for precise tests of the hypothesized inequality-security consumption relationship. Although they offer real consequences for participants' choices, economic games are highly artificial by design. Insights generated in the security game may not be generalizable to consumers' daily consumption context. To provide a test with greater external validity, this project supplements experimental results with the multilevel analysis of archival data assessing respondents' use of security measures, to test whether **H4)**: `r tolower(hypotheses[4])` (Table \@ref(tab:design-table); versus **H4~0~)**: no significant outgroup/\*agentic-distribution interaction).
 
 The format of a registered report carries substantial benefit when analyzing archival data, as such data-dependent analysis, the so-called "garden of forking paths [@gelman2014] allows a researcher to pick and choose those data and analyses that best suit their preferred conclusions[@simmons2011]. The commitment to reprocessing and analysis plans before model estimation helps to reduce these researcher degrees of freedom.
 
 ### Study 2 - experimental procedures (Design)
 
-The relationship between country-level inequality and the consumption of security products will be tested using a multilevel linear regression. This analysis will be accomplished using a combination of three archival datasets: the International Crime Victimization Survey, the Standardized World Income Inequality Database, and the Penn World Tables.
+The relationship between country-level inequality and the consumption of security products will be tested using a multilevel linear regression. This analysis will be accomplished using a combination of three archival datasets: the ICVS[@vankesteren2010], the Standardized World Income Inequality Database (SWIID)[@solt2020], and the Penn World Tables (version 10.0; PWT)[@feenstra2015].
 
 <!-- Atkinson and Brandolini (2001) discuss these and several related pitfalls in their excellent survey on the use of secondary data sets in studies of income inequality. -->
 
 ### Study 2 - Proposed sample characteristics (Sampling plan)
 
-First, indicators of security consumption have been accessed from the International Crime Victimization survey [ICVS, @vankesteren2010], which has surveyed over 300,000 people across `r cleaned_countries` different countries on householders' experiences with crime, policing, crime prevention, and feelings of unsafety. Second, nation-level inequality in disposable income was accessed through the Standardized World Income Inequality Database [SWIID, @solt2020]. The SWIID has been designed to maximize the comparability of income inequality data while maintaining the widest possible coverage across countries and over time. Lastly, countries' expenditure-side real GDP and populations were retrieved from the Penn World Table, PWT; version 10.0 [@feenstra2015].
+First, indicators of security consumption have been accessed from the ICVS [@vankesteren2010], which has surveyed over 300,000 people across `r cleaned_countries` different countries on householders' experiences with crime, policing, crime prevention, and feelings of unsafety. Second, nation-level inequality in disposable income was accessed through the SWIID[@solt2020]. The SWIID has been designed to maximize the comparability of income inequality data while maintaining the widest possible coverage across countries and over time. Lastly, countries' expenditure-side real GDP and populations were retrieved from the PWT[@feenstra2015].
 
 Although the above datasets extend across multiple years, the current analysis will be limited to observations across 2004-2006. These observations were collected across two distinct sweeps in the ICVS, with one being specific to the European Union. Imposing this restriction yields a sufficient initial number of cases (`r format(sweep5_nrow, big.mark = ",", scientific = FALSE)`) and countries (`r sweep5_countries`) before screening, combined with relative recency of data. By contrast, all data collected by the ICVS between 2010 and 2015 only totals only twelve countries, before screening.
 
@@ -249,11 +228,7 @@ Security consumption (*M* = `r round(mean(iv_2005_mod$total_security),2)`, *SD* 
 
 The focal model will include predictor variables at country- and individual-levels: at the nation level, 1) nation-level inequality (gini - disposable income), 2) expenditure-side GDP per capita (matched purchasing power parity), and 3) nation-level self-reported crime victimization; and at the respondent level: 1) age (five-year increments), 2) gender (`r round(summary(iv_2005_mod$gender)["female"]/nrow(iv_2005_mod)*100,0)`% female), 3) employed (`r round(summary(iv_2005_mod$employed)[1]/nrow(iv_2005_mod)*100,0)`% employed), 4) income quartile, 5) relationship status (`r round(summary(iv_2005_mod$partnered)[1]/nrow(iv_2005_mod)*100,0)`% partnered), 6) number of individual victimization experiences, and 7) perceived police effectiveness, range = `r min(iv_2005_mod$police_effective)`-`r max(iv_2005_mod$police_effective)`). See Table \@ref(tab:s2desc-tab) for remaining descriptive statistics.
 
-As an index of inequality, the Gini coefficient is most intuitively defined as the average difference in income between all pairs in a population, divided by twice the average income in the population. The SWIID consists of 100 separate dataframes, with varying gini values to reflect the values' uncertainty (i.e., larger standard errors) when making comparisons across different countries or time periods.
-
-<!-- "The inequality estimates and their associated uncertainty are represented by 100 draws from the posterior distribution: for any given observation, the differences across these imputations capture the uncertainty in the estimate" -->
-
-The PWT-selected GDP values are adjusted for Purchasing Power Parity, "to compare relative living standards across countries at a single point in time" [@feenstra2015]. Nations' GDP values were divided by their population sizes to yield a per-capita GDP value, which will be used for these analyses.
+As an index of inequality, the Gini coefficient is most intuitively defined as the average difference in income between all pairs in a population, divided by twice the average income in the population. The SWIID consists of 100 separate dataframes, with varying gini values to reflect the values' uncertainty (i.e., larger standard errors) when making comparisons across different countries or time periods. The PWT-selected GDP values are adjusted for Purchasing Power Parity, "to compare relative living standards across countries at a single point in time" [@feenstra2015]. Nations' GDP values were divided by their population sizes to yield a per-capita GDP value, which will be used for these analyses.
 
 ```{r vic-var-recode, echo = FALSE}
 vic_var_assault <- dplyr::recode(vic_var_assault, "cartheft_5yrs" = "car thefts", "motortheft_5yrs" = "motor vehicle thefts", "bicyctheft_5yrs" = "bicycle thefts", "burglar_5yrs" = "burglaries", "attempt_5yrs" = "attempted burglaries", "robbery_5yrs" = "robberies", "pers_theft_5yrs" = "thefts", "assault_5yrs"="physical assaults")
@@ -277,6 +252,13 @@ As a proof of concept, the proposed analyses have been conducted on individuals'
 
 <!--# Full descriptions must be provided of any outcome-neutral criteria that must be met for successful testing of the stated hypotheses.Such quality checks might include the absence of floor or ceiling effects in data distributions, positive controls, or other quality checks that are orthogonal to the experimental hypotheses. -->
 
+
+<!-- https://marissabarlaz.github.io/portfolio/ols/ -->
+<!-- e expect a -1.095 increase (or a 1.095 decrease) in the expected value of rating on the log odds scale, given all of the other variables in the model are held constant. In other words, when going from object to subject, the likelihood of a 4 versus a 1-3 on the rating scale decreases by 1.095 on the log odds scale, the likelihood of a 3 versus a 1-2 on the rating scale decreases by 1.095 on the log odds scale, and the likelihood of a 2 versus a 1 on the rating scale decreases by 1.095 on the log odds scale. -->
+
+<!-- If we want to look at this on the odds scale, we can exponentiate using exp() to look at odds. -->
+
+
 \newpage
 
 # Data availability statement
@@ -293,8 +275,7 @@ Interactive demos of experimental games can be accessed at [(https://security-pr
 
 ```{=tex}
 \begingroup
-\setlength{\parindent}{-0.5in}
-\setlength{\leftskip}{0.5in}
+
 ```
 ::: {#refs custom-style="Bibliography"}
 :::
@@ -307,7 +288,6 @@ Interactive demos of experimental games can be accessed at [(https://security-pr
 
 The funders had no role in study design, data collection and analysis, decision to publish or preparation of the manuscript.
 
-We used `r cite_r("r-references.bib")` in preparing this document.
 
 # Author contributions
 
@@ -319,60 +299,15 @@ The authors declare no competing interests.
 
 \newpage
 
-# Figures & Figure captions
+<!-- # Figures & Figure captions -->
 
-(ref:pretest-splitplot) Means (95% CI) and distributions for pretest. n=`r screened_n`, within-subjects, *p*s \> .49
+<!-- \newpage -->
 
-```{r pretest-splitplot, echo=FALSE, out.width='100%', fig.cap="(ref:pretest-splitplot)"}
-knitr::include_graphics(here::here("figures", "spending_pretest_splitplot.png"))
-```
-
-(ref:design) Study design for a priori power analysis for two-level experiments (Study 1a and b). Note: Max possible value is \$1.00; bars indicate +/-1 *SD*
-
-```{r l2-design, echo=FALSE, out.width='100%', fig.cap="(ref:design)"}
-knitr::include_graphics(here::here("figures", "l2_design_plot.png"))
-```
-
-(ref:powerplot2) Per-condition sample size thresholds for 95% power in main effect of inequality for two-level experiments (Study 1a and b). Assuming two-sided testing.
-
-```{r powerplot2, echo=FALSE, out.width='100%', fig.cap='(ref:powerplot2)'}
-knitr::include_graphics(here::here("figures", "l2powerplot.png"))
-```
-
-```{r design, echo=FALSE, out.width='100%', fig.cap="(ref:design)"}
-knitr::include_graphics(here::here("figures", "power_design_plot.png"))
-```
-
-<!-- is a "no-way interaction:" that the effect of inequality will be nullified when incomes are invisible. The hypothesis of a no-way interaction suggests firstly that sample sizes must twice the size of an equivalent study just testing a simple effect; secondly, our core hypothesis rests on all three coefficients being significant [d]in the following model: -->
-
-(ref:powerplot) Per-condition sample size thresholds for 95% power in main and interactive effects. Assuming two-sided testing.
-
-```{r powerplot, echo=FALSE, out.width='100%', fig.cap='(ref:powerplot)'}
-knitr::include_graphics(here::here("figures", "01powerplot.png"))
-```
-
-(ref:icvs-security-hist) Histogram for number of security measures (max = `r length(prevention_min2)`). Dotted Line indicates mean (*M* =`r round(mean(iv_2005_mod$total_security),2)`)
-
-```{r icvs-security-hist, echo=FALSE, out.width='100%', fig.cap="(ref:icvs-security-hist)"}
-knitr::include_graphics(here::here("figures", "security_hist.png"))
-```
-
-(ref:icvs-victim-hist) Histogram for number of victimization experiences (max = `r length(vic_var_assault)`). Dotted Line indicates mean (*M* =`r round(mean(iv_2005_mod$num_victim_5yr_assault),2)`).
-
-```{r icvs-victim-hist, echo=FALSE, out.width='100%', fig.cap="(ref:icvs-victim-hist)"}
-knitr::include_graphics(here::here("figures", "victim_hist.png"))
-```
-
-(ref:icvs-victim-dotwhisk) Dot-whisker plot for ordinal regression coefficients predicting victimization experiences
-
-```{r icvs-victim-dotwhisk, echo=FALSE, out.width='100%', fig.cap="(ref:icvs-victim-dotwhisk)"}
-knitr::include_graphics(here::here("figures", "ordinal_dotwhisker.png"))
-```
 
 # Tables
 
 ```{r design-table}
-kd <- knitr::kable(design, caption = 'Design table',
+kd <- knitr::kable(design, caption = 'Design table', format = "latex",
                    # booktabs = TRUE, 
                    col.names = design_columns) %>%
   kable_styling(full_width = FALSE) %>%
@@ -380,39 +315,12 @@ kd <- knitr::kable(design, caption = 'Design table',
   column_spec(2,width = "1.3in") %>%
   column_spec(3,width = "1.7in") %>%
   column_spec(4,width = "1.3in") %>%
-  column_spec(5,width = "1.7in")
+  column_spec(5,width = "1.7in") %>%
+  kableExtra::landscape()
 
-landscape(kd, margin = NULL)
+kd
 ```
 
-```{r l2anovaexact}
-l2_01_exact$main_results$power <- round(l2_01_exact$main_results$power,2)
-l2_01_exact$main_results$non_centrality <- round(l2_01_exact$main_results$non_centrality,2)
-knitr::kable(round(l2_01_exact$main_results,4), caption = 'Power of main effect for 2-level design', booktabs = TRUE)
-```
-
-```{r l2pairwiseexact}
-row.names(l2_01_exact$pc_results) <- gsub(x = row.names(l2_01_exact$pc_results), pattern = "yes", replacement = "1")
-row.names(l2_01_exact$pc_results) <- gsub(x = row.names(l2_01_exact$pc_results), pattern = "no", replacement = "0")
-row.names(l2_01_exact$pc_results) <- gsub(x = row.names(l2_01_exact$pc_results), pattern = "inequality", replacement = "ineq")
-row.names(l2_01_exact$pc_results) <- gsub(x = row.names(l2_01_exact$pc_results), pattern = "p_", replacement = "")
-knitr::kable(round(l2_01_exact$pc_results,2), caption = 'Power of pairwise comparisons for 2-level design (t-test)', booktabs = TRUE)
-```
-
-```{r anovaexact}
-security_01_exact$main_results$power <- round(security_01_exact$main_results$power,2)
-security_01_exact$main_results$non_centrality <- round(security_01_exact$main_results$non_centrality,2)
-knitr::kable(round(security_01_exact$main_results,4), caption = 'Power of main and interaction effects for 2x2 factorial designs', booktabs = TRUE)
-```
-
-```{r pairwiseexact}
-row.names(security_01_exact$pc_results) <- gsub(x = row.names(security_01_exact$pc_results), pattern = "yes", replacement = "1")
-row.names(security_01_exact$pc_results) <- gsub(x = row.names(security_01_exact$pc_results), pattern = "no", replacement = "0")
-row.names(security_01_exact$pc_results) <- gsub(x = row.names(security_01_exact$pc_results), pattern = "inequality", replacement = "ineq")
-row.names(security_01_exact$pc_results) <- gsub(x = row.names(security_01_exact$pc_results), pattern = "undeserved", replacement = "undes")
-row.names(security_01_exact$pc_results) <- gsub(x = row.names(security_01_exact$pc_results), pattern = "p_", replacement = "")
-knitr::kable(round(security_01_exact$pc_results,2), caption = 'Power of pairwise comparisons for 2x2 factorial designs (t-test)', booktabs = TRUE)
-```
 
 ```{r s2desc-tab}
 s2desc_columns <- c("Variable",	"Mean",	"SD")
@@ -452,19 +360,21 @@ s2_desc_tab <- knitr::kable(s2_desc, caption = 'Study 2 Descriptive Statistics',
 s2_desc_tab
 ```
 
-```{r s2-victim-table}
-tidy_ci %>%
-  kbl(booktabs = T, caption = 'Results for sample multilevel analysis, predicting victimization')
+
+<!-- \clearpage -->
+
+<!-- # (APPENDIX) Appendix {-}  -->
+
+<!-- # Appendix A -->
+
+
+\clearpage
+
+# Supplementary material {-}
+
+\beginsupplement
+
+```{r, child=c('supp_materials.Rmd')}
+
 ```
 
-# Supplementary information
-
-(ref:modmed) Hypothesized pattern of moderated mediation
-
-```{r concept-modmed, echo=FALSE, out.width='100%', fig.cap="(ref:modmed)"}
-knitr::include_graphics(here::here("figures", "ineqsec_concepmodmed.jpg"))
-```
-
-```{r detail-modmed, echo=FALSE, out.width='100%', fig.cap="(ref:modmed)"}
-knitr::include_graphics(here::here("figures", "ineqsec_modmed_detail.jpg"))
-```
