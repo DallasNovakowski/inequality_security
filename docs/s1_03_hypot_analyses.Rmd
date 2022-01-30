@@ -288,59 +288,6 @@ bxp +
     )
 ```
 
-For moderated mediation, **H2a)**: `r h2a`. Or more precisely, **H2a.1)**: `r h2a.1`
-
-```{r merit-mediat-predict}
-#predicting mediator
-m_merit_med1 <- lm(likely_attack ~ inequality*merit, data = ineq_merit_data)
-```
-
-```{r merit-likely-security}
-# test for relationship between p. attack likelihood and security spending
-m_merit_likely_security <- lm(security_spending ~ 
-                                likely_attack, data = ineq_merit_data)
-```
-
-```{r merit-mediat-d}
-# model with mediator: likely_attack 
-#(or perceived likelihood of partner attacking)
-m_merit_med2 <- lm(security_spending ~ inequality*merit + likely_attack, 
-                 data = ineq_merit_data)
-```
-
-```{r merit-mod-med}
-# see https://ademos.people.uic.edu/Chapter15.html#
-#41_create_the_necessary_regression_models
-library(mediation)
-mediate <- mediation::mediate
-
-m_merit_modmed_himerit <- mediate(m_merit_med1, m_merit_med2,    
-    covariates = list(merit = 1), boot = TRUE,   
-    boot.ci.type = "bca", sims = 2000, treat="inequality",
-                           mediator="likely_attack")
-plot(m_merit_modmed_himerit, xlim = 0:1)
-summary(m_merit_modmed_himerit) 
-# Specify mediation at low visibility
-m_merit_modmed_lowmerit <- mediate(m_merit_med1, m_merit_med2,    
-    covariates = list(merit = 0), boot = TRUE,   
-    boot.ci.type = "bca", sims = 2000, treat="inequality",
-                           mediator="likely_attack")
-plot(m_merit_modmed_lowmerit, xlim = 0:1)
-summary(m_merit_modmed_lowmerit) 
-```
-
-```{r merit-modmed-test}
-modmed_testmerit <- mediate(m_merit_modmed_himerit, m_merit_modmed_lowmerit, 
-                            boot = TRUE,  boot.ci.type = "bca", sims = 2000, 
-                            treat="inequality", mediator="likely_attack")   
-#We don't specify anything about the moderator in this code yet
-merit_modmed_test <- test.modmed(modmed_testmerit, 
-    covariates.1 = list(merit = 0), covariates.2 = list(merit = 1), 
-    sims = 2000)
-#Here we specify both levels of the moderator that we want to test
-merit_modmed_test
-```
-
 ## Study 1f {.unnumbered}
 
 **H3):** `r h3`. Or more precisely, **H3.1):** `r h3.1`
@@ -405,60 +352,5 @@ group_mod <- ineq_group_data %>%
   group_by(merit) %>%
   emmeans_test(security_spending ~ inequality, 
                p.adjust.method = "bonferroni")
-```
-
-For moderated mediation, **H3a):** `r h3a`
-
-```{r group-mediat-predict, eval=FALSE, echo=TRUE}
-#predicting mediator
-m_group_med1 <- lm(likely_attack ~ outgroup*agentic, data = ineq_group_data)
-```
-
-```{r group-likely-security, eval=FALSE, echo=TRUE}
-# test for relationship between p. attack likelihood and security spending
-m_group_likely_security <- lm(security_spending ~ likely_attack, 
-                              data = ineq_group_data)
-```
-
-```{r group-mediat-dv, eval=FALSE, echo=TRUE}
-# model with mediator: likely_attack 
-#(or perceived likelihood of partner attacking)
-m_group_med2 <- lm(security_spending ~ agentic*outgroup + likely_attack, 
-                 data = ineq_group_data)
-```
-
-Or more precisely, **H3a.1):** `r h3a.1`
-
-```{r group-mod-med, eval=FALSE, echo = TRUE}
-# see https://ademos.people.uic.edu/Chapter15.html#
-#41_create_the_necessary_regression_models
-m_group_modmed_outgroup <- mediate(m_group_med1, m_group_med2,    
-                           covariates = list(outgroup = 1), boot = TRUE,   
-                           boot.ci.type = "bca", sims = 2000, 
-                           treat="inequality",
-                           mediator="likely_attack")
-plot(m_group_modmed_outgroup, xlim = 0:1)
-summary(m_group_modmed_outgroup) 
-# Specify mediation at low visibility
-m_group_modmed_ingroup <- mediate(m_group_med1, m_group_med2,    
-                           covariates = list(outgroup = 0), boot = TRUE,   
-                           boot.ci.type = "bca", sims = 2000, 
-                           treat="inequality",
-                           mediator="likely_attack")
-plot(m_group_modmed_ingroup, xlim = 0:1)
-summary(m_group_modmed_ingroup) 
-```
-
-```{r group-modmed-test, eval=FALSE, echo = TRUE}
-modmed_testgroup <- mediate(m_group_modmed_outgroup, m_group_modmed_ingroup, 
-                            boot = TRUE,  boot.ci.type = "bca", sims = 2000, 
-                            treat="inequality", mediator="likely_attack")   
-#We don't specify anything about the moderator in this code yet
-group_modmed_test <- test.modmed(modmed_testgroup, 
-                                 covariates.1 = list(outgroup = 0),   
-            covariates.2 = list(outgroup = 1), 
-            sims = 2000)
-#Here we specify both levels of the moderator that we want to test
-group_modmed_test
 ```
 
