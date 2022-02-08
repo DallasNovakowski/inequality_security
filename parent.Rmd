@@ -1,0 +1,58 @@
+---
+title: "Parent"
+author: "Dallas Novakowski"
+date: "10/01/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+sections.path <- file.path(rprojroot::find_root("inequality_security.Rproj"),
+                           "docs"
+                           )
+r.files.vec <- list.files(sections.path)
+r.files.vec <- r.files.vec[grepl(".Rmd", r.files.vec)]
+```
+
+
+
+
+```{r}
+extracted.path <- file.path(rprojroot::find_root("inequality_security.Rproj"),
+                           "scripts",
+                           "extracted")
+
+
+purrr::map(r.files.vec, function(file.i) {
+  # print(file.i)
+  file.name <- gsub(".Rmd", "", file.i)
+  extracted.file <- paste0(file.name, ".R")
+  knitr::purl(
+    file.path(sections.path, file.i),
+    file.path(extracted.path, extracted.file)
+    )
+})
+
+```
+
+
+
+```{r}
+source.vec <- c(
+  "01_security_pretest_clean.r",
+  "02_security_power_analyses.r",
+  "inequality_security_NHB_RR_stage1.r",
+  "s2_01_icvs_prep_report.r",
+  "s2_02_icvs_exploration.r",
+  "s2_icvs_other_analyses.r"
+)
+
+purrr::map(source.vec, function(source.i) {
+  source(file.path(extracted.path, source.i))
+})
+```
+

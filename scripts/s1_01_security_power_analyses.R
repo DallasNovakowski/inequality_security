@@ -352,3 +352,150 @@ pwr.anova.test(
 
 
 
+
+sample_design <- ANOVA_design(
+  design = "2w*2b",
+  n = 23,
+  mu = c(-0.25, 0.25, 0.25,-0.25),
+  sd = 1,
+  r = .5,
+  labelnames = c("age", "old", "young", 
+                 "color", "blue", "red")
+)
+
+sample_result <- ANOVA_exact(sample_design,
+                                 alpha_level = .05,
+                                 verbose = FALSE)
+
+sample_design_flip <- ANOVA_design(
+  design = "2b*2w",
+  n = 23,
+  mu = c(0.25,-0.25,-0.25, 0.25),
+  sd = 1,
+  r = .5,
+  labelnames = c("color", "blue", "red", 
+                 "within", "old", "young")
+)
+
+sample_result_flip <- ANOVA_exact(sample_design_flip,
+                            alpha_level = .05,
+                            verbose = FALSE)
+
+
+sample_design_flip_7 <- ANOVA_design(
+  design = "2b*2w",
+  n = 23,
+  mu = c(0.25,-0.25,-0.25, 0.25),
+  sd = 1,
+  r = .7,
+  labelnames = c("color", "blue", "red", 
+                 "within", "old", "young")
+)
+
+sample_result_flip_7 <- ANOVA_exact(sample_design_flip_7,
+                                 alpha_level = .05,
+                                 verbose = FALSE)
+
+
+# try with between effect
+
+sample_design_flip_btwn <- ANOVA_design(
+  design = "2b*2w",
+  n = 23,
+  mu = c(0.25, 0.25,-0.25,-0.25),
+  sd = 1,
+  r = .5,
+  labelnames = c("color", "blue", "red", 
+                 "within", "old", "young")
+)
+
+#f = 0.2952
+sample_result_flip_btwn <- ANOVA_exact(sample_design_flip_btwn,
+                                 alpha_level = .05,
+                                 verbose = FALSE)
+
+
+ 
+sample_design_flip_btwn_7 <- ANOVA_design(
+  design = "2b*2w",
+  n = 23,
+  mu = c(0.25, 0.25,-0.25,-0.25),
+  sd = 1,
+  r = .7,
+  labelnames = c("color", "blue", "red", 
+                 "within", "old", "young")
+)
+
+#f 0.2773
+sample_result_flip_btwn_7 <- ANOVA_exact(sample_design_flip_btwn_7,
+                                   alpha_level = .05,
+                                   verbose = FALSE)
+
+
+# so we can replicate the effect size decrease of the correlation
+
+
+sample_design_btwn <- ANOVA_design(
+  design = "2w*2b",
+  n = 23,
+  mu = c(0.25, -0.25, 0.25,-0.25),
+  sd = 1,
+  r = .5,
+  labelnames = c("within", "old", "young", 
+                 "color", "blue", "red")
+)
+
+# f = 0.2952
+sample_result_btwn <- ANOVA_exact(sample_design_btwn,
+                             alpha_level = .05,
+                             verbose = FALSE)
+
+sample_design_btwn_7 <- ANOVA_design(
+  design = "2w*2b",
+  n = 23,
+  mu = c(0.25, -0.25, 0.25,-0.25),
+  sd = 1,
+  r = .7,
+  labelnames = c("within", "old", "young", 
+                 "color", "blue", "red")
+)
+
+# f = 0.2773; exact same thing as 2b*2w
+sample_result_btwn_7 <- ANOVA_exact(sample_design_btwn_7,
+                                  alpha_level = .05,
+                                  verbose = FALSE)
+
+
+# go for extreme; r = .99
+sample_design_btwn_99 <- ANOVA_design(
+  design = "2w*2b",
+  n = 23,
+  mu = c(0.25, -0.25, 0.25,-0.25),
+  sd = 1,
+  r = .99,
+  labelnames = c("within", "old", "young", 
+                 "color", "blue", "red")
+)
+
+# f = 0.2563;
+sample_result_btwn_99 <- ANOVA_exact(sample_design_btwn_99,
+                                    alpha_level = .05,
+                                    verbose = FALSE)
+
+
+# go for extreme; r = .0
+sample_design_btwn_0 <- ANOVA_design(
+  design = "2w*2b",
+  n = 23,
+  mu = c(0.25, -0.25, 0.25,-0.25),
+  sd = 1,
+  r = .0,
+  labelnames = c("within", "old", "young", 
+                 "color", "blue", "red")
+)
+
+# f = 0.3615;
+sample_result_btwn_0 <- ANOVA_exact(sample_design_btwn_0,
+                                     alpha_level = .05,
+                                     verbose = FALSE)
+
