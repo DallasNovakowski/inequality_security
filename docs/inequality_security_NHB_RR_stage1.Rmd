@@ -16,7 +16,7 @@ author:
 abstract: |
   A growing body of evidence suggests that economic inequality causes humans to take more risks and engage in aggressive behaviours. In a 'winner-takes-all' environment, risky activities such as gambling, lying, and crime can be a person's only means of keeping up with competitors and accessing contested resources. There is comparatively little research investigating whether people anticipate risk-taking and conflict from their neighbors in unequal environments. An informative context for examining the distrust-inducing effects of inequality is the security market, which offers goods that protect customers from the actions of malicious agents. For instance, barred windows are purchased because they (purportedly) protect consumers from break-ins. Given the costly nature of these security products, security consumption can only be worthwhile if a consumer expects that other people have harmful intentions.
 
-  The proposed research will examine whether inequality will increase consumers' willingness to purchase security products through two studies: 1) experimental manipulations of inequality and distributional fairness in an economic game context, and 2) multilevel analyses of the effects of nation-level inequality (k = 28) on individuals' consumption of security goods (n = 52,908).
+  The proposed research will examine whether inequality will increase consumers' willingness to purchase security products through two studies: 1) experimental manipulations of inequality and distributional fairness in an economic game context, and 2) multilevel analyses of the effects of nation-level inequality (k = 32) on individuals' consumption of security goods (n = 79,864).
 
 #   
 # keywords          : "inequality, security, consumption, trust, distrust, multilevel analysis, International Crime Victimization Survey"
@@ -25,7 +25,10 @@ abstract: |
 output:   
   bookdown::pdf_book
     # keep_tex: yes   # useful for troubleshooting and journal submissions 
-
+    
+#   bookdown::word_document2:   # knits to word, but doesn't work with KableExtra
+#     toc: true
+# always_allow_html: true
 
 bibliography: references.bib
 csl: nature.csl
@@ -95,7 +98,7 @@ People appear to demonstrate an aversion to being the subject of social comparis
 
 If envious peers are more likely to act spitefully and take risks, being able to anticipate or detect disparities among peers may be helpful in protecting oneself from harmful behaviours. These patterns of envy aversion seem adaptive when considering the risk- and conflict- inducing effects of inequality. Indeed, theories have been proposed that predict a "fear-of-envy" equilibrium, where concerns over partner's destructive envy can reduce people's likelihood to engage in wealth-creating behaviours [@gershman2014; @brams2005].
 
-This project will operate under the assumption that the purchase and use of security products is a consumer manifestation of distrust. Currently, most research on the inequality-trust relationship is based on attitudinal measures (REF). While informative tools for otherwise unobservable internal states, these psychological measures provide little information on how trust and distrust manifest in people's behaviours. Security products may thus be informative because security products are one of the few goods that confer little intrinsic value to consumers. Whereas vacations are inherently satisfying, the costs of burglar alarms, sturdy locks, and security cameras are often only worthwhile *if consumers expect that other agents may cause them harm*. This project aims to test an envy aversion model of distrust and security consumption, which predicts that **H1)**: `r hypotheses[1]` (see Table \@ref(tab:design-table) for hypotheses and design table) because **H1.1)** people expect disadvantaged peers to experience envy.
+This project will operate under the assumption that the purchase and use of security products is a consumer manifestation of distrust. Currently, most research on the inequality-trust relationship is based on attitudinal measures (REF). While informative tools for otherwise unobservable internal states, these psychological measures provide little information on how trust and distrust manifest in people's behaviours. Security products may thus be informative because security products are one of the few goods that confer little intrinsic value to consumers. Whereas vacations are inherently satisfying, the costs of burglar alarms, sturdy locks, and security cameras are often only worthwhile *if consumers expect that other agents may cause them harm*. This project aims to test an envy aversion model of distrust and security consumption, which predicts that **H1)**: `r hypotheses[1]` (see Table \@ref(tab:design-table) for hypotheses and design table) because **H1a)** people expect disadvantaged peers to experience envy.
 
 This theory of envy avoidance also addresses the role of fairness in shaping the type of envy an individual experiences. Benign envy is associated with a motivation to improve oneself, and occurs when an individual believes that the envied person's advantage is deserved . By contrast, malicious envy is characterized by a desire to harm the comparison target, and is elicited when the individual believes that their environment is unfair [@vandeven2012]. Participants are are more likely to engage in helping behaviours when they believe that their partner is frustrated by the disparity and harboring antagonistic motivations (i.e., experiencing malicious envy)[@vandeven2010]. Conversely, participants who earned an advantaged position (which is associated with benign envy) tend to be less generous [@hoffman1994]. As such, this project will also test the prediction that **H2)**: `r tolower(hypotheses[2])`, and that **H3)** Individuals will consume more security when inequality is the result of group-based favoritism (Table \@ref(tab:design-table)).
 
@@ -167,9 +170,7 @@ For this random vs. merit manipulation, all participants will complete a slider 
 
 #### A priori power analysis (Study 1d)
 
-Study 1d requires statistical power to detect a "no-way" interaction. Given the unknown size of the hypothesized effect, this study will target an effect size of $\eta_{p}^2$ = .01. To achieve 95% power, studies must have a minimum of `r cell_n_01` participants per cell, or a study-wide total of n=`r format(cell_n_01*4,big.mark = ",", scientific = FALSE)`. This large sample size is necessary given the possibility of a "no-way" interaction, where only one condition is significantly different from the remainder. In this case, the simple effect of inequality is nullified depending on the moderator. @simonsohn2015 discusses how, in a no-way interaction, samples require at least twice as many subjects per cell as a study that simply aims to show the simple effect.
-
-For a visual breakdown of hypotheses, see Figures \@ref(fig:concept-modmed) and \@ref(fig:detail-modmed). Figures \@ref(fig:design) and \@ref(fig:powerplot) display the pattern of means and per-condition sample size thresholds to obtain 95% power. Additionally, see Tables \@ref(tab:anovaexact) and \@ref(tab:pairwiseexact) for the power and effect sizes of the ANOVA and pairwise comparisons, respectively.
+Study 1d requires statistical power to detect a "no-way" interaction. Given the unknown size of the hypothesized effect, this study will target an effect size of $\eta_{p}^2$ = .01. To achieve 95% power, studies must have a minimum of `r cell_n_01` participants per cell, or a study-wide total of n=`r format(cell_n_01*4,big.mark = ",", scientific = FALSE)`. This large sample size is necessary given the possibility of a "no-way" interaction, where only one condition is significantly different from the remainder. In this case, the simple effect of inequality is nullified depending on the moderator. @simonsohn2015 discusses how, in a no-way interaction, samples require at least twice as many subjects per cell as a study that simply aims to show the simple effect. Figures \@ref(fig:design) and \@ref(fig:powerplot) display the pattern of means and per-condition sample size thresholds to obtain 95% power. Additionally, see Tables \@ref(tab:anovaexact) and \@ref(tab:pairwiseexact) for the power and effect sizes of the ANOVA and pairwise comparisons, respectively.
 
 ```{r merit-define-model, eval = FALSE, echo=FALSE}
 m_merit <- lm(security_spending ~ inequality*merit, data = ineq_merit_data)
@@ -205,7 +206,7 @@ Observations were excluded for participants that refused response on any analysi
 
 Notably, the number of participants and countries dropped from analyses can be heavily impacted by the selection of variables targeted for analyses. For instance, including perceived police effectiveness in any analyses would require dropping the countries of Japan, Peru, and Iceland. Likewise, including participants' experiences of assault would require removing Peru. Lastly, analyzing participants' income quartiles requires removing Japan.
 
-Including all three of these variables yields k = `r sum(summary(iv_2005_mod$country)>0)` countries, and n = `r format(nrow(iv_2005_mod), big.mark = ",", scientific = FALSE)` participants. By comparison, excluding these three variables yields a sample of `r sum(summary(iv_2005$country)>0)` countries and a total `r format(nrow(iv_2005), big.mark = ",", scientific = FALSE)` participants. The reported analyses will focus on the former, smaller sample specification, but supplementary analyses will assess whether the effects of a reduced model (i.e., excluding assaults, income quartile, and perceived police effectiveness) change between these sample subsets.
+Dropping all three of these variables yields k = `r sum(summary(iv_2005$country)>0)` countries, and n = `r format(nrow(iv_2005), big.mark = ",", scientific = FALSE)` participants. By comparison, including these three variables yields a sample of `r sum(summary(iv_2005_mod$country)>0)` countries and a total `r format(nrow(iv_2005_mod), big.mark = ",", scientific = FALSE)` participants. The reported analyses will focus on the former, larger sample specification to avoid restricting the observed range of values. For instance, Peru has the highest reported rates of victimization in this sample, and the second-highest gini value.
 
 <!-- , with a minimum of `r min(summary(iv_2005$country)[summary(iv_2005$country)!= 0])` participants per country.  -->
 
@@ -220,13 +221,13 @@ prevention_min2 <- dplyr::recode(prevention_min2, "prev_burglar_alarm" = "burgla
 
 ```
 
-Security consumption (*M* = `r round(mean(iv_2005_mod$total_security),2)`, *SD* = `r round(sd(iv_2005_mod$total_security),2)`) has been computed by summing respondents' self-reported ownership of `r as.english(length(prevention_min2))` different preventative measures: `r glue::glue_collapse(x = prevention_min2, ", ", last = ", and ")`. This variable excludes several security items in the ICVS due to missing data, such as owning a watch dog, having surveillance arrangements with neighbors, and purchasing insurance against criminal activities.
+Security consumption (*M* = `r round(mean(iv_2005$total_security),2)`, *SD* = `r round(sd(iv_2005$total_security),2)`) has been computed by summing respondents' self-reported ownership of `r as.english(length(prevention_min2))` different preventative measures: `r glue::glue_collapse(x = prevention_min2, ", ", last = ", and ")`. This variable excludes several security items in the ICVS due to missing data, such as owning a watch dog, having surveillance arrangements with neighbors, and purchasing insurance against criminal activities.
 
 <!-- a burglar alarm, special door locks, special grills, a high perimeter fence, and caretaker security. -->
 
 #### Predictor variables
 
-The focal model will include predictor variables at country- and individual-levels: at the nation level, 1) nation-level inequality (gini - disposable income), 2) expenditure-side GDP per capita (matched purchasing power parity), and 3) nation-level self-reported crime victimization; and at the respondent level: 1) age (five-year increments), 2) gender (`r round(summary(iv_2005_mod$gender)["female"]/nrow(iv_2005_mod)*100,0)`% female), 3) employed (`r round(summary(iv_2005_mod$employed)[1]/nrow(iv_2005_mod)*100,0)`% employed), 4) income quartile, 5) relationship status (`r round(summary(iv_2005_mod$partnered)[1]/nrow(iv_2005_mod)*100,0)`% partnered), 6) number of individual victimization experiences, and 7) perceived police effectiveness, range = `r min(iv_2005_mod$police_effective)`-`r max(iv_2005_mod$police_effective)`). See Table \@ref(tab:s2desc-tab) for remaining descriptive statistics.
+The focal model will include predictor variables at country- and individual-levels: at the nation level, 1) nation-level inequality (gini - disposable income), 2) expenditure-side GDP per capita (matched purchasing power parity), and 3) nation-level self-reported crime victimization; and at the respondent level: 1) age (five-year increments), 2) gender (`r round(summary(iv_2005$gender)["female"]/nrow(iv_2005)*100,0)`% female), 3) employed (`r round(summary(iv_2005$employed)[1]/nrow(iv_2005)*100,0)`% employed), 4) income quartile, 5) relationship status (`r round(summary(iv_2005$partnered)[1]/nrow(iv_2005)*100,0)`% partnered), 6) number of individual victimization experiences, and 7) perceived police effectiveness, range = `r min(iv_2005$police_effective)`-`r max(iv_2005$police_effective)`). See Table \@ref(tab:s2desc-tab) for remaining descriptive statistics.
 
 As an index of inequality, the Gini coefficient is most intuitively defined as the average difference in income between all pairs in a population, divided by twice the average income in the population. The SWIID consists of 100 separate dataframes, with varying gini values to reflect the values' uncertainty (i.e., larger standard errors) when making comparisons across different countries or time periods. The PWT-selected GDP values are adjusted for Purchasing Power Parity, "to compare relative living standards across countries at a single point in time" [@feenstra2015]. Nations' GDP values were divided by their population sizes to yield a per-capita GDP value, which will be used for these analyses.
 
@@ -244,11 +245,16 @@ Analyses will be predict security consumption as an ordinal variable (0: no secu
 
 The coefficient estimates and standard errors will be extracted through simulations. Using `smvrnorm` function from the `stevemisc` package, the distributions for fixed-effects estimates will be generated from 100 dataframes, which each consist of coefficients and variance/covariance matrices from a model. These distributions will be used to calculate point estimates and standard errors for each fixed effect.
 
-If the weighted model fails to converge, the model will be conducted without frequency weights (receiving the error, `Variance-covariance matrix of the parameters is not defined`). Likewise, if the unweighted ordinal regression fails to converge, a weighted mixed logistic regresssion will be conducted. If the weighted mixed logistic regression fails to converge, an unweighted mixed logistic regression will be conducted instead.
+If the weighted model fails to converge, the model will be conducted without frequency weights (receiving the error, `Variance-covariance matrix of the parameters is not defined`). Likewise, if the unweighted ordinal regression fails to converge, a weighted mixed logistic regresssion will be conducted. If the weighted mixed logistic regression fails to converge, an unweighted mixed logistic regression will be conducted instead. In addition, supplementary analyses will assess whether the effects of inequality persist in a smaller, variable-maximizing dataset (k = `r sum(summary(iv_2005_mod$country)>0)`, n = `r format(nrow(iv_2005_mod), big.mark = ",", scientific = FALSE)`).
 
 ### Pilot data (Study 2)
 
-As a proof of concept, the proposed analyses have been conducted on individuals' victimization experiences, which, like security behaviours, is operationalized as a summed variable of multiple binary items, resulting in a similar distribution to security behaviours (see Figures \@ref(fig:icvs-security-hist) and \@ref(fig:icvs-victim-hist)). In this case, `r model_nonconvergence` of 100 analyzed dataframes failed to converge (preventing calculation of standard errors). As such, mixed ordinal regression without frequency weighting was conducted, and had no convergence issues. In this model, gini has a nonsignificant rtelationship with personal experiences of victimization, `r tidy_extract(tidy_ci,"gini_2004_6_cent")`. By contrast, all of the individual-level variables had significant relationships with likelihood to be report victimization, e.g., age: `r tidy_extract(tidy_ci,"age_cent")`. A coefficient of `r tidy_ci[6,"estimate"]` corresponds to a `r tidy_ci[6,"estimate"]` decrease in the natural logged odds of observing a 3 versus a 2, 1 or 0, per unit change in the age variable (which corresponds to a five-year change in real age). Similarly, a one-unit change in the age variable decreases the natural logged odds of observing a 2 versus 1 or 0 by `r tidy_ci[6,"estimate"]`. See Figure \@ref(fig:icvs-victim-dotwhisk) and Table \@ref(tab:s2-victim-table) for more results.
+As a proof of concept, the proposed analyses have been conducted on individuals' victimization experiences, which, like security behaviours, is operationalized as a summed variable of multiple binary items, resulting in a similar distribution to security behaviours (see Figures \@ref(fig:icvs-security-hist) and \@ref(fig:icvs-victim-hist)). In this case, `r model_nonconvergence` of 100 analyzed dataframes failed to converge (preventing calculation of standard errors). As such, mixed ordinal regression without frequency weighting was conducted, and had no convergence issues. 
+
+In this ordinal mixed regression model, gini has a significant relationship with personal experiences of victimization, `r tidy_extract(iv_tidy_ci,"gini_2004_6_cent")`, corresponding to a `r iv_tidy_ci[3,"estimate"]` increase the natural logged odds of observing a 2 versus a 1 or 0 (and 1 versus 0), per unit change in the gini coefficient. See Figure \@ref(fig:icvs-victim-dotwhisk-iv) and Table \@ref(tab:s2-victim-table-iv) for more results. In addition, see Figures \@ref(fig:icvs-victim-dotwhisk) and \@ref(fig:icvs-victim-dotwhisk-min), as well as Tables \@ref(tab:s2-victim-table) and \@ref(tab:s2-victim-table-min). 
+
+
+, but supplementary analyses will assess whether the effects of a larger model (i.e., including assaults, income quartile, and perceived police effectiveness) change between these sample subsets.
 
 <!--# Full descriptions must be provided of any outcome-neutral criteria that must be met for successful testing of the stated hypotheses.Such quality checks might include the absence of floor or ceiling effects in data distributions, positive controls, or other quality checks that are orthogonal to the experimental hypotheses. -->
 
@@ -325,26 +331,30 @@ kd
 ```{r s2desc-tab}
 s2desc_columns <- c("Variable",	"Mean",	"SD")
 
-Variable <- c("gini","gdp","nation-level victimization","age","income quartile", "individual victimizations","police effectiveness","security consumed")
+Variable <- c("gini","gdp","nation-level victimization","age",
+              # "income quartile",
+              "individual victimizations",
+              # "police effectiveness",
+              "security consumed")
 Mean <-
-  c(round(mean(gd_mod$gini_2004_6),2),
-    format(round(mean(gd_mod$gdppc_2004_6)), big.mark = ",", scientific = FALSE),
-    round(mean(gd_mod$num_victim_5yr_assault),2),
-    round(mean(iv_2005_mod$age_num),2),
-    round(mean(iv_2005_mod$income_quartile),2),
-    round(mean(iv_2005_mod$num_victim_5yr_assault),2),
-    round(mean(iv_2005_mod$police_effective),2),
-    round(mean(iv_2005_mod$total_security),2)
+  c(round(mean(gd$gini_2004_6),2),
+    format(round(mean(gd$gdppc_2004_6)), big.mark = ",", scientific = FALSE),
+    round(mean(gd$num_victim_5yr),2),
+    round(mean(iv_2005$age_num),2),
+    # round(mean(iv_2005$income_quartile),2),
+    round(mean(iv_2005$num_victim_5yr),2),
+    # round(mean(iv_2005$police_effective),2),
+    round(mean(iv_2005$total_security),2)
     )
 SD <-
-  c(round(sd(gd_mod$gini_2004_6),2),
-    format(round(sd(gd_mod$gdppc_2004_6)), big.mark = ",", scientific = FALSE),
-    round(sd(gd_mod$num_victim_5yr_assault),2),
-    round(sd(iv_2005_mod$age_num),2),
-    round(sd(iv_2005_mod$income_quartile),2),
-    round(sd(iv_2005_mod$num_victim_5yr_assault),2),
-    round(sd(iv_2005_mod$police_effective),2),
-    round(sd(iv_2005_mod$total_security),2)
+  c(round(sd(gd$gini_2004_6),2),
+    format(round(sd(gd$gdppc_2004_6)), big.mark = ",", scientific = FALSE),
+    round(sd(gd$num_victim_5yr),2),
+    round(sd(iv_2005$age_num),2),
+    # round(sd(iv_2005$income_quartile),2),
+    round(sd(iv_2005$num_victim_5yr),2),
+    # round(sd(iv_2005$police_effective),2),
+    round(sd(iv_2005$total_security),2)
     )
 
 s2_desc <- data.frame(Variable, Mean, SD)
