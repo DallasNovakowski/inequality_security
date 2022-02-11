@@ -22,6 +22,7 @@ library(RColorBrewer)
 library(reshape2)
 library(ggpubr) # stat_pvalue_manual
 library(tidyverse)
+library(stats)
 
 #for raincloud plots
 source("https://gist.githubusercontent.com/benmarwick/2a1bb0133ff568cbe28d/raw/fb53bd97121f7f9ce947837ef1a4c65a73bffb3f/geom_flat_violin.R")
@@ -487,10 +488,9 @@ data_long <- data_long %>%
 skew_groups <-
   by(data_long$security_spending, data_long$page, moments::skewness)
 
-kurt_groups <-
-  by(data_long$security_spending, data_long$page, moments::kurtosis)
+kurt_groups <-by(data_long$security_spending, data_long$page, moments::kurtosis)
 
-sd_groups <- by(data_long$security_spending, data_long$page, sd)
+sd_groups <- by(data_long$security_spending, data_long$page, stats::sd)
 
 mean_groups <- by(data_long$security_spending, data_long$page, mean)
 
@@ -635,7 +635,7 @@ g <-
 
 g
 
-ggsave(here::here("figures", "securitypretest_rainclouds.png"))
+# ggsave(here::here("figures", "securitypretest_rainclouds.png"))
 ```
 
 
@@ -714,15 +714,15 @@ geom_split_violin <- function (mapping = NULL,
 ```{r spending}
 # split violin - adapted from https://debruine.github.io/post/plot-comparison/
 
-# spending_summary_data <- data_long %>%
-#   group_by(prob, cost) %>%
-#   dplyr::summarise(
-#     mean = mean(security_spending),
-#     min = mean(security_spending) - qnorm(0.975) * sd(security_spending) /
-#       sqrt(n()),
-#     max = mean(security_spending) + qnorm(0.975) * sd(security_spending) /
-#       sqrt(n())
-#   )
+spending_summary_data <- data_long %>%
+  group_by(prob, cost) %>%
+  dplyr::summarise(
+    mean = mean(security_spending),
+    min = mean(security_spending) - qnorm(0.975) * sd(security_spending) /
+      sqrt(n()),
+    max = mean(security_spending) + qnorm(0.975) * sd(security_spending) /
+      sqrt(n())
+  )
 # 
 # 
 # spending_pretest_splitplot <- data_long %>%
@@ -849,9 +849,35 @@ ggsave(here::here("figures", "spending_pretest_splitplot.png"),
 
 For this project, we will be using values from the 50_02 condition, which corresponds to a baseline 50% chance of successful thefts, and each unit of security costing $0.02. This condition seems to produce the least skewed data, at `r round(skew_groups["50_02"],2)`
 
+```{r within-factor-cor}
+
+cor_50_60 <- data_long %>%
+    arrange(participant_code, prob) %>%
+    summarise_each(funs(cor(.[prob == "50"], .[prob == "60"])), starts_with("security")) %>%
+  pull()
+  
+
+cor_60_75 <- data_long %>%
+    arrange(participant_code, prob) %>%
+    summarise_each(funs(cor(.[prob == "60"], .[prob == "75"])), starts_with("security"))%>%
+  pull()
+
+cor_50_75 <- data_long %>%
+    arrange(participant_code, prob) %>%
+    summarise_each(funs(cor(.[prob == "50"], .[prob == "75"])), starts_with("security"))%>%
+  pull()
+
+mean(cor_50_60,cor_60_75,cor_50_75) # looks similar to ICC; .559
+```
+
+
 ```{r order analysis, warning=FALSE, echo=FALSE}
 # models for analyzing order effects
 m1_null <- lme4::lmer(security_spending ~  (1 | participant_code), data = data_long, REML=FALSE)
+
+pretest_icc <- performance::icc(m1_null)
+
+sjPlot::tab_model(m1_null)
 
 m1_order <- lmerTest::lmer(security_spending ~ as.numeric(round_num) + as.numeric(prob) + cost + (1 | participant_code), data = data_long, REML=TRUE)
 
@@ -861,6 +887,6 @@ pretest_model <- summary(m1_order)
 pretest_model
 
 
-cgwtools::resave(pretest_model, file = here::here("output", "pretest_output.RData"))
+cgwtools::resave(pretest_model,pretest_icc,cor_50_60,cor_60_75,cor_50_75, file = here::here("output", "pretest_output.RData"))
 ```
 
