@@ -20,10 +20,10 @@ victim_mord_max <- ordered(num_victim_5yr_winz) ~ gini_2004_6_cent + gdppc_2004_
 victim_ass_mord_min <- ordered(num_victim_5yr_assault_winz) ~ gini_2004_6_cent + gdppc_2004_6_scale +
   age_cent + employed + male + (1 | country)
 
-victimim_ass_mord_max <- ordered(num_victim_5yr_assault_winz) ~ gini_2004_6_cent + gdppc_2004_6_scale +
+victim_ass_mord_max <- ordered(num_victim_5yr_assault_winz) ~ gini_2004_6_cent + gdppc_2004_6_scale +
   age_cent + employed + male + police_effective + income_quartile + (1 | country)
 
-cgwtools::resave(victim_lmer_min,victim_lmer_max, victim_mord_min,victim_mord_max,victim_ass_mord_min,victimim_ass_mord_max,
+cgwtools::resave(victim_lmer_min,victim_lmer_max, victim_mord_min,victim_mord_max,victim_ass_mord_min,victim_ass_mord_max,
                  file = here::here("output","icvs_output.RData"))
 
 
@@ -44,9 +44,14 @@ lme_mod_max1 <- lme4::lmer(victim_lmer_max,
                           data = mod_joined1, REML=FALSE)
 
 
-# ordinal models ___________
+# ordinal models ______________
 #reduced ordinal model
-m_ord_mod1 <- summary(ordinal::clmm(victim_ass_mord_min, data = mod_joined1))
+m_ord_mod1 <- summary(ordinal::clmm(victim_mord_min, 
+                                    data = mod_joined1))
+
+m_ord_iv1 <- summary(ordinal::clmm(victim_mord_min, 
+                                    data = iv_joined1))
+
 
 #full model for analyses
 m_ord_mod_max1 <- summary(ordinal::clmm(victim_ass_mord_max, 
@@ -63,4 +68,4 @@ m_ord_mod_max1 <- summary(ordinal::clmm(victim_ass_mord_max,
 # lme_mod1,lme_mod_max1,m_ord_mod1,m_ord_mod_max1, file = here::here("output","icvs_output.RData"))
 
  
-cgwtools::resave(m_ord_mod1,m_ord_mod_max1, file = here::here("output","icvs_output.RData"))
+cgwtools::resave(m_ord_mod1,m_ord_mod_max1,m_ord_iv1, file = here::here("output","icvs_output.RData"))

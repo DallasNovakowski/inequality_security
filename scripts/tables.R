@@ -1,6 +1,9 @@
 source(file=here::here("scripts","hypotheses.r"))
 load(file = here::here("output", "pretest_output.RData"))
+load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/icvs_solo_datafiles.RData")  # loads indidividual dataframes for different icvs configurations
 
+
+nrow(iv_2005_mod)
 
 #First design table ____________________________________
 
@@ -18,7 +21,7 @@ Sampling <- c(paste("Studies 1a, b, & c; n=",format(round(power_ttest_security$n
               "Study 1a, same sample as above",
               paste("Study 1d; n = ",format(cell_n_01*4,big.mark = ",", scientific = FALSE), "crowdsourced. Power target: parial eta^2 = .01. Excluded if completes < 3 sliders; missing data, failed atn/comp checks"), 
               paste("Study 1e; n = ",format(cell_n_01*4,big.mark = ",", scientific = FALSE), "crowdsourced, following from power analysis in Study 1e. Exclusion: missing data, failed atn/comp checks"), 
-              "Study 2; k = 28 countries, and n = 52,908 participants; Exclusion: missing data")
+              paste("Study 2; k = 28 countries, and n = ", format(nrow(iv_2005_mod),big.mark = ",", scientific = FALSE), "participants; Exclusion: missing data"))
 Analysis<- c("Between-subjects t-tests, r package `rstatix`",
              "Mediation analysis; r package `mediate`",
              "2bx2b ANOVA and Pairwise comparisons, r package `car`",

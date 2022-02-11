@@ -1,6 +1,7 @@
 library(tidyverse)
 library(stevemisc) # for svnorm 
 library(dotwhisker)
+library(ggtext)
 
 # library(modelr) # for data_grid
 # library(ordinal)
@@ -8,8 +9,6 @@ library(dotwhisker)
 source(here::here("scripts", "manuscript_funs.r"), local = knitr::knit_global())
 
 load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/icvs_joined_samples.RData")
-
-load(here::here("data","m100_sims.RData"))
 
 load(here::here("output","icvs_output.RData"))
 
@@ -44,7 +43,8 @@ m100_tidy %>%
       age_cent = "Age",
       employed1 = "Employed",
       male1 = "Male",
-      police_effective = "Perceived police effectiveness",
+      police_effective = "Perceived 
+      police effectiveness",
       income_quartile = "Income quartile"
     )
   ) %>%
@@ -54,11 +54,15 @@ m100_tidy %>%
              colour = "grey60",
              linetype = "dashed") +
   theme(legend.position = "none") +
-  labs(title = "Predicting crime victimization",
+  labs(title = str_wrap(paste("Predicting crime victimization, max. var. Smaller sample,
+                     n = ", format(nrow(mod_joined1),big.mark = ",", scientific = FALSE), 
+                              "k = ", 
+                              length((summary(as.factor(mod_joined1$country))[0!= summary(as.factor(mod_joined1$country))]))),45) ,
        x = "Coefficient Estimate")
 
 #save the dot whisker plot
-ggsave(here::here("figures", "ordinal_dotwhisker.png"))
+ggsave(here::here("figures", "ordinal_dotwhisker.png"),
+       height = 3, width = 6)
 
 # create regression result tibble for making a a table
 tidy_ci <- m100_tidy %>%
@@ -85,7 +89,7 @@ tidy_ci <- subset(tidy_ci, select = -c(ci95_lo,ci95_hi))
 
 tidy_ci <- tidy_ci %>% relocate(CI95, .before = z_score)
 
-tidy_ci$df <- m_ord_mod1$dims$df.residual
+tidy_ci$df <- format(m_ord_mod_max1$dims$df.residual,big.mark = ",", scientific = FALSE)
 
 tidy_ci <- tidy_ci %>% relocate(df, .before = estimate)
 
@@ -138,12 +142,15 @@ m100_min_tidy %>%
              colour = "grey60",
              linetype = "dashed") +
   theme(legend.position = "none") +
-  labs(title = "Predicting crime victimization",
+  labs(title = str_wrap(paste("Predicting crime victimization, min. var. Smaller sample,
+                     n = ", format(nrow(mod_joined1),big.mark = ",", scientific = FALSE), 
+                     "k = ", 
+                     length((summary(as.factor(mod_joined1$country))[0!= summary(as.factor(mod_joined1$country))]))),45) ,
        x = "Coefficient Estimate")
 
 #save the dot whisker plot
 ggsave(here::here("figures", "min_ordinal_dotwhisker.png"),
-       height = 3)
+       height = 3, width = 6)
 
 
 # create regression result tibble for making a a table
@@ -171,6 +178,11 @@ min_tidy_ci <- subset(min_tidy_ci, select = -c(ci95_lo,ci95_hi))
 
 min_tidy_ci <- min_tidy_ci %>% relocate(CI95, .before = z_score)
 
+
+min_tidy_ci$df <- format(m_ord_mod1$dims$df.residual,big.mark = ",", scientific = FALSE)
+
+min_tidy_ci <- min_tidy_ci %>% relocate(df, .before = estimate)
+
 cgwtools::resave(min_tidy_ci, file = here::here("output","icvs_output.RData"))
 
 
@@ -182,7 +194,7 @@ load(here::here("output","m100_iv_sims.RData"))
 
 # organize sim data as tibble
 m100_iv_sims <- m100_iv_sims %>%
-  map_df(. %>% as_tibble())
+map_df(. %>% as_tibble())
 
 m100_iv_tidy <- tibble(
   term = names(m100_iv_sims),
@@ -216,12 +228,14 @@ m100_iv_tidy %>%
              colour = "grey60",
              linetype = "dashed") +
   theme(legend.position = "none") +
-  labs(title = "Predicting crime victimization",
+  labs(title = str_wrap(paste("Predicting crime victimization, min. var. Larger sample, n = ",
+                              format(nrow(iv_joined1),big.mark = ",", scientific = FALSE),
+                     "k = ",length((summary(as.factor(iv_joined1$country))[0!= summary(as.factor(iv_joined1$country))]))),45), 
        x = "Coefficient Estimate")
 
 #save the dot whisker plot
 ggsave(here::here("figures", "iv_ordinal_dotwhisker.png"),
-       height = 3)
+       height = 3, width = 6)
 
 
 
@@ -249,6 +263,10 @@ iv_tidy_ci <- round_df(iv_tidy_ci, 3)
 iv_tidy_ci <- subset(iv_tidy_ci, select = -c(ci95_lo,ci95_hi))
 
 iv_tidy_ci <- iv_tidy_ci %>% relocate(CI95, .before = z_score)
+
+iv_tidy_ci$df <- format(m_ord_iv1$dims$df.residual,big.mark = ",", scientific = FALSE)
+
+iv_tidy_ci <- iv_tidy_ci %>% relocate(df, .before = estimate)
 
 cgwtools::resave(iv_tidy_ci, file = here::here("output","icvs_output.RData"))
 

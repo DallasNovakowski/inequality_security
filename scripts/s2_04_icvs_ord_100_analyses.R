@@ -53,12 +53,16 @@ m100_sims <- lapply(seq_along(combined), function(i) {
 }) 
 
 save(m100_sims, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/m100_sims.RData")
-cgwtools::resave(m100_sims, file = here::here("output","m100_sims.RData"))
+
+save(m100_sims, file = here::here("output","m100_sims.RData"))
+
+
+# cgwtools::resave(m100_sims, file = here::here("output","m100_sims.RData"))
 
 
 rm(m100_ord)
 
-m100_ord_min <- mod_joined %>% map(~ ordinal::clmm(victim_ass_mord_min, data = .x))
+m100_ord_min <- mod_joined %>% map(~ ordinal::clmm(victim_mord_min, data = .x))
 
 
 m100_min_coef <- m100_ord_min %>%
