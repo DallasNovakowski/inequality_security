@@ -30,7 +30,6 @@ power_ttest_security_d2 <- pwr.t.test(d=.2,power=.95,sig.level=.05,
 
 # Basic f = .1 2-level ANOVA, n = 650.6, more power needed than t-test ______________________________________________________
 power_anova_security_f1 <- pwr.anova.test(
-  # n = 650.6,
   power=.95,
   k = 2,
   f = .1,
@@ -108,24 +107,198 @@ security_powerplot_0 <- plot_power(security_design_0, min_n = 20, max_n = 400,
 
 cell_n_0 <- security_powerplot_0$anova_n$n[1]
 
-# cgwtools::resave(cell_n_0, file = here::here("output", "pretest_output.RData"))
-
-# security_powerplot_0$plot_ANOVA
-# g1_d2 <- ggplotGrob(security_powerplot_0$plot_ANOVA)
-# 
-# gtable_show_layout(g1_d2)
-# 
-# grid_ineq_extract_d2 <- g1_d2[c(7,12:16),]
-# 
-# ineq_grid_0  <- grid.arrange(grid_ineq_extract_d2)
-
-# # Export
-# ggsave(filename=here::here("figures","mixedpowerplot_d2.png"), plot=ineq_grid_0, height = 3)
-
-
 # f = .1416; quite a bit larger than straight 2b study
 security_exact_0 <- ANOVA_exact(security_design_0, 
                                 alpha = 0.05)
+
+
+#with .5 correlation; similar to pretest correlation; additionally  allows from conversion from dz = d = 2f  _______________________________________
+
+security_design_5 <- ANOVA_design(design = "2b*2w",
+                                  n = 489, 
+                                  mu = c(pretest_d2,pretest_d2, 
+                                         base_mean, base_mean), 
+                                  sd = base_sd,
+                                  r = .5,
+                                  labelnames = c("inequality", "unequal", "equal",
+                                                 "stake", "histake", "lostake"
+                                  ))
+
+
+ggplot2::ggsave(here::here("figures", "security_design_within_5.png"), height = 3, width =5)
+
+security_powerplot_5 <- plot_power(security_design_5, min_n = 20, max_n = 700, 
+                                   desired_power = 95)
+
+
+cell_n_5 <- security_powerplot_5$anova_n$n[1]
+
+cgwtools::resave(cell_n_5, file = here::here("output", "pretest_output.RData"))
+
+security_powerplot_5$plot_ANOVA
+g1_d2 <- ggplotGrob(security_powerplot_5$plot_ANOVA)
+
+gtable_show_layout(g1_d2)
+
+grid_ineq_extract_d2 = g1_d2[c(7,12:16),0:5]
+
+ineq_grid_5  <- grid.arrange(grid_ineq_extract_d2)
+# Export
+ggsave(filename=here::here("figures","security_powerplot_within_5.png"), plot=ineq_grid_5, height = 3)
+
+
+# f = 0.1156; smaller than .25 correlation, and more importantly - doesn't equate to d = .2
+security_exact_5 <- ANOVA_exact(security_design_5, 
+                                alpha = 0.05)
+
+
+
+#with .5 correlation and 2x6 design  _______________________________________
+
+security_design_5_2_6 <- ANOVA_design(design = "2b*6w",
+                                  n = 380, 
+                                  mu = c(pretest_d2,pretest_d2, 
+                                         pretest_d2,pretest_d2, 
+                                         pretest_d2,pretest_d2, 
+                                         base_mean, base_mean,
+                                         base_mean, base_mean, 
+                                         base_mean, base_mean), 
+                                  sd = base_sd,
+                                  r = .5,
+                                  labelnames = c("inequality", "unequal", "equal",
+                                                 "stake", "lo stakes/loprob/loprice",
+                                                 "lo stakes/loprob/hiprice",
+                                                 "lo stakes/hiprob",
+                                                 "hi stakes/loprob/loprice ", "hi stakes/loprob/hiprice",
+                                                 "hi stakes/hiprob"
+                                  ))
+
+
+ggplot2::ggsave(here::here("figures", "security_design_within_5_2_6.png"), height = 3, width =5)
+
+security_powerplot_5_2_6 <- plot_power(security_design_5_2_6, min_n = 20, max_n = 500, 
+                                   desired_power = 95)
+
+
+cell_n_5_2_6 <- security_powerplot_5_2_6$anova_n$n[1]
+
+cgwtools::resave(cell_n_5_2_6, file = here::here("output", "pretest_output.RData"))
+
+security_powerplot_5_2_6$plot_ANOVA
+g1_d2 <- ggplotGrob(security_powerplot_5_2_6$plot_ANOVA)
+
+gtable_show_layout(g1_d2)
+
+grid_ineq_extract_d2 = g1_d2[c(0:7,12:16),0:6]
+
+ineq_grid_5_2_6  <- grid.arrange(grid_ineq_extract_d2)
+# Export
+ggsave(filename=here::here("figures","security_powerplot_within_5_2_6.png"), plot=ineq_grid_5_2_6, height = 3)
+
+
+# f = .1311; smaller than .25 correlation, and more importantly - doesn't equate to d = .2
+security_exact_5_2_6 <- ANOVA_exact(security_design_5_2_6, 
+                                alpha = 0.05)
+
+
+
+
+
+
+#with .5 correlation and 2x4 design  _______________________________________
+
+security_design_5_2b4w <- ANOVA_design(design = "2b*4w",
+                                      n = 408, 
+                                      mu = c(pretest_d2,pretest_d2, 
+                                             pretest_d2,pretest_d2, 
+                                             base_mean, base_mean,
+                                             base_mean, base_mean), 
+                                      sd = base_sd,
+                                      r = .5,
+                                      labelnames = c("inequality", "unequal", "equal",
+                                                     "stake", "lo stakes/loprob",
+                                                     "lo stakes/hiprob",
+                                                     "hi stakes/loprob",
+                                                     "hi stakes/hiprob"
+                                      ))
+
+
+ggplot2::ggsave(here::here("figures", "security_design_within_5_2b4w.png"), height = 3, width =5)
+
+security_powerplot_5_2b4w <- plot_power(security_design_5_2b4w, min_n = 20, max_n = 500, 
+                                       desired_power = 95)
+
+
+cell_n_5_2b4w <- security_powerplot_5_2b4w$anova_n$n[1]
+
+cgwtools::resave(cell_n_5_2b4w, file = here::here("output", "pretest_output.RData"))
+
+security_powerplot_5_2b4w$plot_ANOVA
+g1_d2 <- ggplotGrob(security_powerplot_5_2b4w$plot_ANOVA)
+
+gtable_show_layout(g1_d2)
+
+grid_ineq_extract_d2 = g1_d2[c(0:7,12:16),0:6]
+
+ineq_grid_5_2b4w  <- grid.arrange(grid_ineq_extract_d2)
+# Export
+ggsave(filename=here::here("figures","security_powerplot_within_5_2b4w.png"), plot=ineq_grid_5_2b4w, height = 3)
+
+
+# f = .1267; smaller than .25 correlation, and more importantly - doesn't equate to d = .2
+security_exact_5_2b4w <- ANOVA_exact(security_design_5_2b4w, 
+                                    alpha = 0.05)
+
+
+
+#with .5 correlation; similar to pretest correlation; additionally  allows from conversion from dz = d = 2f  _______________________________________
+
+security_design_5w <- ANOVA_design(design = "2b*2w*2w",
+                                  n = 408, 
+                                  mu = c(pretest_d2,pretest_d2, 
+                                         pretest_d2,pretest_d2,
+                                         base_mean, base_mean,
+                                         base_mean, base_mean), 
+                                  sd = base_sd,
+                                  r = .5,
+                                  labelnames = c("inequality", "unequal", "equal",
+                                                 "stake", "histake", "lostake",
+                                                 "prob", "prob50", "prob75"
+                                  ))
+
+
+ggplot2::ggsave(here::here("figures", "security_design_within_5w.png"), height = 3, width =5)
+
+security_powerplot_5w <- plot_power(security_design_5w, min_n = 20, max_n = 700, 
+                                   desired_power = 95)
+
+
+cell_n_5w <- security_powerplot_5w$anova_n$n[1]
+# 
+# cgwtools::resave(cell_n_5w, file = here::here("output", "pretest_output.RData"))
+# 
+security_powerplot_5w$plot_ANOVA
+g1_d2 <- ggplotGrob(security_powerplot_5w$plot_ANOVA)
+
+gtable_show_layout(g1_d2)
+
+grid_ineq_extract_d2 = g1_d2[c(1:7,20:24),0:7]
+
+ineq_grid_5w  <- grid.arrange(grid_ineq_extract_d2)
+# # Export
+ggsave(filename=here::here("figures","security_powerplot_within_5w.png"), plot=ineq_grid_5w, height = 3)
+
+
+# f = 0.1156; smaller than .25 correlation, and more importantly - doesn't equate to d = .2
+security_exact_5w <- ANOVA_exact(security_design_5w, 
+                                alpha = 0.05)
+
+
+
+
+
+
+
 
 
 
@@ -230,51 +403,6 @@ security_exact_cormat_25 <- ANOVA_exact(security_design_cormat_25,
 
 
 
-
-#with .5 correlation like what allows from conversion from dz = d = 2f  _______________________________________
-
-security_design_5 <- ANOVA_design(design = "2b*2w",
-                                   n = 489, 
-                                   mu = c(pretest_d2,pretest_d2, 
-                                          base_mean, base_mean), 
-                                   sd = base_sd,
-                                   r = .5,
-                                   labelnames = c("inequality", "unequal", "equal",
-                                                  "stake", "histake", "lostake"
-                                                  
-                                                  # , "prob", "hi prob", "lo prob"
-                                                  # ,"price" , "hi", "lo"
-                                   ))
-
-
-# ggplot2::ggsave(here::here("figures", "power_design_within_d2.png"), height = 3, width =5)
-
-security_powerplot_5 <- plot_power(security_design_5, min_n = 20, max_n = 700, 
-                                    desired_power = 95)
-
-
-cell_n_5 <- security_powerplot_5$anova_n$n[1]
-
-# cgwtools::resave(cell_n_5, file = here::here("output", "pretest_output.RData"))
-
-# security_powerplot_5$plot_ANOVA
-# g1_d2 <- ggplotGrob(security_powerplot_5$plot_ANOVA)
-# 
-# gtable_show_layout(g1_d2)
-# 
-# grid_ineq_extract_d2 = g1_d2[c(7,20:24),]
-# 
-# ineq_grid_5  <- grid.arrange(grid_ineq_extract_d2)
-# # Export
-# ggsave(filename=here::here("figures","mixedpowerplot_d2.png"), plot=ineq_grid_5, height = 3)
-
-
-# f = 0.1156; smaller than .25 correlation
-security_exact_5 <- ANOVA_exact(security_design_5, 
-                                 alpha = 0.05)
-
-
-
 # targeting value consistent with cohen's d = .2, correlation =.56  ______________________________________________________
 
 # from pretest, ICC is .56, use as within-factor correlation
@@ -351,7 +479,8 @@ pwr.anova.test(
 # best guess is that the pattern of means is causing issues? or I shouldn't
 
 
-
+# after some further testing - it is definitely the sole between-subjects-effect that is responsible
+#for the changing the relationship between correlation and effect size/power 
 
 sample_design <- ANOVA_design(
   design = "2w*2b",
@@ -499,3 +628,5 @@ sample_result_btwn_0 <- ANOVA_exact(sample_design_btwn_0,
                                      alpha_level = .05,
                                      verbose = FALSE)
 
+# before we break, a guess: for solely between-subjects effects - the effect comes from being able to distinguish between
+# the conditions - introducing a correlation 
