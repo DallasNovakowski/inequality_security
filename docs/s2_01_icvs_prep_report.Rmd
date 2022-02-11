@@ -425,10 +425,14 @@ estonia missing motortheft
 probably drop assaults and sexual offences
 
 ```{r sum victim, message=F}
-vic_var_drop <- names(select(victim_2005,-c("assault_5yrs","sexoff_5yrs","motortheft_5yrs")))
+vic_var_drop <- names(select(victim_2005,-c("assault_5yrs","sexoff_5yrs"
+                                            ,"motortheft_5yrs"
+                                            )))
 
 
-vic_var_assault <- names(select(victim_2005,-c("sexoff_5yrs","motortheft_5yrs")))
+vic_var_assault <- names(select(victim_2005,-c("sexoff_5yrs"
+                                               ,"motortheft_5yrs"
+                                               )))
 
 # currently keeping
 summary(victim_2005[,vic_var_drop])
@@ -598,11 +602,14 @@ just hong kong for age
 
 <li>
 
-employed, partnered and male are totally filled
+employed, and male are totally filled
 
+
+Estonia missing partnered
 </li>
 
 </ul>
+
 
 ### what countries should we include?
 
@@ -637,7 +644,7 @@ iv_2005[,c("age_num", "male", "employed", "partnered", "police_effective", "inco
 ```
 
 ```{r partnered filtering}
-iv_2005 <- filter(iv_2005, !is.na(partnered))
+# iv_2005 <- filter(iv_2005, !is.na(partnered))
 
 summary(iv_2005$country)[summary(iv_2005$country)!= 0]
 
