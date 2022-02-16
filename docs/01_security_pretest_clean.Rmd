@@ -881,12 +881,18 @@ sjPlot::tab_model(m1_null)
 
 m1_order <- lmerTest::lmer(security_spending ~ as.numeric(round_num) + as.numeric(prob) + cost + (1 | participant_code), data = data_long, REML=TRUE)
 
+pretest_no_order <- lmerTest::lmer(security_spending ~ prob + cost + (1 | participant_code), data = data_long, REML=TRUE)
+
+pretest_anova <- anova(pretest_no_order, ddf = "Kenward-Roger")
+
 pretest_model <- summary(m1_order)
 
+tidy_pretest_model <- tidy(m1_order, conf.int = TRUE,
+conf.level = 0.95)
 
 pretest_model
 
 
-cgwtools::resave(pretest_model,pretest_icc,cor_50_60,cor_60_75,cor_50_75, file = here::here("output", "pretest_output.RData"))
+cgwtools::resave(pretest_anova,tidy_pretest_model,pretest_model,pretest_icc,cor_50_60,cor_60_75,cor_50_75, file = here::here("output", "pretest_output.RData"))
 ```
 

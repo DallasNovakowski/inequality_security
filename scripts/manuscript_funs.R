@@ -31,13 +31,13 @@ round_df <- function(x, digits) {
 }
 
 
-tidy_extract <- function(df,varname){
-  this_var <- df[df$term  == varname, ]
+tidy_extract <- function(data,varname){
+  this_var <- data[data$term  == varname, ]
   
   
   test_stat <- this_var$z_score
-  df <- format(round(as.numeric(this_var$df),0),big.mark = ",", scientific = FALSE) 
-    
+  df <- this_var$df 
+  
   pval <- ifelse(grepl("<",this_var$p_value, fixed = TRUE),
                  this_var$p_value,
                  paste("=", as.numeric(this_var$p_value) %>% round(3)))

@@ -13,7 +13,9 @@ h1p <- "The presence of relatively disadvantaged peers increases security consum
 
 h1_min <- "Positive main effect of inequality"
 
-h1.1 <- "(t-test) In the model `ineq_t_test`, security spending will be larger in the when income inequality is present (1) vs. absent (0)"
+h1.1 <- "(mixed anova) In the model `ineq_anova_mixed`, security spending will be larger in the when income inequality is present (1) vs. absent (0)"
+
+h1.t <- "(t-test) In the model `ineq_t_test`, security spending will be larger in the when income inequality is present (1) vs. absent (0)"
 
 h1a <- "Economic inequality's effect on security consumption is mediated by the expectation of peers' envy"
 

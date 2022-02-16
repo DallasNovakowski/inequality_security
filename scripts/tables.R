@@ -16,16 +16,15 @@ Question <- c("Does inequality increase security consumption?",
               "Under inequality, does group-based favoritism increase security consumption?", 
               "Is country-level inequality associated with individual-level security consumption?")
 Hypothesis <- c(h1_min,hyp2_min[1],h2_min, h3_min, h4_min)
-Sampling <- c(paste("Studies 1a, b, & c; n=",format(round(power_ttest_security$n*2,0),big.mark = ",", scientific = FALSE)," 
-               crowdsourced. Target: cohen's d = .2. Exclusion: missing data, failed attention/comprehension checks"),
-              "Study 1a, same sample as above",
-              paste("Study 1d; n = ",format(cell_n_01*4,big.mark = ",", scientific = FALSE), "crowdsourced. Power target: parial eta^2 = .01. Excluded if completes < 3 sliders; missing data, failed atn/comp checks"), 
-              paste("Study 1e; n = ",format(cell_n_01*4,big.mark = ",", scientific = FALSE), "crowdsourced, following from power analysis in Study 1e. Exclusion: missing data, failed atn/comp checks"), 
+Sampling <- c(paste("Study 1a; n = ",format(round(cell_n_5*2,0),big.mark = ",", scientific = FALSE)," crowdsourced. Target: cohen's f = ", round(security_exact_5$main_results$cohen_f[1],2),". Study 1b: n determined by 1a effect. Exclusion: missing data, failed atn/comp checks", sep = ""),
+              "Study 1a & 1b, same samples as above",
+              paste("Study 1c; n = ",format(cell_n_01*4,big.mark = ",", scientific = FALSE), "crowdsourced. Power target: cohen's f = .1. Excluded if completes < 3 sliders; missing data, failed atn/comp checks"), 
+              paste("Study 1d; n = ",format(cell_n_01*4,big.mark = ",", scientific = FALSE), "crowdsourced, following from power analysis in Study 1c. Exclusion: missing data, failed atn/comp checks"), 
               paste("Study 2; k = 28 countries, and n = ", format(nrow(iv_2005_mod),big.mark = ",", scientific = FALSE), "participants; Exclusion: missing data"))
-Analysis<- c("Between-subjects t-tests, r package `rstatix`",
+Analysis<- c("2b*2w ANOVA and estimated marginal means, r package `rstatix`",
              "Mediation analysis; r package `mediate`",
-             "2bx2b ANOVA and Pairwise comparisons, r package `car`",
-             "2bx2b ANOVA and Pairwise comparisons, r package `car`", 
+             "2b*2b ANOVA and Pairwise comparisons, r package `car`",
+             "2b*2b ANOVA and Pairwise comparisons, r package `car`", 
              "Multi-level ordinal regression model, r package `ordinal`")
 Interpretation <- c("Task complexity (low comprehension of partner's income)",
                     "Low comprehension",
@@ -45,9 +44,9 @@ Question2 <- c("Does envy anticipation mediate the effect of inequality on secur
                "Does fairness mediate the outgroup*agentic effect on security consumption?")
 Hypothesis2 <- c(hyp2_min)
 Sampling2 <- c(paste(format(round(power_ttest_security$n*2,0),big.mark = ",", scientific = FALSE),"
-               n=680 (Studies 1a, b, & c), crowdsourced. Power: partial eta2 = .01."),
-               "Study 1d; n = 1360, crowdsourced", "Study 1e; n = 1360, crowdsourced, following from previous power analysis")
-Analysis2 <- c("mediation::mediate","moderated mediaiotn using mediation::test.modmed", 
+               n = 680 (Studies 1a, &b), crowdsourced. Power: partial eta2 = .01."),
+               "Study 1c; n = 1360, crowdsourced", "Study 1d; n = 1360, crowdsourced, following from previous power analysis")
+Analysis2 <- c("mediation::mediate","moderated mediation using mediation::test.modmed", 
                "moderated mediaiotn using mediation::test.modmed")
 Interpretation2 <- c("Task complexity (low comprehension of partner's income)",
                      "low perceived deservingness in hi inequality, meritocracy condition",

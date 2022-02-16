@@ -1,5 +1,6 @@
 # setup
 
+library(tidyverse)
 library(gtable)
 library(Superpower)
 library(gridExtra)
@@ -114,7 +115,7 @@ security_exact_0 <- ANOVA_exact(security_design_0,
 
 #with .5 correlation; similar to pretest correlation; additionally  allows from conversion from dz = d = 2f  _______________________________________
 
-security_design_5 <- ANOVA_design(design = "2b*2w",
+security_design_2b2w_f1156_5 <- ANOVA_design(design = "2b*2w",
                                   n = 489, 
                                   mu = c(pretest_d2,pretest_d2, 
                                          base_mean, base_mean), 
@@ -125,35 +126,36 @@ security_design_5 <- ANOVA_design(design = "2b*2w",
                                   ))
 
 
-ggplot2::ggsave(here::here("figures", "security_design_within_5.png"), height = 3, width =5)
+ggplot2::ggsave(here::here("figures", "security_design_2b2w_f1156_5.png"), height = 3, width =5)
 
-security_powerplot_5 <- plot_power(security_design_5, min_n = 20, max_n = 700, 
+security_powerplot_2b2w_f1156_5 <- plot_power(security_design_2b2w_f1156_5, min_n = 20, max_n = 500, 
                                    desired_power = 95)
 
 
-cell_n_5 <- security_powerplot_5$anova_n$n[1]
+cell_n2b2w_f1156_5 <- security_powerplot_2b2w_f1156_5$anova_n$n[1]
 
-cgwtools::resave(cell_n_5, file = here::here("output", "pretest_output.RData"))
+cgwtools::resave(cell_n2b2w_f1156_5, file = here::here("output", "pretest_output.RData"))
 
-security_powerplot_5$plot_ANOVA
-g1_d2 <- ggplotGrob(security_powerplot_5$plot_ANOVA)
+security_powerplot_2b2w_f1156_5$plot_ANOVA
+g1_d2 <- ggplotGrob(security_powerplot_2b2w_f1156_5$plot_ANOVA)
 
 gtable_show_layout(g1_d2)
 
-grid_ineq_extract_d2 = g1_d2[c(7,12:16),0:5]
+grid_ineq_extract_d2 = g1_d2[c(1:7,12:16),]
 
-ineq_grid_5  <- grid.arrange(grid_ineq_extract_d2)
+ineq_grid2b2w_f1156_5  <- grid.arrange(grid_ineq_extract_d2)
 # Export
-ggsave(filename=here::here("figures","security_powerplot_within_5.png"), plot=ineq_grid_5, height = 3)
+ggsave(filename=here::here("figures","security_powerplot_2b2w_f1156_5.png"), plot=ineq_grid2b2w_f1156_5, height = 3)
 
 
 # f = 0.1156; smaller than .25 correlation, and more importantly - doesn't equate to d = .2
-security_exact_5 <- ANOVA_exact(security_design_5, 
+security_exact2b2w_f1156_5 <- ANOVA_exact(security_design_2b2w_f1156_5, 
                                 alpha = 0.05)
 
+cgwtools::resave(security_exact2b2w_f1156_5, file = here::here("output", "pretest_output.RData"))
 
 
-#with .5 correlation and 2x6 design  _______________________________________
+#with .5 correlation and 2x6 design  ____________________________________________________________________
 
 security_design_5_2_6 <- ANOVA_design(design = "2b*6w",
                                   n = 380, 
@@ -200,6 +202,9 @@ ggsave(filename=here::here("figures","security_powerplot_within_5_2_6.png"), plo
 security_exact_5_2_6 <- ANOVA_exact(security_design_5_2_6, 
                                 alpha = 0.05)
 
+security_exact_5_2b6w_result <- security_exact_5_2_6$main_results
+
+cgwtools::resave(security_exact_5_2b6w_result, file = here::here("output", "pretest_output.RData"))
 
 
 
@@ -245,9 +250,120 @@ ineq_grid_5_2b4w  <- grid.arrange(grid_ineq_extract_d2)
 ggsave(filename=here::here("figures","security_powerplot_within_5_2b4w.png"), plot=ineq_grid_5_2b4w, height = 3)
 
 
-# f = .1267; smaller than .25 correlation, and more importantly - doesn't equate to d = .2
+# f = .1266
 security_exact_5_2b4w <- ANOVA_exact(security_design_5_2b4w, 
                                     alpha = 0.05)
+
+security_exact_5_2b4w_result <- security_exact_5_2b4w$main_results
+
+cgwtools::resave(security_exact_5_2b4w_result, file = here::here("output", "pretest_output.RData"))
+
+
+
+#with .5 correlation and 2x4 design, targetting f1  _______________________________________
+
+security_design_5_2b4w_f1 <- ANOVA_design(design = "2b*4w",
+                                       n = 653, 
+                                       mu = c(.66587,.66587, 
+                                              .66587,.66587, 
+                                              base_mean, base_mean,
+                                              base_mean, base_mean), 
+                                       sd = base_sd,
+                                       r = .5,
+                                       labelnames = c("inequality", "unequal", "equal",
+                                                      "stake", "lo stakes/loprob",
+                                                      "lo stakes/hiprob",
+                                                      "hi stakes/loprob",
+                                                      "hi stakes/hiprob"
+                                       ))
+
+
+ggplot2::ggsave(here::here("figures", "security_design_within_5_2b4w_f1.png"), height = 3, width =5)
+
+security_powerplot_5_2b4w_f1 <- plot_power(security_design_5_2b4w_f1, min_n = 20, max_n = 700, 
+                                        desired_power = 95)
+
+
+cell_n_5_2b4w_f1 <- security_powerplot_5_2b4w_f1$anova_n$n[1]
+
+cgwtools::resave(cell_n_5_2b4w_f1, file = here::here("output", "pretest_output.RData"))
+
+security_powerplot_5_2b4w_f1$plot_ANOVA
+g1_d2 <- ggplotGrob(security_powerplot_5_2b4w_f1$plot_ANOVA)
+
+gtable_show_layout(g1_d2)
+
+grid_ineq_extract_d2 = g1_d2[c(0:7,12:16),0:6]
+
+ineq_grid_5_2b4w_f1  <- grid.arrange(grid_ineq_extract_d2)
+# Export
+ggsave(filename=here::here("figures","security_powerplot_within_5_2b4w_f1.png"), plot=ineq_grid_5_2b4w_f1, height = 3)
+
+
+# f = .9995
+security_exact_5_2b4w_f1 <- ANOVA_exact(security_design_5_2b4w_f1, 
+                                     alpha = 0.05)
+
+security_exact_5_2b4w_f1_result <- security_exact_5_2b4w_f1$main_results
+
+cgwtools::resave(security_exact_5_2b4w_f1_result, file = here::here("output", "pretest_output.RData"))
+
+
+
+#with .5 correlation and 2x6 design, targetting f1  _______________________________________
+
+security_design_5_2b6w_f1 <- ANOVA_design(design = "2b*6w",
+                                          n = 652, 
+                                          mu = c(.66415,.66415, 
+                                                 .66415,.66415, 
+                                                 .66415,.66415, 
+                                                 base_mean, base_mean,
+                                                 base_mean, base_mean, 
+                                                 base_mean, base_mean), 
+                                          sd = base_sd,
+                                          r = .5,
+                                          labelnames = c("inequality", "unequal", "equal",
+                                                         "stake", "lo stakes/loprob/loprice",
+                                                         "lo stakes/loprob/hiprice",
+                                                         "lo stakes/hiprob",
+                                                         "hi stakes/loprob/loprice ", "hi stakes/loprob/hiprice",
+                                                         "hi stakes/hiprob"
+                                          ))
+
+
+ggplot2::ggsave(here::here("figures", "security_design_within_5_2b6w_f1.png"), height = 3, width =5)
+
+security_powerplot_5_2b6w_f1 <- plot_power(security_design_5_2b6w_f1, min_n = 20, max_n = 700, 
+                                           desired_power = 95)
+
+
+cell_n_5_2b6w_f1 <- security_powerplot_5_2b6w_f1$anova_n$n[1]
+
+cgwtools::resave(cell_n_5_2b6w_f1, file = here::here("output", "pretest_output.RData"))
+
+security_powerplot_5_2b6w_f1$plot_ANOVA
+g1_d2 <- ggplotGrob(security_powerplot_5_2b6w_f1$plot_ANOVA)
+
+gtable_show_layout(g1_d2)
+
+grid_ineq_extract_d2 = g1_d2[c(0:7,12:16),0:6]
+
+ineq_grid_5_2b6w_f1  <- grid.arrange(grid_ineq_extract_d2)
+# Export
+ggsave(filename=here::here("figures","security_powerplot_within_5_2b6w_f1.png"), plot=ineq_grid_5_2b6w_f1, height = 3)
+
+
+# f = .9999
+security_exact_5_2b6w_f1 <- ANOVA_exact(security_design_5_2b6w_f1, 
+                                        alpha = 0.05)
+
+security_exact_5_2b6w_f1_result <- security_exact_5_2b6w_f1$main_results
+
+cgwtools::resave(security_exact_5_2b6w_f1_result, file = here::here("output", "pretest_output.RData"))
+
+
+
+
 
 
 
@@ -630,3 +746,43 @@ sample_result_btwn_0 <- ANOVA_exact(sample_design_btwn_0,
 
 # before we break, a guess: for solely between-subjects effects - the effect comes from being able to distinguish between
 # the conditions - introducing a correlation 
+
+
+
+
+
+# Study 1c (meritocracy) 2b*2b cohen's f = .1
+
+# detecting .01 partial η2, with 95% power
+security_2b2b_f01_design <- ANOVA_design(design = "2b*2b",
+                                   n = 327, 
+                                   mu = c(0.7444, base_mean, base_mean, base_mean), 
+                                   sd = base_sd, 
+                                   # r = 0.8, 
+                                   labelnames = c("inequality", "yes", "no", "undeserved", "yes", "no"))
+
+
+ggplot2::ggsave(here::here("figures", "security_design_2b2b_f01.png"), height = 3, width =5)
+
+
+security_2b2b_f01_powerplot <- plot_power(security_2b2b_f01_design, min_n = 20, max_n = 500, desired_power = 95)
+
+cell_n_2b2b_f01 <- security_2b2b_f01_powerplot$anova_n$n[1]
+
+cgwtools::resave(cell_n_2b2b_f01, file = here::here("output", "pretest_output.RData"))
+
+security_2b2b_f01_powerplot$plot_ANOVA
+g1_d2 <- ggplotGrob(security_2b2b_f01_powerplot$plot_ANOVA)
+
+gtable_show_layout(g1_d2)
+
+grid_ineq_extract_d2 = g1_d2[c(0:6,10:16),]
+
+ineq_grid_5  <- grid.arrange(grid_ineq_extract_d2)
+# Export
+ggsave(filename=here::here("figures","security_powerplot_2b2b_f01.png"), plot=ineq_grid_5, height = 3)
+
+security_2b2b_f01_exact <- ANOVA_exact(security_2b2b_f01_design, 
+                                 alpha = 0.05)
+
+cgwtools::resave(security_2b2b_f01_exact, file = here::here("output", "pretest_output.RData"))

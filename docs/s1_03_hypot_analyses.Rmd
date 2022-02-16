@@ -83,7 +83,8 @@ ineq_data$likely_envy <- rowSums(ineq_data
 
 
 # Acceptable if mean alpha >= .7
-# Otherwise, iteratively dropping each item until >= .7 is achieved, minimum three items acceptable
+# Otherwise, iteratively dropping each item until
+#>= .7 is achieved, minimum three items acceptable
 # If no >= .7 solution found, forego mediation analyses
 ltm::cronbach.alpha(ineq_data$likely_envy,CI=TRUE)
 ```
@@ -137,11 +138,17 @@ ineq_data %>%  cohens_d(security_spending ~ inequality, var.equal = TRUE)
 
 ```{r 1a-long}
 ineq_data_long <- ineq_data %>%
-  gather(key = "stake_cond", value = "security_spending", ss_lostak_loprob_loprice, ss_lostak_loprob_hiprice, ss_lostak_hiprob,ss_histak_loprob_loprice, ss_histak_loprob_hiprice, ss_histak_hiprob) %>%
+  gather(key = "stake_cond", value = "security_spending",
+         ss_lostak_loprob_loprice, ss_lostak_loprob_hiprice, 
+         ss_lostak_hiprob,ss_histak_loprob_loprice, 
+         ss_histak_loprob_hiprice, ss_histak_hiprob) %>%
   convert_as_factor(pnum, stake_cond)
 
 ineq_envy_long <- ineq_data %>%
-  gather(key = "stake_cond", value = "likely_envy", envy_lostak_loprob_loprice, envy_lostak_loprob_hiprice, envy_lostak_hiprob,envy_histak_loprob_loprice, envy_histak_loprob_hiprice, envy_histak_hiprob) %>%
+  gather(key = "stake_cond", value = "likely_envy", 
+         envy_lostak_loprob_loprice, envy_lostak_loprob_hiprice, 
+         envy_lostak_hiprob,envy_histak_loprob_loprice, 
+         envy_histak_loprob_hiprice, envy_histak_hiprob) %>%
   convert_as_factor(pnum, stake_cond)
 
 ineq_data_long$likely_envy <- ineq_envy_long$likely_envy
@@ -165,19 +172,30 @@ ineq_data_long %>%
   group_by(stake_cond) %>%
   levene_test(security_spending ~ inequality)
 
-# homogeneity of covariances - only signals problems when p < 0.001 and your sample sizes are unequal
-# Fix:  separating your analyses into distinct repeated measures ANOVAs for each group. Alternatively, you could omit the interpretation of the interaction term.
+# homogeneity of covariances - only signals problems 
+#when p < 0.001 and your sample sizes are unequal
+# Fix:  separating your analyses into distinct 
+#repeated measures ANOVAs for each group. 
+#Alternatively, you could omit the 
+#interpretation of the interaction term.
 # At minimum. Report violation
-box_m(ineq_data_long[, "security_spending", drop = FALSE], ineq_data_long$inequality)
+box_m(ineq_data_long[, "security_spending", drop = FALSE], 
+      ineq_data_long$inequality)
 ```
 
+### Hypothesis 1 
+
+**H1:** `r hypotheses[1]`, or in terms of the model: **H1:** `r h1.1`
 
 ```{r study1a-anova}
-# By using the function get_anova_table() [rstatix] to extract the ANOVA table, the Greenhouse-Geisser sphericity correction is automatically applied to factors violating the sphericity assumption.
+# By using the function get_anova_table() [rstatix] 
+#to extract the ANOVA table, the Greenhouse-Geisser 
+#sphericity correction is automatically applied to 
+#factors violating the sphericity assumption.
 
 ineq_anova_mixed <- anova_test(
-  dv = security_spending, between= inequality, within = stake_cond, wid=pnum, 
-               data = ineq_data_long
+  dv = security_spending, between= inequality, within = stake_cond, 
+  wid=pnum, data = ineq_data_long
   )
 
 get_anova_table(ineq_anova_mixed)
@@ -185,12 +203,20 @@ get_anova_table(ineq_anova_mixed)
 ```
 
 
-```{r study 1a-mixed}
-m_mixed_med1 <- lmer(likely_envy ~ inequality  + (1| pnum) + stake_cond, data = ineq_data_long)
+**H1a)**: `r h1a`, or in terms of the model, **H1a)**: `r h1am`
 
-m_mixed_med2 <- lmer(security_spending ~ likely_envy + inequality  + (1| pnum) + stake_cond, data = ineq_data_long)
+**H1a.1)**, mediation step 1: `r h1a.1`
 
-m_mixed_total <- lmer(security_spending ~ inequality  + (1| pnum) + stake_cond, data = ineq_data_long)
+
+```{r study 1a-med-mixed}
+m_mixed_med1 <- lmer(likely_envy ~ inequality  + (1| pnum) + 
+                       stake_cond, data = ineq_data_long)
+
+m_mixed_med2 <- lmer(security_spending ~ likely_envy + inequality  + 
+                       (1| pnum) + stake_cond, data = ineq_data_long)
+
+m_mixed_total <- lmer(security_spending ~ inequality  + (1| pnum) + 
+                        stake_cond, data = ineq_data_long)
 
 m_mixed_med_full <- mediate(m_mixed_med1, m_mixed_med2, 
     #                         boot = TRUE,   
@@ -221,9 +247,6 @@ bxp +
 
 ```
 
-**H1a)**: `r h1a`, or in terms of the model, **H1a)**: `r h1am`
-
-**H1a.1)**, mediation step 1: `r h1a.1`
 
 ```{r mediat-predict}
 #predicting mediator
@@ -429,7 +452,8 @@ outliers_merit <- ineq_group_data %>%
 # If outliers present, winzorize
 
 # Build the linear model
-lm_group  <- lm(security_spending ~ as.factor(inequality)*as.factor(outgroup),
+lm_group  <- lm(security_spending ~ 
+                  as.factor(inequality)*as.factor(outgroup),
              data = ineq_group_data)
 
 # Create a QQ plot of residuals

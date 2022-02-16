@@ -14,6 +14,25 @@ load(here::here("output","icvs_output.RData"))
 
 load(file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/m100_sims.RData")
 
+# https://stat.ethz.ch/pipermail/r-help/2006-May/094765.html
+
+# The sums of
+# squares and degrees of freedom for the numerators are calculated as in
+# a linear model.  There is a slot in an lmer model that is similar to
+# the "effects" component in a lm model and that, along with the
+# "assign" attribute for the model matrix provides the numerator of the
+# F ratio.  The denominator is the penalized residual sum of squares
+# divided by the REML degrees of freedom, which is n-p where n is the
+# number of observations and p is the column rank of the model matrix
+# for the fixed effects.
+
+
+# For the time being, I would recommend using a Markov Chain Monte Carlo
+# sample (function mcmcsamp) to evaluate the properties of individual
+# coefficients (use HPDinterval or just summary from the "coda"
+#               package).  Evaluating entire terms is more difficult but you can
+# always calculate the F ratio and put a lower bound on the denominator
+# degrees of freedom.
 
 # organize sim data as tibble
 m100_sims <- m100_sims %>%
