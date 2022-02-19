@@ -24,8 +24,8 @@ load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/icvs_jo
 
 load(file = here::here("output","icvs_output.RData"))
 
-source(here::here("scripts", "icvs_scripts.r"), local = knitr::knit_global())
-source(here::here("scripts", "s2_icvs_sample_models.r"), local = knitr::knit_global())
+source(here::here("scripts", "s2_01_icvs_scripts.r"), local = knitr::knit_global())
+# source(here::here("scripts", "s2_03_icvs_sample_models.r"), local = knitr::knit_global())
 ```
 
 # Analysis procedure
@@ -84,6 +84,8 @@ victim_gini_full <- gd %>%
   ggplot(aes(x = gini_2004_6, y = num_victim_5yr, label = outlier_country)) +
   geom_point(position = "jitter") + geom_smooth(alpha = .25, color = "red", span = 1.5) + geom_smooth(method = "lm", alpha = .25) + ggtitle("Victimization & Gini - Full") + theme_minimal() + coord_cartesian(xlim = c(20, 65), ylim = c(.25, 1.125)) + ggrepel::geom_label_repel()
 
+ggsave(here::here("figures", "victim_viz.png"),
+       height = 3)
 
 # victim GDP plot with outliers
 victim_gdp_full <- gd %>% 
@@ -94,6 +96,15 @@ victim_gdp_full <- gd %>%
 
 
 gridExtra::grid.arrange(victim_age, victim_gini_full,victim_gdp_full, gini_gdp_full, nrow = 2, ncol=2)
+
+
+```
+
+```{r, include=FALSE}
+# victim_gini_full
+# 
+# ggsave(here::here("figures", "victim_viz.png"),
+#        height = 3)
 
 ```
 
@@ -417,7 +428,7 @@ hist_plot(gd_mod,gdppc_2004_6,"Regular GDP"),
 hist_plot(gd_mod,gdppc_2004_6_winz,"Winzorized GDP"),
 
 hist_plot(gd_mod,gini_2004_6,"Regular Gini"),
-hist_plot(gd_mod,gini_winz,"Winzorized Gini"),
+hist_plot(gd_mod,gini_2004_6_winz,"Winzorized Gini"),
 
 nrow = 4, ncol=2)
 
@@ -425,12 +436,22 @@ nrow = 4, ncol=2)
 
 ```{r hist-info, warning=F, message=FALSE, fig.show='hide'}
 hist_plot(mod_joined1, total_security, "Histogram of Total Security")
-ggsave(here::here("figures", "security_hist.png"),
+ggsave(here::here("figures", "security_hist_mod.png"),
        height = 3)
 
 hist_plot(mod_joined1, num_victim_5yr_assault, "Histogram of victimizations over past 5 years")
-ggsave(here::here("figures", "victim_hist.png"),
+ggsave(here::here("figures", "victim_hist_mod.png"),
        height = 3)
+
+hist_plot(iv_joined1,total_security,"Histogram of security consumption")
+ggsave(here::here("figures", "security_hist_iv.png"),
+       height = 3)
+
+hist_plot(iv_joined1, num_victim_5yr, "Histogram of victimizations over past 5 years")
+ggsave(here::here("figures", "victim_hist_iv.png"),
+       height = 3)
+
+
 ```
 
 ### Multicolinnearity

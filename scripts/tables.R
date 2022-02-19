@@ -15,7 +15,7 @@ Question <- c("Does inequality increase security consumption?",
               "Does deservingness reduce inequality's effect on security consumption?", 
               "Under inequality, does group-based favoritism increase security consumption?", 
               "Is country-level inequality associated with individual-level security consumption?")
-Hypothesis <- c(h1_min,hyp2_min[1],h2_min, h3_min, h4_min)
+Hypothesis <- c(h1_min,hyp2_min[1],paste(h2_min,". ",h2.2m,sep=""), paste(h3_min,". ",h3.2m,sep=""), h4_min)
 Sampling <- c(paste("Study 1a; n = ",format(round(cell_n_5*2,0),big.mark = ",", scientific = FALSE)," crowdsourced. Target: cohen's f = ", round(security_exact_5$main_results$cohen_f[1],2),". Study 1b: n determined by 1a effect. Exclusion: missing data, failed atn/comp checks", sep = ""),
               "Study 1a & 1b, same samples as above",
               paste("Study 1c; n = ",format(cell_n_01*4,big.mark = ",", scientific = FALSE), "crowdsourced. Power target: cohen's f = .1. Excluded if completes < 3 sliders; missing data, failed atn/comp checks"), 

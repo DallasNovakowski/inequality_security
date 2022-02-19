@@ -786,3 +786,43 @@ security_2b2b_f01_exact <- ANOVA_exact(security_2b2b_f01_design,
                                  alpha = 0.05)
 
 cgwtools::resave(security_2b2b_f01_exact, file = here::here("output", "pretest_output.RData"))
+
+
+
+
+
+# TOST POWER ANALYSES________________________________________________________________________________
+
+
+
+
+
+# Mixed ANOVA, pairwise comparisons, repeated measures ____________________________
+# e.g., for comparing unequal_histak ~ unequal_lostak
+
+
+#n = 326, or 652 in 2b*2w
+t_tost_2b2w_sample <- power_t_TOST(
+  n = NULL,
+  delta = 0,
+  sd = 1,
+  low_eqbound = -.2,
+  high_eqbound = .2,
+  alpha = .05,
+  power = .95,
+  type = "paired"
+)
+
+#n = 386, or 772 in 2b*2w
+t_tost_2b2w_bonf <- power_t_TOST(
+  n = NULL,
+  delta = 0,
+  sd = 1,
+  low_eqbound = -.2,
+  high_eqbound = .2,
+  alpha = .025,
+  power = .95,
+  type = "paired"
+)
+
+# Need to change sd? maybe not since we're looking at cohen's d

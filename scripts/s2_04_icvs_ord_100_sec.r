@@ -17,22 +17,9 @@ set.seed(1234)
 load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/icvs_joined_samples.RData")
 
 load(here::here("data","m100_sims.RData"))
+load(here::here("output","icvs_output.RData"))
 
 
-
-sec_lmer_min <- total_security ~ gini_2004_6_cent + gdppc_2004_6_scale + victim_nation + 
-  num_victim_5yr + age_cent + employed + male + (1 | country)
-
-sec_lmer_max <- total_security ~ gini_2004_6_cent + gdppc_2004_6_scale + victim_nation_assault + 
-  num_victim_5yr_assault + age_cent + employed + male + police_effective + income_quartile + (1 | country)
-
-sec_mord_min <- ordered(security_winz) ~  gdppc_2004_6_scale + gini_2004_6_cent + victim_nation + 
-  num_victim_5yr + age_cent + employed + male + (1 | country)
-
-sec_mord_max <- ordered(security_winz) ~ gdppc_2004_6_scale + gini_2004_6_cent + victim_nation_assault + 
-  num_victim_5yr_assault + age_cent + employed + male + police_effective + income_quartile + (1 | country)
-
-cgwtools::resave(sec_lmer_min,sec_lmer_max, sec_mord_min,sec_mord_max, file = here::here("output","icvs_output.RData"))
 
 
 
