@@ -39,138 +39,66 @@ stake_strings <- c("histak_loprob_loprice", "histak_loprob_hiprice", "histak_hip
 
 # stake <- as.factor(sample(stake_strings, replace=TRUE, size=N))
 
-likely_envy <- round(1+1.5*inequality + rnorm(N, 0,2),2) #Suspected mediator 
+# likely_envy <- round(1+1.5*inequality + rnorm(N, 0,2),2) #Suspected mediator 
 
 # security_spending <- 2*likely_envy + rnorm(N, 0, 5) #DV
 
 envy_lostak <- 2*likely_envy + rnorm(N, 0, 5)
-
 envy_histak <- 2*likely_envy + rnorm(N, 0, 5)
-
-ss_lostak <- 2*likely_envy + rnorm(N, 0, 5)
-
-ss_histak <- 2.*likely_envy + rnorm(N, 0, 5)
+ss_lostak <- 2*envy_lostak + rnorm(N, 0, 5)
+ss_histak <- 2.*envy_histak + rnorm(N, 0, 5)
 
 inequality <- as.factor(inequality)
 
 stake_diff <- ss_histak - ss_lostak
 
-ineq_data <- data.frame(pnum,inequality, 
-                        # stake, 
-                        likely_envy, 
-                        # security_spending, 
-                        envy_lostak,envy_histak,ss_lostak,ss_histak,stake_diff
-                        )
-
-
-# envy_lostak_loprob_loprice <- 2*likely_envy + rnorm(N, 0, 5)
-# 
-# envy_lostak_loprob_hiprice <- 2*likely_envy + rnorm(N, 0, 5)
-# 
-# envy_lostak_hiprob <- 2*likely_envy + rnorm(N, 0, 5)
-# 
-# envy_histak_loprob_loprice <- 2*likely_envy + rnorm(N, 0, 5)
-# 
-# envy_histak_loprob_hiprice <- 2*likely_envy + rnorm(N, 0, 5)
-# 
-# envy_histak_hiprob <- 2*likely_envy + rnorm(N, 0, 5)
-# 
-# 
-# ss_lostak_loprob_loprice <- 2*likely_envy + rnorm(N, 0, 5)
-# 
-# ss_lostak_loprob_hiprice <- 2*likely_envy + rnorm(N, 0, 5)
-# 
-# ss_lostak_hiprob <- 2*likely_envy + rnorm(N, 0, 5)
-# 
-# ss_histak_loprob_loprice <- 2*likely_envy + rnorm(N, 0, 5)
-# 
-# ss_histak_loprob_hiprice <- 2*likely_envy + rnorm(N, 0, 5)
-# 
-# ss_histak_hiprob <- 2*likely_envy + rnorm(N, 0, 5)
-
-
-# ineq_data <- data.frame(pnum,inequality, 
-#                         # stake, 
-#                         likely_envy, security_spending, ss_lostak_loprob_loprice, ss_lostak_loprob_hiprice, ss_lostak_hiprob,ss_histak_loprob_loprice, ss_histak_loprob_hiprice, ss_histak_hiprob,
-#                         envy_lostak_loprob_loprice, envy_lostak_loprob_hiprice, envy_lostak_hiprob,envy_histak_loprob_loprice, envy_histak_loprob_hiprice, envy_histak_hiprob
-#                         )
+ineq_data <- data.frame(pnum,inequality,envy_lostak,envy_histak,ss_lostak,ss_histak,stake_diff)
 ```
 
 ## Study 1a/1b/1c, Analysis Plan {.unnumbered}
 
 ```{r envy-measure, eval = F}
-ineq_data$likely_envy <- rowSums(ineq_data
-    [,c("partner_envy", "partner_jealous", "partner_frustrated", 
-        "partner_bitter")])
+ineq_data$envy_lostak <- rowSums(ineq_data
+    [,c("partner_envy_lostak", "partner_jealous_lostak", 
+        "partner_frustrated_lostak", "partner_bitter_lostak")])
+
+ineq_data$envy_histak <- rowSums(ineq_data
+    [,c("partner_envy_histak", "partner_jealous_histak", 
+        "partner_frustrated_histak", "partner_bitter_histak")])
 
 
 # Acceptable if mean alpha >= .7
 # Otherwise, iteratively dropping each item until
 #>= .7 is achieved, minimum three items acceptable
 # If no >= .7 solution found, forego mediation analyses
-ltm::cronbach.alpha(ineq_data$likely_envy,CI=TRUE)
-```
+ltm::cronbach.alpha(ineq_data$envy_lostak,CI=TRUE)
 
-
-
-
-```{r study-1a-assumptions}
-# Outliers
-ineq_data %>%
-  group_by(inequality) %>%
-  identify_outliers(security_spending)
-
-# If outliers present, winzorize
-
-#shapiro normality by group
-ineq_data %>%
-  group_by(inequality) %>%
-  shapiro_test(security_spending)
-
-ggqqplot(ineq_data, x = "security_spending", facet.by = "inequality")
-
-# Due to large samples, no alternative method will 
-# be used in the case of nonnormality
-
-ineq_data %>% levene_test(security_spending ~ as.factor(inequality))
-
-# If levene's is significant, use welch's t-test
-
-```
-
-```{r t-test}
-
-#welch's
-ineq_t_test <- ineq_data %>% 
-  t_test(security_spending ~ inequality) %>%
-  add_significance()
-ineq_t_test
-
-ineq_data %>%  cohens_d(security_spending ~ inequality, var.equal = FALSE)
-
-# student's (equal variances)
-ineq_t_test_stud <- ineq_data %>%
-  t_test(security_spending ~ inequality, var.equal = TRUE) %>%
-  add_significance()
-ineq_t_test_stud
-
-ineq_data %>%  cohens_d(security_spending ~ inequality, var.equal = TRUE)
+ltm::cronbach.alpha(ineq_data$envy_histak,CI=TRUE)
 ```
 
 
 ```{r 1a-2b2w-long}
-ineq_data_long <- ineq_data %>%
-  gather(key = "stake_cond", value = "security_spending",
-         ss_lostak,ss_histak) %>%
-  convert_as_factor(pnum, stake_cond)
+ineq_data %>% 
+  gather(cell, value, ends_with("stak")) %>%
+  mutate(stake_cond = str_sub(cell,1,end=-8),
+         cell = str_sub(cell,-6,-1)) %>%
+  # select(pnum, inequality, stake_cond, cell, value) %>%
+  spread(key = cell, value = value)
 
-ineq_envy_long <- ineq_data %>%
-  gather(key = "stake_cond", value = "likely_envy", 
-         envy_lostak,envy_histak) %>%
-  convert_as_factor(pnum, stake_cond)
+ineq_data_long <- ineq_data %>% 
+  gather(cell, value, ends_with("stak")) %>%
+  mutate(stake_cond = str_sub(cell,1,end=-8),
+         cell = str_sub(cell,-6,-1)) %>%
+  # select(pnum, inequality, stake_cond, cell, value) %>%
+  spread(key = stake_cond, value = value)
 
-ineq_data_long$likely_envy <- ineq_envy_long$likely_envy
+ineq_data_long <- rename(ineq_data_long, stake_cond=cell,
+                         security_spending = ss,
+                         likely_envy = envy)
+```
 
+
+```{r long-summary-security}
 ineq_data_long %>%
   group_by(stake_cond, inequality) %>%
   get_summary_stats(security_spending, type = "mean_sd")
@@ -202,41 +130,25 @@ box_m(ineq_data_long[, "security_spending", drop = FALSE],
 ```
 
 
-```{r 1a-long}
-# ineq_data_long <- ineq_data %>%
-#   gather(key = "stake_cond", value = "security_spending",
-#          ss_lostak_loprob_loprice, ss_lostak_loprob_hiprice, 
-#          ss_lostak_hiprob,ss_histak_loprob_loprice, 
-#          ss_histak_loprob_hiprice, ss_histak_hiprob) %>%
-#   convert_as_factor(pnum, stake_cond)
-# 
-# ineq_envy_long <- ineq_data %>%
-#   gather(key = "stake_cond", value = "likely_envy", 
-#          envy_lostak_loprob_loprice, envy_lostak_loprob_hiprice, 
-#          envy_lostak_hiprob,envy_histak_loprob_loprice, 
-#          envy_histak_loprob_hiprice, envy_histak_hiprob) %>%
-#   convert_as_factor(pnum, stake_cond)
-# 
-# ineq_data_long$likely_envy <- ineq_envy_long$likely_envy
-# 
-# ineq_data_long %>%
-#   group_by(stake_cond, inequality) %>%
-#   get_summary_stats(security_spending, type = "mean_sd")
-# 
-# ineq_data_long %>%
-#   group_by(stake_cond, inequality) %>%
-#   identify_outliers(security_spending)
-# 
-# ineq_data_long %>%
-#   group_by(stake_cond, inequality) %>%
-#   shapiro_test(security_spending)
-# 
-# ggqqplot(ineq_data_long, "security_spending", ggtheme = theme_bw()) +
-#   facet_grid(inequality ~ stake_cond)
-# 
-# ineq_data_long %>%
-#   group_by(stake_cond) %>%
-#   levene_test(security_spending ~ inequality)
+```{r long-summary-envy}
+ineq_data_long %>%
+  group_by(stake_cond, inequality) %>%
+  get_summary_stats(likely_envy, type = "mean_sd")
+
+ineq_data_long %>%
+  group_by(stake_cond, inequality) %>%
+  identify_outliers(likely_envy)
+
+ineq_data_long %>%
+  group_by(stake_cond, inequality) %>%
+  shapiro_test(likely_envy)
+
+ggqqplot(ineq_data_long, "likely_envy", ggtheme = theme_bw()) +
+  facet_grid(inequality ~ stake_cond)
+
+ineq_data_long %>%
+  group_by(stake_cond) %>%
+  levene_test(likely_envy ~ inequality)
 
 # homogeneity of covariances - only signals problems 
 #when p < 0.001 and your sample sizes are unequal
@@ -245,9 +157,8 @@ box_m(ineq_data_long[, "security_spending", drop = FALSE],
 #Alternatively, you could omit the 
 #interpretation of the interaction term.
 # At minimum. Report violation
-
-# box_m(ineq_data_long[, "security_spending", drop = FALSE], 
-#       ineq_data_long$inequality)
+box_m(ineq_data_long[, "likely_envy", drop = FALSE], 
+      ineq_data_long$inequality)
 ```
 
 ### Hypothesis 1  {.unnumbered}
@@ -266,11 +177,10 @@ ineq_anova_mixed <- anova_test(
   )
 
 get_anova_table(ineq_anova_mixed)
-
 ```
 
 
-```{r}
+```{r afex-anova}
 # Fit ANOVA ---------------------------------------------------------------
 
 afex_options(es_aov         = 'ges',
@@ -288,48 +198,66 @@ ez_inequality
 afex_plot(ez_inequality,  ~ inequality,  ~ stake_cond)
 ```
 
-```{r mean-dif}
-# maybe better to do with wide format
-# or just summarize
-ayyy <- mean(ineq_data$ss_lostak)
 
+```{r group-lostak}
+#this use of N looks right- for each between-subjects factor
 grouped_lostak <- ineq_data %>%
   group_by(inequality) %>%
   summarise_at(vars(ss_lostak), list(mean = mean,sd=sd,n=length))
 
 grouped_lostak$se <- grouped_lostak$sd/sqrt(grouped_lostak$n)
 
-lostak_dif <- as.numeric(unname(grouped_lostak[2,2] - grouped_lostak[1,2]))
+lostak_dif <- as.numeric(unname(grouped_lostak[2,2] - 
+                                  grouped_lostak[1,2]))
 
-lostak_se <- as.numeric(unname(sqrt(grouped_lostak[2,5] + grouped_lostak[1,5])))
+lostak_se <- as.numeric(unname(sqrt(grouped_lostak[2,5] +
+                                      grouped_lostak[1,5])))
 
-lostak_diff_sd <- as.numeric(sqrt(grouped_lostak[2,5]^2 + grouped_lostak[1,5]^2))
+lostak_diff_sd <- as.numeric(sqrt(grouped_lostak[2,5]^2 +
+                                    grouped_lostak[1,5]^2))
+```
 
+
+```{r group-histak}
+#this use of N looks right- for each between-subjects factor
 grouped_histak <- ineq_data %>%
   group_by(inequality) %>%
   summarise_at(vars(ss_histak), list(mean = mean,sd=sd,n=length))
 
 grouped_histak$se <- grouped_histak$sd/sqrt(grouped_histak$n)
 
-histak_dif <- as.numeric(unname(grouped_histak[2,2] - grouped_histak[1,2]))
+histak_dif <- as.numeric(unname(grouped_histak[2,2] - 
+                                  grouped_histak[1,2]))
 
-histak_se <- as.numeric(unname(sqrt(grouped_histak[2,5] + grouped_histak[1,5])))
+histak_se <- as.numeric(unname(sqrt(grouped_histak[2,5] +
+                                      grouped_histak[1,5])))
 
-histak_diff_sd <- as.numeric(sqrt(grouped_histak[2,5]^2 + grouped_histak[1,5]^2))
-
-
-diff_diff <- histak_dif - lostak_dif
-
-diff_se <- sqrt(lostak_se+ histak_se)
-
-pooled <- sqrt(((N-1)*histak_diff_sd^2 + (N-1)*lostak_diff_sd^2) / (N+N-2))
-
-diff_sd <- diff_se*sqrt(N)
+histak_diff_sd <- as.numeric(sqrt(grouped_histak[2,5]^2 +
+                                    grouped_histak[1,5]^2))
 
 
 ```
 
-```{r}
+
+```{r overall-equiv-computation}
+#this use of N may be wrong - uses the overall 
+#sample size instead of some specification from between groups 
+diff_diff <- histak_dif - lostak_dif
+
+diff_se <- sqrt(lostak_se+ histak_se)
+
+pooled <- sqrt(((N-1)*histak_diff_sd^2 + 
+                  (N-1)*lostak_diff_sd^2) / (N+N-2))
+
+diff_sd <- diff_se*sqrt(N)
+
+```
+
+
+An equivalence test will be used to determine whether the effect of inequality significantly smaller than a minimally large effect size.
+
+```{r t-tost}
+
 tsum_TOST(
 m1 = histak_dif,
 sd1 = histak_diff_sd,
@@ -349,83 +277,8 @@ alpha = 0.05,
 bias_correction = TRUE,
 rm_correction = FALSE
 )
-
-TOSTpaired(
-n = 100,
-m1 = histak_dif,
-m2 = lostak_dif,
-sd1 = histak_diff_sd,
-sd2 = lostak_diff_sd,
-r12=.5,
-low_eqbound_dz = -.2,
-high_eqbound_dz = .2,
-alpha = .05,
-plot = TRUE,
-verbose = TRUE
-)
 ```
 
-
-```{r t-tost}
-res2 = TOSTER::t_TOST(formula = stake_diff ~ inequality,
-              data = ineq_data,
-              paired = FALSE,
-              low_eqbound = -sd(ineq_data$stake_diff)*.2,
-              high_eqbound =  sd(ineq_data$stake_diff)*.2,
-              alpha = .05,
-              plots = TRUE)
-res2
-```
-
-
-
-
-```{r ez-eq}
-
-# code grabbed from https://github.com/mattansb/Analysis-of-Factorial-Designs-foR-Psychologists/blob/master/07%20Accepting%20nulls/02%20Testing%20null%20contrasts.R
-
-# Get conditional means:
-em_ineq <- emmeans(ez_inequality, ~ stake_cond + inequality)
-
-co_int_ineq <- contrast(em_ineq, interaction = "consec")
-
-co_ineq <- contrast(em_ineq, interaction = list(stake_cond = contr.lostak_ineq,
-                                             inequality = contr.histak_ineq))
-
-SESOI <- .01
-
-## 2. Test
-# Use emmeans::test to test the contrasts we've built. the `delta` argument
-# tells `test()` that we want an equivalence test compared to this value.
-test(co_int_ineq, delta = SESOI)
-
-contr.stak <- data.frame(s_ef = c(0,1))
-contr.ineq <- data.frame(i_ef = c(0,1))
-
-# Conduct interaction-contrast analysis
-c_ineq <- contrast(em_ineq, interaction = list(stake_cond = contr.stak,
-                                             inequality = contr.ineq))
-
-c_ineq
-```
-
-
-```{r}
-
-# Let's define those contrasts:
-contr.stak1 <- data.frame(s_ef = c(0,1))
-contr.ineq1 <- data.frame(i_ef = c(1,0))
-
-
-# Conduct interaction-contrast analysis
-c_ineq1 <- contrast(em_ineq, interaction = list(stake_cond = contr.stak1,
-                                             inequality = contr.ineq1))
-
-tw.emm <- contrast(em_ineq, interaction = c(tension = "poly", wool = "consec"), 
-                   by = NULL)
-
-c_ineq1
-```
 
 
 **H1a)**: `r h1a`, or in terms of the model, **H1a)**: `r h1am`

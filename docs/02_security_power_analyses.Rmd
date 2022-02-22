@@ -8,7 +8,9 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
+library(gtable)
 library(Superpower)
+library(gridExtra)
 set.seed(1234)
 
 load(here::here("output", "pretest_output.RData"))
@@ -17,7 +19,11 @@ Superpower_options("plot" = FALSE, "verbose" = FALSE)
 
 nsims <- 2000
 
-cgwtools::resave(nsims, file = here::here("output", "pretest_output.RData"))
+base_mean <- unname(base_mean)
+
+cgwtools::resave(nsims, base_mean, file = here::here("output", "pretest_output.RData"))
+
+
 ```
 
 After the pretest, we found substantial variation within conditions. From data vizualization, a few strategies can be identified for guiding consumption of security goods: firstly, purchasing none at all (the most risk-accepting strategy), secondly, purchasing the maximum possible, and third, purchasing the median value of the possible range. Lastly, for those that do not use one of these max/min/median strategies, participants seem to make purchases in multiples of five.
@@ -41,10 +47,21 @@ library(pwr)
 power_ttest_security <- pwr.t.test(d=(0.6798-base_mean)/base_sd,power=.95,sig.level=.05,
            type="two.sample",alternative="greater")
 
+power_ttest_security2 <- pwr.t.test(d=.2,power=.95,sig.level=.05,
+           type="two.sample",alternative="greater")
+
+power_ttest_security2_8 <- pwr.t.test(d=.2,power=.8,sig.level=.05,
+           type="two.sample",alternative="greater")
 
 eta01_power_ttest_security<- pwr.t.test(d=(0.7419-base_mean)/base_sd,power=.95,sig.level=.05,
            type="two.sample",alternative="greater")
 
+pwr.anova.test(
+  # n = 541.7865,
+              power=.95,
+               k = 2,
+               f = .1,
+               sig.level = .05)
 
 
 power_ttest_security
@@ -288,3 +305,121 @@ security_02_exact <- ANOVA_exact(security_02_design,
 
 knitr::kable(security_02_exact$main_results)
 ```
+
+# 2bx2wx2w factorial
+
+First one yields a cohen's f of .2, which would be a cohen's d of .4
+
+# For a larger mixed effect: cohen's f = .2
+
+```{r mixed-power-f2, warning=FALSE}
+# m_units = 37.1
+
+# .65 -> f=.109
+
+security_mixed_design_f2 <- ANOVA_design(design = "2b*2w*2w",
+                   n = 163, 
+                   mu = c(0.6798,0.6798, 0.6798, 0.6798, base_mean, base_mean, base_mean, base_mean), 
+                   sd = base_sd, 
+                   r = pretest_icc$ICC_adjusted,
+                   labelnames = c("inequality", "yes", "no", 
+                                  "stake", "hi", "lo"
+                                  , "prob", "hi prob", "lo prob"
+                                  # ,"price" , "hi", "lo"
+                                  ))
+
+ggplot2::ggsave(here::here("figures", "power_design_within_f2.png"), height = 3, width =5)
+
+security_mixed_design_f2
+```
+
+
+```{r mixed-powerplot-f2, warning=FALSE, echo=FALSE}
+security_mixed_powerplot_f2 <- plot_power(security_mixed_design_f2, min_n = 20, max_n = 500, 
+                                       desired_power = 95)
+
+cell_n_mixed_f2 <- security_mixed_powerplot_f2$anova_n$n[1]
+
+cgwtools::resave(cell_n_mixed_f2, file = here::here("output", "pretest_output.RData"))
+
+security_mixed_powerplot_f2$plot_ANOVA
+g1_f2 <- ggplotGrob(security_mixed_powerplot_f2$plot_ANOVA)
+
+gtable_show_layout(g1_f2)
+
+grid_ineq_extract_f2 = g1_f2[c(7,20:24),]
+
+mixed_ineq_grid_f2  <- grid.arrange(grid_ineq_extract_f2)
+# Export
+ggsave(filename=here::here("figures","mixedpowerplot_f2.png"), plot=mixed_ineq_grid_f2, height = 3)
+```
+
+
+```{r power-plot-f2, warning=FALSE, echo=FALSE}
+security_mixed_exact_f2 <- ANOVA_exact(security_mixed_design_f2, 
+                                  alpha = 0.05)
+
+cgwtools::resave(security_mixed_exact_f2, file = here::here("output", "pretest_output.RData"))
+
+knitr::kable(security_mixed_exact_f2$main_results)
+```
+
+# Smaller mixed effect: cohen's f = .1
+
+
+```{r mixed-power-f1, warning=FALSE}
+# m_units = 37.1
+
+# .65 -> f=.109
+
+# detecting .01 partial η2, with 95% power
+security_mixed_design <- ANOVA_design(design = "2b*2w*2w",
+                   n = 653, 
+                   mu = c(0.647,0.647, 0.647, 0.647, base_mean, base_mean, base_mean, base_mean), 
+                   sd = base_sd, 
+                   r = pretest_icc$ICC_adjusted,
+                   labelnames = c("inequality", "yes", "no", 
+                                  "stake", "hi", "lo"
+                                  , "prob", "hi prob", "lo prob"
+                                  # ,"price" , "hi", "lo"
+                                  ))
+
+ggplot2::ggsave(here::here("figures", "power_design_within.png"), height = 3, width =5)
+
+security_mixed_design
+```
+
+
+```{r mixedpowerplot-f1, warning=FALSE, echo=FALSE}
+security_mixed_powerplot <- plot_power(security_mixed_design, min_n = 20, max_n = 700, 
+                                       desired_power = 95)
+
+cell_n_mixed <- security_mixed_powerplot$anova_n$n[1]
+
+cgwtools::resave(cell_n_mixed, file = here::here("output", "pretest_output.RData"))
+
+security_mixed_powerplot$plot_ANOVA
+g1 <- ggplotGrob(security_mixed_powerplot$plot_ANOVA)
+
+gtable_show_layout(g1)
+
+grid_ineq_extract = g1[c(7,20:24),]
+
+mixed_ineq_grid  <- grid.arrange(grid_ineq_extract)
+# Export
+ggsave(filename=here::here("figures","mixedpowerplot.png"), plot=mixed_ineq_grid, height = 3)
+```
+
+
+```{r power-table-f1, warning=FALSE, echo=FALSE}
+security_mixed_exact <- ANOVA_exact(security_mixed_design, 
+                                  alpha = 0.05)
+
+cgwtools::resave(security_mixed_exact, file = here::here("output", "pretest_output.RData"))
+
+knitr::kable(security_mixed_exact$main_results)
+```
+
+http://jakewestfall.org/blog/index.php/2016/03/25/five-different-cohens-d-statistics-for-within-subject-designs/
+
+> The crucial thing to recognize about applying the classical Cohen’s d is that it deliberately ignores information about the design of the study. That is, you compute d the same way whether you are dealing with a between-subjects, within-subjects, or mixed design. Basically, in computing d, you always treat the data as if it came from a simple two-independent-groups design.
