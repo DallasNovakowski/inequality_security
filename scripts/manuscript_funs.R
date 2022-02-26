@@ -19,6 +19,26 @@ inline_extract <- function(model,coef_name){
 }
 
 
+anova_extract <- function(model,coef_name){
+  test_stat <- round(as.numeric(model[coef_name,"F value"]),2)
+  df <- paste(model[coef_name,"NumDF"], round(model[coef_name,"DenDF"],2),sep = ", ")
+  
+  pval <- ifelse(model[coef_name,"Pr(>F)"] < .001,
+                 "< .001",
+                 paste("=", model[coef_name,"Pr(>F)"] %>% round(3)))
+  
+  estimate <- model[coef_name,"cohen_f_p"]
+  # se <- model[coef_name,"Std. Error"]
+  ci_lo <- model[coef_name,"ci95_lo"]
+  ci_hi <- model[coef_name,"ci95_hi"]
+  
+  # print(c(test_stat, df, pval, estimate, se))
+  
+  paste("*F*","(",df,")"," = ", round(test_stat,2), ", *p* ", 
+        pval, ", *partial cohen's f* = ", round(estimate,3),  
+        ", CI(95%) = [", round(ci_lo,3), ", ", round(ci_hi,3),"]",  sep="")
+}
+
 percent <- function(x, digits = 0, format = "f", ...) {      # Create user-defined function
   paste0(formatC(x * 100, format = format, digits = digits, ...), "%")
 }
