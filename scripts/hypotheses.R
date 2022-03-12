@@ -21,11 +21,11 @@ h1a <- "Economic inequality's effect on security consumption is mediated by the 
 
 h1am <- "The indirect effect (ACME) will be significantly different from 0"
 
-h1a.1  <- "(Mediation step 1) In the model `m_envy_med1`, the coefficient for income inequality will have a significant positive effect on participants' belief that their partner is envious."
+h1a.1  <- "In the model `m_mixed_med1`, the coefficient for income inequality will have a significant positive effect on participants' belief that their partner is envious."
 
-h1a.2 <- "(Mediation step 2) In the model `m_envy_med2`, participants' belief that their partner is envious will have a significantly positive effect on security spending."
+h1a.2 <- "In the model `m_mixed_med2`, participants' belief that their partner is envious will have a significantly positive effect on security spending."
 
-h1a.3 <- "In the model `m_envy_med_full`, the indirect effect/ACME (Average Causal Mediation Effect [total effect - direct effect]) will be significantly different from 0"
+h1a.3 <- "In the model `m_mixed_med_full`, the indirect effect/ACME (Average Causal Mediation Effect [total effect - direct effect]) will be significantly different from 0"
 
 hyp1 <- c(h1,h1_min,h1.1,h1a,h1am,h1a.1,h1a.2,h1a.3)
 
@@ -37,11 +37,11 @@ h2 <- "The effect of inequality on security consumption will be lower when incom
 
 h2_min <- "Negative inequality*merit interaction"
 
-h2.1 <- "(linear/anova): In the two-way model `car_aov_merit`, 
-the inequality*merit interaction will have a significantly negative effect on security spending."
+h2.1 <- "(linear/anova): In the 2b*2b model `anova_merit`, 
+the inequality-merit interaction will have a significantly negative effect on security spending."
 
-h2.2 <- "(Planned pairwise comparisons), in the model `tukey_merit` the hi-inequality/random income condition will have significantly higher rates of security consumption than all other conditions 
-(i.e., **.1)** hi-inequality/merit income, **.2)** no-inequality/random income, & **.3)** no-inequality/merit income)."
+h2.2 <- "(Planned pairwise comparisons), in the model `merit_pc`, the hi-inequality/random income condition will have significantly higher rates of security consumption than all other conditions 
+(i.e., **.a)** hi-inequality/merit income, **.b)** no-inequality/random income, & **.c)** no-inequality/merit income)."
 
 h2.2m <- "Pairwise: Hi-inequality/random > all other conditions."
 
@@ -66,9 +66,9 @@ h3 <- "The effect of partner's outgroup membership on security consumption will 
 
 h3_min <- "Positive outgroup partner*agentic interaction"
 
-h3.1 <- "(lm/anova) In the two-way model `car_aov_group`, the interaction between group membership and agentic wealth distribution will be significant."
+h3.1 <- "(lm/anova) In the 2b*2b model `anova_group`, the interaction between group membership and agentic wealth distribution will be significant."
 
-h3.2 <- "(Planned pairwise comparisons) In the model `tukey_group`, the agentic wealth distribution/outgroup condition will have higher rates of security consumption than all other conditions (i.e., **a)** agentic/ingroup, **b)** random/outgroup, & **c)** random/ingroup."
+h3.2 <- "(Planned pairwise comparisons) In the model `group_pc`, the agentic wealth distribution/outgroup condition will have higher rates of security consumption than all other conditions (i.e., **a)** agentic/ingroup, **b)** random/outgroup, & **c)** random/ingroup."
 
 h3.2m <- "Pairwise: agentic/outgroup condition > all other conditions."
 

@@ -22,19 +22,19 @@ load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/icvs_so
 
 # Supp. Figures {.unnumbered}
 
-(ref:pretest-splitplot) Means (95% CI) and distributions for Study 1 pretest. n=`r screened_n`, within-subjects, *p*s \> .49. See Table \@ref(tab:tidy-pretest).
+(ref:pretest-splitplot) Means (95% CI) and distributions for Study 1 pretest. n=`r screened_n`, within-subjects, *p*s \> `r plyr::round_any(sort(pretest_anova[,"Pr(>F)"],FALSE)[1], 0.01, f = floor)`. See Table \@ref(tab:pretest-anova).
 
 ```{r pretest-splitplot,eval = TRUE, include=TRUE, echo=FALSE, out.width='100%', fig.cap="(ref:pretest-splitplot)"}
 knitr::include_graphics(here::here("figures", "spending_pretest_splitplot.png"))
 ```
 
-(ref:mixed-design) Study design for a priori power analysis for 2b\*4w mixed ANOVA experiments (Study 1a & b). Note: Max possible value is \$1.00; bars indicate +/-1 *SD*
+(ref:mixed-design) Study design for a priori power analysis for 2b\*2w mixed ANOVA experiments (Study 1a & b). Note: Max possible value is \$1.00; bars indicate +/-1 *SD*
 
 ```{r mixed-design,eval = TRUE,include=TRUE, echo=FALSE, out.width='100%', fig.cap="(ref:mixed-design)"}
 knitr::include_graphics(here::here("figures", "security_design_2b2w_f1156_5.png"))
 ```
 
-(ref:powerplot2) Per-condition sample size thresholds for 95% power in main effect of inequality for 2b\*4w mixed ANOVA experiments (Study 1a & b).
+(ref:powerplot2) Per-condition sample size thresholds for 95% power in main effect of inequality for 2b\*2w mixed ANOVA experiments (Study 1a & b).
 
 ```{r powerplot2,eval = TRUE, include=TRUE, echo=FALSE, out.width='100%', fig.cap='(ref:powerplot2)'}
 knitr::include_graphics(here::here("figures", "security_powerplot_2b2w_f1156_5.png"))
@@ -92,7 +92,48 @@ knitr::include_graphics(here::here("figures", "ordinal_dotwhisker.png"))
 
 \clearpage
 
-```{r tidy-pretest, echo=FALSE, eval = TRUE, include=TRUE}
+```{r pretest-anova, eval = TRUE, echo=FALSE}
+pretest_anova1 <- round(data.frame(pretest_anova),3)
+
+pretest_anova1$ci95 <- as.character(paste("[", pretest_anova1$ci95_lo, ", ", pretest_anova1$ci95_hi,"]",  sep=""))
+
+# pretest_anova1$df <- paste("[", pretest_anova1$NumDF, ", ", pretest_anova1$ci95_hi,"]",  sep=""))
+
+
+
+pretest_anova1$df <- as.character(paste(round(pretest_anova1$NumDF,2), ", ", round(pretest_anova1$DenDF,2),  sep=""))
+  
+pretest_anova1 <- pretest_anova1[,!names(pretest_anova1) %in% c("ci95_lo","ci95_hi", "pes","NumDF","DenDF")]
+
+
+# pretest_anova1 <- pretest_anova1 %>% relocate(c(cohens_f,Pr..F.), .before = F)
+
+
+pretest_anova1 <- pretest_anova1 %>% 
+  dplyr::rename(
+    "95% CI" = ci95,
+    "F" = F,
+    "p" = Pr..F.,
+  "Cohen's F"  = cohens_f
+    )
+
+pretest_anova1 <- pretest_anova1 %>% relocate(df, .before = MSE)
+
+
+# pretest_anova1 <- pretest_anova1 %>% relocate(p, .before = "$\\eta_p^2$")
+
+knitr::kable(pretest_anova1,
+             # format='markdown',
+             align = "ccccccc",
+             caption = '2w*3w ANOVA results for Study 1 pretest',
+             booktabs = TRUE,
+             
+             # escape = FALSE
+             )
+```
+
+
+```{r tidy-pretest, echo=FALSE, eval = FALSE, include=TRUE}
 tidy_pretest_model1 <- tidy_pretest_model[,-c(1,2)]
 
 
@@ -137,7 +178,9 @@ tidy_pretest_model1 <- tidy_pretest_model1 %>%
     p = p.value
     )
 
-knitr::kable(tidy_pretest_model1,align = "lcccccc", caption = 'Mixed model results for Study 1 pretest', booktabs = TRUE)
+knitr::kable(tidy_pretest_model1,
+             align = "lcccccc",
+             caption = 'Mixed model results for Study 1 pretest', booktabs = TRUE)
 ```
 
 
@@ -171,7 +214,7 @@ knitr::kable(round(security_exact2b2w_f1156_5$pc_results,2), caption = 'Power of
 ```{r 2b2b-anova-power,echo=FALSE,  eval = TRUE, include=TRUE}
 security_2b2b_f01_exact$main_results$power <- round(security_2b2b_f01_exact$main_results$power,2)
 security_2b2b_f01_exact$main_results$non_centrality <- round(security_2b2b_f01_exact$main_results$non_centrality,2)
-knitr::kable(round(security_2b2b_f01_exact$main_results,4), caption = 'Power of main and interaction effects for 2b*2b factorial designs (Studies 1d, e)', booktabs = TRUE)
+knitr::kable(round(security_2b2b_f01_exact$main_results,4), caption = 'Power of main and interaction effects for 2b*2b factorial designs (Studies 1c, d)', booktabs = TRUE)
 ```
 
 ```{r 2b2b-pairwise-power,echo=FALSE, eval = TRUE,  include=TRUE}
@@ -184,11 +227,13 @@ row.names(security_2b2b_f01_exact$pc_results) <- gsub(x = row.names(security_2b2
 row.names(security_2b2b_f01_exact$pc_results) <- gsub(x = row.names(security_2b2b_f01_exact$pc_results), pattern = "((?:[^_]+_){3}[^_]+)_", replacement = "\\1_*VS*_")
 
 
-knitr::kable(round(security_2b2b_f01_exact$pc_results,2), caption = 'Power of pairwise comparisons for 2b*2b factorial designs (t-test; Studies 1d, e)', booktabs = TRUE)
+knitr::kable(round(security_2b2b_f01_exact$pc_results,2), caption = 'Power of pairwise comparisons for 2b*2b factorial designs (t-test; Studies 1c,d)', booktabs = TRUE)
 ```
 
+
+
 ```{r s2-victim-table-iv,echo=FALSE,  eval = TRUE, include=TRUE}
-iv_tidy_ci$term <- recode(iv_tidy_ci$term, gdppc_2004_6_scale  = "GDP", gini_2004_6_cent = "Inequality(Gini)", age_cent="Age",employed1="employed",male1="male",police_effective="p.police effectiveness",income_quartile= "income quartile")
+iv_tidy_ci$term <- recode(iv_tidy_ci$term,  gini_2004_6_cent = "Inequality(Gini)",gdppc_2004_6_scale  = "GDP", age_cent="Age",employed1="Employed",male1="Male",police_effective="P.police effectiveness",income_quartile= "Income quartile")
 
 
 iv_tidy_ci %>%
@@ -200,12 +245,14 @@ iv_tidy_ci %>%
     p = p_value
     ) %>%
   
-  kbl(booktabs = T,align = "lcccccc", caption = paste("Results for (pilot)  multilevel analysis, predicting victimization, larger sample, n = ",
+  kbl(booktabs = T,
+      align = "lcccccc",
+      caption = paste("Results for (pilot)  multilevel analysis, predicting victimization, larger targeted sample, n = ",
                      format(nrow(iv_2005),big.mark = ",", scientific = FALSE),"k = ",length((summary(as.factor(iv_2005$country))[0!= summary(as.factor(iv_2005$country))])))) 
 ```
 
 ```{r s2-victim-table-min,echo=FALSE,  eval = TRUE, include=TRUE}
-min_tidy_ci$term <- recode(min_tidy_ci$term, gdppc_2004_6_scale  = "GDP", gini_2004_6_cent = "Inequality(Gini)", age_cent="Age",employed1="employed",male1="male",police_effective="p.police effectiveness",income_quartile= "income quartile")
+min_tidy_ci$term <- recode(min_tidy_ci$term, gini_2004_6_cent = "Inequality(Gini)",gdppc_2004_6_scale  = "GDP", age_cent="Age",employed1="Employed",male1="Male",police_effective="P.police effectiveness",income_quartile= "Income quartile")
 
 
 min_tidy_ci %>%
@@ -216,7 +263,9 @@ min_tidy_ci %>%
     z = z_score,
     p = p_value
     ) %>%
-  kbl(booktabs = T,align = "lcccccc", caption = paste(
+  kbl(booktabs = T,
+      align = "lcccccc",
+      caption = paste(
     "Results for (pilot) multilevel analysis, minimized variables, predicting victimization, n = ",
                      format(nrow(iv_2005_mod),big.mark = ",", scientific = FALSE),
     "k = ",length((summary(as.factor(iv_2005_mod$country))[0!= summary(as.factor(iv_2005_mod$country))]))))
@@ -224,7 +273,7 @@ min_tidy_ci %>%
 
 ```{r s2-victim-table,echo=FALSE,  eval = TRUE, include=TRUE}
 
-tidy_ci$term <- recode(tidy_ci$term, gdppc_2004_6_scale  = "GDP", gini_2004_6_cent = "Inequality(Gini)", age_cent="Age",employed1="employed",male1="male",police_effective="p.police effectiveness",income_quartile= "income quartile")
+tidy_ci$term <- recode(tidy_ci$term,  gini_2004_6_cent = "Inequality(Gini)", gdppc_2004_6_scale  = "GDP", age_cent="Age",employed1="Employed",male1="Male",police_effective="P.police effectiveness",income_quartile= "Income quartile")
 
 tidy_ci %>%
   dplyr::rename(
@@ -234,7 +283,9 @@ tidy_ci %>%
     z = z_score,
     p = p_value
     ) %>%
-  kbl(booktabs = T,align = "lcccccc", caption = paste(
+  kbl(booktabs = T,
+      align = "lcccccc",
+      caption = paste(
     "Results for (pilot) multilevel analysis, predicting victimization with max. variables, n = ",
                      format(nrow(iv_2005_mod),big.mark = ",", scientific = FALSE),
     "k = ",length((summary(as.factor(iv_2005_mod$country))[0!= summary(as.factor(iv_2005_mod$country))])))) 

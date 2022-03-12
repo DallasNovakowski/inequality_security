@@ -108,7 +108,16 @@ tidy_ci <- subset(tidy_ci, select = -c(ci95_lo,ci95_hi))
 
 tidy_ci <- tidy_ci %>% relocate(CI95, .before = z_score)
 
-tidy_ci$df <- format(m_ord_mod_max1$dims$df.residual,big.mark = ",", scientific = FALSE)
+  # format(m_ord_mod_max1$dims$df.residual,big.mark = ",", scientific = FALSE)
+
+tidy_ci$df <- NA
+
+tidy_ci[c(1:3,6:10),"df"] <- format(nrow(mod_joined1) - nrow(tidy_ci) - 1,big.mark = ",", scientific = FALSE)
+
+tidy_ci[c(4,5),"df"] <- format(length((summary(as.factor(mod_joined1$country))
+                                           [0!= summary(as.factor(mod_joined1$country))])) - 2 - 1,
+                                   big.mark = ",", scientific = FALSE)
+
 
 tidy_ci <- tidy_ci %>% relocate(df, .before = estimate)
 
@@ -197,8 +206,18 @@ min_tidy_ci <- subset(min_tidy_ci, select = -c(ci95_lo,ci95_hi))
 
 min_tidy_ci <- min_tidy_ci %>% relocate(CI95, .before = z_score)
 
+min_tidy_ci$df <- NA
 
-min_tidy_ci$df <- format(m_ord_mod1$dims$df.residual,big.mark = ",", scientific = FALSE)
+min_tidy_ci[c(1,2,5:7),"df"] <- format(nrow(mod_joined1) - nrow(min_tidy_ci) - 1,big.mark = ",", scientific = FALSE)
+
+min_tidy_ci[c(3,4),"df"] <- format(length((summary(as.factor(mod_joined1$country))
+                                           [0!= summary(as.factor(mod_joined1$country))])) - 2 - 1,
+                                   big.mark = ",", scientific = FALSE)
+
+
+  #format(m_ord_mod1$dims$df.residual,big.mark = ",", scientific = FALSE)
+
+
 
 min_tidy_ci <- min_tidy_ci %>% relocate(df, .before = estimate)
 
@@ -257,6 +276,12 @@ ggsave(here::here("figures", "iv_ordinal_dotwhisker.png"),
        height = 3, width = 6)
 
 
+##DF for level-1 predictors is M-r-1, where M is number of level-1 units and r is the total number of explanatory variables
+#DF for  level-2 predictors is N-q-1, where N is the number of clusters and q is the number of level-2 predictors
+
+
+
+#Same for cross-level interactions as long as all q predict level-1 variable
 
 # create regression result tibble for making a a table
 iv_tidy_ci <- m100_iv_tidy %>%
@@ -283,7 +308,16 @@ iv_tidy_ci <- subset(iv_tidy_ci, select = -c(ci95_lo,ci95_hi))
 
 iv_tidy_ci <- iv_tidy_ci %>% relocate(CI95, .before = z_score)
 
-iv_tidy_ci$df <- format(m_ord_iv1$dims$df.residual,big.mark = ",", scientific = FALSE)
+iv_tidy_ci$df <- NA
+
+iv_tidy_ci[c(1,2,5:7),"df"] <- format(nrow(iv_joined1) - nrow(iv_tidy_ci) - 1,
+                                      big.mark = ",", scientific = FALSE)
+
+iv_tidy_ci[c(3,4),"df"] <- format(length((summary(as.factor(iv_joined1$country))
+                                          [0!= summary(as.factor(iv_joined1$country))])) - 2 - 1,
+                                  big.mark = ",", scientific = FALSE)
+
+  # format(m_ord_iv1$dims$df.residual,big.mark = ",", scientific = FALSE)
 
 iv_tidy_ci <- iv_tidy_ci %>% relocate(df, .before = estimate)
 

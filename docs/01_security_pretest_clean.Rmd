@@ -24,6 +24,9 @@ library(ggpubr) # stat_pvalue_manual
 library(tidyverse)
 library(stats)
 library(MBESS)
+library("emmeans")
+library(afex) #aov_ez
+
 
 #for raincloud plots
 source("https://gist.githubusercontent.com/benmarwick/2a1bb0133ff568cbe28d/raw/fb53bd97121f7f9ce947837ef1a4c65a73bffb3f/geom_flat_violin.R")
@@ -893,157 +896,97 @@ conf.level = 0.95)
 ```
 
 
-```{r lmertest-anova}
-pretest_no_order <- lmerTest::lmer(security_spending ~ prob*cost + (1 | participant_code), data = data_long, REML=TRUE)
-
-pretest_anova <- round(anova(pretest_no_order, ddf = "Kenward-Roger"),3)
-
-pretest_cohensf <- effectsize::cohens_f(pretest_anova, alternative="two.sided",verbose = FALSE)
-
-effectsize::eta_squared(pretest_anova, alternative="two.sided", generalized = FALSE)
-
-effectsize::omega_squared(pretest_anova, alternative="two.sided")
-
-pretest_anova$cohen_f_p <- round(pretest_cohensf$Cohens_f_partial,3)
-
-pretest_anova$ci95_lo <- round(pretest_cohensf$CI_low,3)
-
-pretest_anova$ci95_hi <- round(pretest_cohensf$CI_high,3)
-
-pretest_anova
-```
-
-```{r aov-anova}
-aov_anova <- aov(security_spending ~ prob*cost + Error(participant_code/prob*cost), data=data_long)
-#2 out of 3 effects not estimable
-
-summary(aov_anova)
+```{rlmertest-anova}
+# pretest_no_order <- lmerTest::lmer(security_spending ~ prob*cost + (1 | participant_code), data = data_long, REML=TRUE)
+# 
+# pretest_anova <- round(anova(pretest_no_order, ddf = "Kenward-Roger"),3)
 ```
 
 
-```{r lme4-anova}
-pretest_lme4 <- lme4::lmer(security_spending ~ prob*cost + (1 | participant_code), data = data_long, REML=TRUE)
-
-lme4_anova <- round(anova(pretest_lme4, ddf = "Kenward-Roger"),3)
-
-lme4_anova
-```
-
-
-```{r rstatix-anova}
-rstat_pretest_anova <- rstatix::anova_test(dv = security_spending, within= c(prob,cost), 
-  wid=participant_code, data = data_long)
-
-rstatix::get_anova_table(rstat_pretest_anova)
-
-cgwtools::resave(pretest_cohensf,pretest_anova,tidy_pretest_model,pretest_model,pretest_icc,cor_50_60,cor_60_75,cor_50_75, file = here::here("output", "pretest_output.RData"))
-```
-
-
-
-```{r afex-anova}
+```{r afex anova}
 afex_options(es_aov         = 'pes',
              correction_aov = 'GG',
              emmeans_model  = 'univariate')
 
-ez_pretest <- aov_ez(id='participant_code',
+pretest_anova <- aov_ez(id='participant_code',
                             dv='security_spending',
                             data=data_long,
                             within = c('prob','cost'),include_aov = TRUE)
-ez_pretest
+pretest_anova
 
-ez_pretest_peta <- effectsize::eta_squared(ez_pretest, alternative="two.sided",verbose = FALSE,generalized = FALSE)
+pretest_anova_peta <- effectsize::eta_squared(pretest_anova, alternative="two.sided",verbose = FALSE,generalized = FALSE)
+
+pretest_anova_cohensf <- effectsize::cohens_f(pretest_anova, alternative="two.sided",verbose = FALSE,generalized = FALSE)
 
 
-afex_plot(ez_pretest,  ~ prob,  ~ cost, error = "within")
+
+afex_plot(pretest_anova,  ~ prob,  ~ cost, error = "within")
+
 ```
+
 
 ```{r afex-pairwise}
 
-library("emmeans")
 ## set up reference grid using only length
-em1 <- emmeans(ez_pretest, 'prob')
-em2 <- emmeans(ez_pretest, 'cost')
+# em1 <- emmeans(pretest_anova, 'prob')
+# em2 <- emmeans(pretest_anova, 'cost')
+# 
+# em3 <-  emmeans(pretest_anova, ~ prob*cost)
+# contrast(em3, interaction = "pairwise")
+# 
+# con1 <- contrast(em3, interaction = "pairwise")
+# pairs(con1, by = NULL)
 
-pairs(em1)
-pairs(em2)
+pretest_emm <- emmeans(pretest_anova, specs = pairwise ~ prob*cost)
 
-Within.aov.1 <- aov_car(security_spending ~ prob*cost + Error(participant_code/prob*cost), data=data_long)
 
-Within_Fitted_Interaction <- emmeans(Within.aov.1, ~ prob|cost)
-Within_Fitted_Interaction2 <- emmeans(Within.aov.1, ~ cost|prob)
-pairs(Within_Fitted_Interaction, adjust="tukey")
-pairs(Within_Fitted_Interaction2, adjust="tukey")
+pretest_emm$contrasts %>%
+    summary(infer = TRUE)%>%
+    as.data.frame()
+# 
+# 
+# pairs(em1)
+# pairs(em2)
+# 
+# Within.aov.1 <- aov_car(security_spending ~ prob*cost + Error(participant_code/prob*cost), data=data_long)
+# 
+# Within_Fitted_Interaction <- emmeans(Within.aov.1, ~ prob|cost)
+# Within_Fitted_Interaction2 <- emmeans(Within.aov.1, ~ cost|prob)
+# pairs(Within_Fitted_Interaction, adjust="tukey")
+# pairs(Within_Fitted_Interaction2, adjust="tukey")
 ```
 
 
-```{r ezANOVA}
-pretest_ezANOVA <- ez::ezANOVA(data=data_long,dv = .(security_spending), 
-                   wid = .(participant_code),
-                   within = .(prob,cost),
-                   type = 3, detailed = TRUE)
-
-pretest_ezANOVA
-
-pretest_ezANOVA <- pretest_ezANOVA$ANOVA
 
 
-ezANOVA_lims <- conf.limits.ncf(F.value = .585, conf.level = 0.90, df.1 <- 2, df.2 <- 325)
-ezANOVA_Lower.lim <- ezANOVA_lims$Lower.Limit/(ezANOVA_lims$Lower.Limit + df.1 + df.2 + 1)
-ezANOVA_Upper.lim <- ezANOVA_lims$Upper.Limit/(ezANOVA_lims$Upper.Limit + df.1 + df.2 + 1)
-ezANOVA_Lower.lim
-ezANOVA_Upper.lim
+```{r afex-effects}
+pretest_peta_sq <- effectsize::eta_squared(pretest_anova, alternative="two.sided", generalized = FALSE)
 
-var_names <- paste("ez_limits_", pretest_ezANOVA[1:4,1], sep = "")
-var_names[x]
-for (x in 1:nrow(pretest_ezANOVA)) {
-print(conf.limits.ncf(F.value = pretest_ezANOVA[x,6], conf.level = 0.90, df.1 <- pretest_ezANOVA[x,2], df.2 <- pretest_ezANOVA[x,4]))
-}
+# effectsize::omega_squared(pretest_anova, alternative="two.sided")
 
-# ci.pvaf(F.value=0.53900775, df.1=, df.2=130, N=66, conf.level=.90)
-
-# ezANOVA_cohensf <- effectsize::cohens_f(pretest_ezANOVA, alternative="two.sided",verbose = FALSE)
-
-#"One somewhat hacky way to get CIs for effects is to use ezStats () to get the means 
-#and FLSD, compute the difference between the means to get the effect, 
-#and divide the FLSD by sqrt(2) to get the CI" 
-
-#The df for the residuals is the product of the numbers 
-#of levels of all factors times the number of replicates minus 1. 
+pretest_anova <- pretest_anova$anova_table
 
 
-ezANOVA_lims_int <- conf.limits.ncf(F.value = 374.96205548, conf.level = 0.90, df.1 <- 1, df.2 <- 65)
-ezANOVA_lim_lower_int <- ezANOVA_lims_int$Lower.Limit/(ezANOVA_lims_int$Lower.Limit + df.1 + df.2 + 1)
-ezANOVA_lim_upper_int <- ezANOVA_lims_int$Upper.Limit/(ezANOVA_lims_int$Upper.Limit + df.1 + df.2 + 1)
+# pretest_anova$peta_sq <- round(pretest_peta_sq$Eta2_partial,3)
 
-ezANOVA_lims_prob <- conf.limits.ncf(F.value = .539, conf.level = 0.90, df.1 <- 2, df.2 <- 130)
-ezANOVA_lim_lower_prob <- ezANOVA_lims_prob$Lower.Limit/(ezANOVA_lims_prob$Lower.Limit + df.1 + df.2 + 1)
-ezANOVA_lim_upper_prob <- ezANOVA_lims_prob$Upper.Limit/(ezANOVA_lims_prob$Upper.Limit + df.1 + df.2 + 1)
+# pretest_anova$ci95_lo <- round(pretest_peta_sq$CI_low,3)
+# 
+# pretest_anova$ci95_hi <- round(pretest_peta_sq$CI_high,3)
 
 
-ezANOVA_lims_cost <- conf.limits.ncf(F.value = 0.0343992, conf.level = 0.90, df.1 <- 1, df.2 <- 65)
-ezANOVA_lim_lower_cost <- ezANOVA_lims_cost$Lower.Limit/(ezANOVA_lims_cost$Lower.Limit + df.1 + df.2 + 1)
-ezANOVA_lim_upper_cost <- ezANOVA_lims_cost$Upper.Limit/(ezANOVA_lims_cost$Upper.Limit + df.1 + df.2 + 1)
+pretest_anova$cohens_f <- round(pretest_anova_cohensf$Cohens_f_partial,3)
 
+pretest_anova$ci95_lo <- round(pretest_anova_cohensf$CI_low,3)
 
-ezANOVA_lims_cost_prob <- conf.limits.ncf(F.value = 0.41822008, conf.level = 0.90, df.1 <- 2, df.2 <- 130)
-ezANOVA_lim_lower_cost_prob <- ezANOVA_lims_cost_prob$Lower.Limit/(ezANOVA_lims_cost_prob$Lower.Limit + df.1 + df.2 + 1)
-ezANOVA_lim_upper_cost_prob <- ezANOVA_lims_cost_prob$Upper.Limit/(ezANOVA_lims_cost_prob$Upper.Limit + df.1 + df.2 + 1)
+pretest_anova$ci95_hi <- round(pretest_anova_cohensf$CI_high,3)
 
-```
+pretest_anova
 
+pretest_anova <- rename(pretest_anova, DenDF = "den Df"
+                        , NumDF = "num Df")
 
-```{r aov-anova, eval = F}
-# needs to be conducted on wide data 
+# pretest_cohensf <- effectsize::cohens_f(pretest_anova, alternative="two.sided",verbose = FALSE)
 
-model <- aov(security_spending ~ prob*cost + Error(factor(participant_code)), data = data_long)
-summary(model)
-
-
-#analyze model
-car_aov_pretest <- car::Anova(model, type = 3)
-
-#Summarize model
-car_aov_sum <- anova_summary(car_aov_merit)
+cgwtools::resave(pretest_initial_n,pretest_peta_sq,pretest_anova_cohensf,pretest_anova,tidy_pretest_model,pretest_model,pretest_icc,cor_50_60,cor_60_75,cor_50_75, file = here::here("output", "pretest_output.RData"))
 
 ```

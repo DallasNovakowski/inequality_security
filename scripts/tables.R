@@ -20,11 +20,11 @@ Sampling <- c(paste("Study 1a; n = ",format(round(cell_n_5*2,0),big.mark = ",", 
               "Study 1a & 1b, same samples as above",
               paste("Study 1c; n = ",format(cell_n_01*4,big.mark = ",", scientific = FALSE), "crowdsourced. Power target: cohen's f = .1. Excluded if completes < 3 sliders; missing data, failed atn/comp checks"), 
               paste("Study 1d; n = ",format(cell_n_01*4,big.mark = ",", scientific = FALSE), "crowdsourced, following from power analysis in Study 1c. Exclusion: missing data, failed atn/comp checks"), 
-              paste("Study 2; k = 28 countries, and n = ", format(nrow(iv_2005_mod),big.mark = ",", scientific = FALSE), "participants; Exclusion: missing data"))
-Analysis<- c("2b*2w ANOVA and estimated marginal means, r package `rstatix`",
+              paste("Study 2; k = 32 countries, and n = ", format(nrow(iv_2005),big.mark = ",", scientific = FALSE), "participants; Exclusion: missing data"))
+Analysis<- c("2b*2w ANOVA and estimated marginal means, r package `afex`",
              "Mediation analysis; r package `mediate`",
-             "2b*2b ANOVA and Pairwise comparisons, r package `car`",
-             "2b*2b ANOVA and Pairwise comparisons, r package `car`", 
+             "2b*2b ANOVA and Pairwise comparisons, r package `afex`",
+             "2b*2b ANOVA and Pairwise comparisons, r package `afex`", 
              "Multi-level ordinal regression model, r package `ordinal`")
 Interpretation <- c("Task complexity (low comprehension of partner's income)",
                     "Low comprehension",

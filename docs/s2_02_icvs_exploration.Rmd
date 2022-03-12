@@ -30,15 +30,11 @@ source(here::here("scripts", "s2_01_icvs_scripts.r"), local = knitr::knit_global
 
 # Analysis procedure
 
-The following describes two survey sweeps of the International Crime Victimization Survey conducted across 2004-6. At first, this data had `r sweep5_nrow` respondents and `r sweep5_countries` countries. After a exclusion process maximizing the number of countries and observations, there were
+The following describes two survey sweeps of the International Crime Victimization Survey conducted across 2004-6. At first, this data had `r sweep5_nrow` respondents and `r sweep5_countries` countries. Analyzing archival data, the so-called "garden of forking paths [\@gelman2014] allows a researcher to pick and choose those data and analyses that best suit their preferred story [\@simmons2011]. As such, transparently showcasing the different analysis paths is an important measure to help reduce the encroachment of model selection bias.
 
-31 countries with 85,085 participants, with a minimum of 790 participants per country.
+As mentioned in the manuscript, including certain variables (e.g., perceived police effectiveness) requires dropping certain countries of Japan, Peru, and Iceland (`mod_joined1`: k = `r sum(summary(as.factor(mod_joined1$country))>0)`, and n = `r format(nrow(mod_joined1), big.mark = ",", scientific = FALSE)`.
 
-Analyzing archival data, the so-called "garden of forking paths [\@gelman2014] allows a researcher to pick and choose those data and analyses that best suit their preferred story [\@simmons2011]. As such, transparently showcasing the different analysis paths is an important measure to help reduce the encroachment of model selection bias.
-
-As mentioned in the manuscript, certain variable inclusions (e.g., perceived police effectiveness) requires dropping certain countries of Japan, Peru, and Iceland (`mod_joined1`: k = `r sum(summary(as.factor(mod_joined1$country))>0)`, and n = `r format(nrow(mod_joined1), big.mark = ",", scientific = FALSE)`.
-
-By comparison, excluding these three variables yields a sample of k = `r sum(summary(as.factor(iv_joined1$country))>0)` countries and a total n = `r format(nrow(iv_joined1), big.mark = ",", scientific = FALSE)` participants. The reported analyses will focus on the former, smaller sample specification, but this descriptives section (and supplementary analyses) examine whether a reduced model (i.e., excluding assaults, income quartile, and perceived police effectiveness) change between these sample subsets.
+By comparison, excluding these three variables yields a sample of k = `r sum(summary(as.factor(iv_joined1$country))>0)` countries and a total n = `r format(nrow(iv_joined1), big.mark = ",", scientific = FALSE)` participants. The reported analyses will focus on the latter, larger sample specification, but this descriptives section (and supplementary analyses) examine whether a reduced model (i.e., excluding assaults, income quartile, and perceived police effectiveness) change between these sample subsets.
 
 # Exploration
 
@@ -57,9 +53,9 @@ summary(iv_joined1$total_security)
 normality_stats(iv_joined1$total_security)
 ```
 
-## Larger dataset
+## Larger (focal) dataset
 
-To give a clearer picture of the data being excluded, data exploration will first be presented for the more complete dataset, then presented with the smaller subset.
+To give a clearer picture of the data being included, data exploration will first be presented for the more complete dataset, then presented with the smaller subset.
 
 ### Influential observations
 
@@ -238,20 +234,31 @@ nrow = 4, ncol=2)
 
 ```
 
+```{r winz-plot-iv}
+victim_gini_full <- gd %>% 
+  mutate(cooks = cooks.distance(lm(num_victim_5yr ~ gini_2004_6_winz)),
+         outlier_country = ifelse(cooks > 4*mean(cooks), country, NA)) %>%
+  ggplot(aes(x = gini_2004_6_winz, y = num_victim_5yr, label = outlier_country)) +
+  geom_point(position = "jitter") + geom_smooth(alpha = .25, color = "red", span = 1.5) + geom_smooth(method = "lm", alpha = .25) + ggtitle("Victimization & Winzorized Gini") + theme_minimal() + coord_cartesian(xlim = c(20, 50), ylim = c(.25, 1.125)) + ggrepel::geom_label_repel()
+
+victim_gini_full
+```
+
+
 ### Multicolinnearity
 
 -   **Check**: VIF/tolerances
 -   **Fix** remove values \>= 5
 
-```{r VIF1, warning=F, message=FALSE}
+```{r VIF1, warning=F, message=FALSE, echo = F}
 performance::check_collinearity(lme1)
 
 #car::vif(lme1) # display VIF values
 ```
 
-## Focal dataset
+## Smaller dataset
 
-```{r descriptives}
+```{r descriptives, echo = F}
 # Fixed effect variables in model
 summary(mod_joined1[,c("num_victim_5yr", "age_cent", "employed", "male")])
 ```
@@ -323,7 +330,6 @@ gridExtra::grid.arrange(victim_age, victim_gini_full,victim_gdp_full, gini_gdp_f
 
 ```
 
-### Variable exploration
 
 ### Model-based exploration
 
@@ -434,7 +440,7 @@ nrow = 4, ncol=2)
 
 ```
 
-```{r hist-info, warning=F, message=FALSE, fig.show='hide'}
+```{r hist-info, warning=F, message=FALSE, fig.show='hide', echo = F}
 hist_plot(mod_joined1, total_security, "Histogram of Total Security")
 ggsave(here::here("figures", "security_hist_mod.png"),
        height = 3)

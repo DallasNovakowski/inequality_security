@@ -11,11 +11,11 @@ knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 library(tidyverse)
 library(kableExtra)
 library(lme4)
-library(rstatix)  # t_test
-library(stats)  #aov function
+library(rstatix)  # t_test; identify_outliers
+# library(stats)  #aov function
 library(ggpubr)  #ggqqplot
-library(afex) #aov_ez
-
+  library(afex) #aov_ez
+library(TOSTER)
 library(mediation)
 mediate <- mediation::mediate
 
@@ -37,52 +37,50 @@ stake_strings <- c("histak_loprob_loprice", "histak_loprob_hiprice", "histak_hip
 
 # stake <- as.factor(sample(stake_strings, replace=TRUE, size=N))
 
-# likely_envy <- round(1+1.5*inequality + rnorm(N, 0,2),2) #Suspected mediator 
+envy_lik <- round(1+1.5*inequality + rnorm(N, 0,2),2) #Suspected mediator
 
-# security_spending <- 2*likely_envy + rnorm(N, 0, 5) #DV
+security_spent <- 2*envy_lik + rnorm(N, 0, 5) #DV
 
 envy_lostak <- 1.5*inequality + rnorm(N, 0, 5)
 envy_histak <- 1.5*inequality + rnorm(N, 0, 5)
 ss_lostak <- 2*envy_lostak + rnorm(N, 0, 5)
-ss_histak <- 2.*envy_histak + rnorm(N, 0, 5)
+ss_histak <- 2*envy_histak + rnorm(N, 0, 5)
 
 inequality <- as.factor(inequality)
 
 stake_diff <- ss_histak - ss_lostak
 
-ineq_data <- data.frame(pnum,inequality,envy_lostak,envy_histak,ss_lostak,ss_histak,stake_diff)
+ineq_data <- data.frame(pnum,inequality,envy_lostak,envy_histak,ss_lostak,ss_histak,stake_diff,security_spent,envy_lik)
 ```
 
 ## Study 1a/1b/1c, Analysis Plan {.unnumbered}
 
 ```{r envy-measure, eval = F}
-# Summing of envy items for each within-subjects condition
-ineq_data$envy_lostak <- rowSums(ineq_data
-    [,c("partner_envy_lostak", "partner_jealous_lostak", 
-        "partner_frustrated_lostak", "partner_bitter_lostak")])
+lostak_envy_items <- c("partner_envy_lostak", "partner_jealous_lostak", 
+        "partner_frustrated_lostak", "partner_bitter_lostak")
 
-ineq_data$envy_histak <- rowSums(ineq_data
-    [,c("partner_envy_histak", "partner_jealous_histak", 
-        "partner_frustrated_histak", "partner_bitter_histak")])
+histak_envy_items <- c("partner_envy_histak", "partner_jealous_histak",
+                       "partner_frustrated_histak", "partner_bitter_histak")
+
 
 # Acceptable if mean alpha >= .7
 # Otherwise, drop each item until >= .7 is achieved, >= 3 items acceptable
 # If no >= .7 solution found, forego mediation analyses
 
-ltm::cronbach.alpha(ineq_data$envy_lostak,CI=TRUE)
+ltm::cronbach.alpha(ineq_data$ineq_data
+    [,lostak_envy_items],CI=TRUE)
 
-ltm::cronbach.alpha(ineq_data$envy_histak,CI=TRUE)
+ltm::cronbach.alpha(ineq_data[,histak_envy],CI=TRUE)
+
+# Summing of envy items for each within-subjects condition
+ineq_data$envy_lostak <- rowSums(ineq_data
+    [,lostak_envy_items])
+
+ineq_data$envy_histak <- rowSums(ineq_data
+    [,histak_envy_items])
 ```
 
-
-```{r 1a-2b2w-long}
-ineq_data %>% 
-  gather(cell, value, ends_with("stak")) %>%
-  mutate(stake_cond = str_sub(cell,1,end=-8),
-         cell = str_sub(cell,-6,-1)) %>%
-  # select(pnum, inequality, stake_cond, cell, value) %>%
-  spread(key = cell, value = value)
-
+```{r 1a-2b2w-long, echo = FALSE}
 ineq_data_long <- ineq_data %>% 
   gather(cell, value, ends_with("stak")) %>%
   mutate(stake_cond = str_sub(cell,1,end=-8),
@@ -94,7 +92,6 @@ ineq_data_long <- rename(ineq_data_long, stake_cond=cell,
                          security_spending = ss,
                          likely_envy = envy)
 ```
-
 
 ```{r long-summary-security}
 # see summary stats
@@ -132,8 +129,7 @@ box_m(ineq_data_long[, "security_spending", drop = FALSE],
       ineq_data_long$inequality)
 ```
 
-
-```{r long-summary-envy}
+```{r long-summary-envy, echo = F}
 ineq_data_long %>%
   group_by(stake_cond, inequality) %>%
   get_summary_stats(likely_envy, type = "mean_sd")
@@ -167,47 +163,47 @@ box_m(ineq_data_long[, "likely_envy", drop = FALSE],
 **H1:** `r hypotheses[1]`, or in terms of the model: **H1:** `r h1.1`
 
 ```{r study1a-anova}
-# Using  rstatix::get_anova_table() applies Greenhouse-Geisser
-# tofactors violating the sphericity assumption.
+# Automatically applies Greenhouse-Geisser when violating sphericity.
 
-ineq_anova_mixed <- anova_test(
-  dv = security_spending, between= inequality, within = stake_cond, 
-  wid=pnum, data = ineq_data_long
-  )
-
-get_anova_table(ineq_anova_mixed)
-```
-
-```{r lmer-ineq-mixed-anova}
-ineq_lmer <- lmerTest::lmer(security_spending ~ inequality*stake_cond + (1 | pnum), data = ineq_data_long, REML=TRUE)
-
-ineq_lmer_anova <- round(anova(ineq_lmer, ddf = "Kenward-Roger"),3)
-
-ineq_lmer_cohensf <- effectsize::cohens_f(ineq_lmer_anova, alternative="two.sided",verbose = FALSE)
-```
-
-
-
-```{r afex-anova}
-# Fit ANOVA ---------------------------------------------------------------
-
-afex_options(es_aov         = 'ges',
+afex_options(es_aov         = 'pes',
              correction_aov = 'GG',
-             emmeans_model  = 'univariate')
+             emmeans_model  = 'univariate'
+             # ,include_aov = TRUE
+             )
 
-ez_inequality <- aov_ez(id='pnum',
+ineq_anova_mixed <-  aov_ez(id='pnum',
                             dv='security_spending',
                             data=ineq_data_long,
                             within = c('stake_cond'),
-                            between = c('inequality'))
-ez_inequality
+                            between = c('inequality')
+                            )
+#Cohen's f chosen because of it's correspondence to power analysis
+ineq_anova_mixed_cohens_f <- effectsize::cohens_f(ineq_anova_mixed, 
+    alternative="two.sided",verbose = FALSE,generalized = FALSE)
 
-
-afex_plot(ez_inequality,  ~ inequality,  ~ stake_cond)
+afex_plot(ineq_anova_mixed,  ~ inequality,  ~ stake_cond, error = "within")
 ```
 
+```{r study1a-pc}
+ineq_mixed_emm <- emmeans(ineq_anova_mixed, 
+                          specs = pairwise ~ stake_cond*inequality)
 
-```{r group-lostak}
+ineq_mixed_emm$contrasts %>%
+    summary(infer = TRUE)%>%
+    as.data.frame()
+```
+
+```{r lmer-ineq-mixed-anova, echo=F}
+# ineq_lmer <- lmerTest::lmer(security_spending ~ inequality*stake_cond 
+#                             + (1 | pnum), data = ineq_data_long, REML=TRUE)
+# 
+# ineq_lmer_anova <- round(anova(ineq_lmer, ddf = "Kenward-Roger"),3)
+# 
+# ineq_lmer_cohensf <- effectsize::cohens_f(ineq_lmer_anova, 
+#     alternative="two.sided",verbose = FALSE)
+```
+
+```{r grouping-lostak, echo =F}
 #this use of N looks right- for each between-subjects factor
 grouped_lostak <- ineq_data %>%
   group_by(inequality) %>%
@@ -225,8 +221,7 @@ lostak_diff_sd <- as.numeric(sqrt(grouped_lostak[2,5]^2 +
                                     grouped_lostak[1,5]^2))
 ```
 
-
-```{r group-histak}
+```{r grouping-histak}
 #this use of N looks right- for each between-subjects factor
 grouped_histak <- ineq_data %>%
   group_by(inequality) %>%
@@ -242,10 +237,7 @@ histak_se <- as.numeric(unname(sqrt(grouped_histak[2,5] +
 
 histak_diff_sd <- as.numeric(sqrt(grouped_histak[2,5]^2 +
                                     grouped_histak[1,5]^2))
-
-
 ```
-
 
 ```{r overall-equiv-computation}
 #this use of N may be wrong - uses the overall 
@@ -258,15 +250,12 @@ pooled <- sqrt(((N-1)*histak_diff_sd^2 +
                   (N-1)*lostak_diff_sd^2) / (N+N-2))
 
 diff_sd <- diff_se*sqrt(N)
-
 ```
-
 
 An equivalence test will be used to determine whether the effect of inequality significantly smaller than a minimally large effect size.
 
 ```{r t-tost}
-
-tsum_TOST(
+ineq_mixed_tost <- tsum_TOST(
 m1 = histak_dif,
 sd1 = histak_diff_sd,
 n1 = N,
@@ -287,17 +276,18 @@ rm_correction = FALSE
 )
 ```
 
-
-
 **H1a)**: `r h1a`, or in terms of the model, **H1a)**: `r h1am`
 
 **H1a.1)**, mediation step 1: `r h1a.1`
 
+**H1a.2)**, mediation step 2: `r h1a.2`
+
+**H1a.3)**, mediation step 3: `r h1a.3`
 
 ```{r study 1a-med-mixed}
 m_mixed_med1 <- lmer(likely_envy ~ inequality  + (1| pnum) + 
                        stake_cond, data = ineq_data_long)
-
+#returns as singular - likely artifact of data generation process
 m_mixed_med2 <- lmer(security_spending ~ likely_envy + inequality  + 
                        (1| pnum) + stake_cond, data = ineq_data_long)
 
@@ -306,73 +296,19 @@ m_mixed_total <- lmer(security_spending ~ inequality  + (1| pnum) +
 
 m_mixed_med_full <- mediate(m_mixed_med1, m_mixed_med2, 
     #                         boot = TRUE,   
-    boot.ci.type = "bca", sims = 2000,
+    # boot.ci.type = "bca", 
+    sims = 2000,
     treat="inequality",
                            mediator="likely_envy")
 
-
 plot(m_mixed_med_full)
 summary(m_mixed_med_full)
-
-
-
-```
-
-
-```{r t-testplot, include=FALSE}
-bxp <- ggboxplot(
-  ineq_data, x = "inequality", y = "security_spending", 
-  ylab = "Security Spending", xlab = "Inequality", add = "jitter"
-  )
-
-ineq_t_test <- ineq_t_test %>% add_xy_position(x = "group")
-
-bxp + 
-  stat_pvalue_manual(ineq_t_test, tip.length = 0) +
-  labs(subtitle = get_test_label(ineq_t_test, detailed = TRUE))
-
-```
-
-
-```{r mediat-predict}
-#predicting mediator
-m_envy_med1 <- lm(likely_envy ~ inequality, data = ineq_data)
-```
-
-**H1a.2)**, mediation step 2: `r h1a.2`
-
-```{r two-lev-likely-security}
-# test for relationship between p. attack likelihood and security spending
-m_envy_med2 <- lm(security_spending ~ likely_envy + inequality, 
-                  data = ineq_data)
-```
-
-**H1a.3)**, mediation step 3: `r h1a.3`
-
-```{r two-lev-med}
-# see https://ademos.people.uic.edu/
-#Chapter15.html#41_create_the_necessary_regression_models
-
-# ACME: Average Causal Mediation Effect [total effect - direct effect]
-# ADE: Average Direct Effect [total effect - indirect effect]
-# Total Effect: Direct (ADE) + Indirect (ACME)
-# Prop. Mediated: Conceptually ACME / Total effect 
-#(This tells us how much of the total effect 
-#our indirect effect is 'explaining')
-
-m_envy_med_full <- mediate(m_envy_med1, m_envy_med2, boot = TRUE,   
-    boot.ci.type = "bca", sims = 2000,treat="inequality",
-                           mediator="likely_envy")
-
-
-plot(m_envy_med_full)
-summary(m_envy_med_full)
 ```
 
 ## Study 1d, Analysis Plan {.unnumbered}
 
-```{r merit-items, eval=FALSE}
-ineq_data$likely_envy <- rowSums(ineq_data[,c("partner_envy", 
+```{r merit-items, eval=FALSE, echo = F}
+ineq_data$envy_lik <- rowSums(ineq_data[,c("partner_envy", 
   "partner_jealous", "partner_frustrated", "partner_bitter")
 
 ltm::cronbach.alpha(ineq_data$likely_envy,CI=TRUE)
@@ -384,9 +320,14 @@ reasonable_income_text <- "My partner's assigned income is reasonable"
 fair_distribution_text <- "The way incomes were given for this game is fair"
 deserved_income_text <- "I deserve my income for this game"
 deserved_role_text <- "I deserve my role for this game"
+
+game_fair_text <- "The way incomes were given for this game is fair"
+self_fair_text <-"My assigned income is fair"
+other_fair_text <-"My partner's assigned income is fair"
 ```
 
-```{r test-merit-data}
+
+```{r test-merit-data, echo = F}
 # Used for making test data
 ineq_merit_data <- ineq_data
 
@@ -402,27 +343,17 @@ ineq_merit_data$inequality <- as.factor(ineq_merit_data$inequality)
 ineq_merit_data$merit <- as.factor(ineq_merit_data$merit)
 ```
 
-```{r fairness-manipulationcheck}
-game_fair_text <- "The way incomes were given for this game is fair"
-self_fair_text <-"My assigned income is fair"
-other_fair_text <-"My partner's assigned income is fair"
-```
-
-### Hypothesis 2 {.unnumbered}
-
-**H2)**: `r h2`. Or more precisely, **H2.1)**: `r h2.1`
 
 
-```{r merit-assumptions}
+```{r merit-assumptions, echo = FALSE}
 outliers_merit <- ineq_merit_data %>%
   group_by(merit, inequality) %>%
-  identify_outliers(security_spending)
+  identify_outliers(security_spent)
 
 # If outliers present, winzorize
 
-
 # Build the linear model
-lm_merit  <- lm(security_spending ~ as.factor(inequality)*as.factor(merit),
+lm_merit  <- lm(security_spent ~ as.factor(inequality)*as.factor(merit),
              data = ineq_merit_data)
 
 # Create a QQ plot of residuals
@@ -434,17 +365,17 @@ shap_merit <- shapiro_test(residuals(lm_merit))
 #normality by groups
 shap_g_merit <- ineq_merit_data %>%
   group_by(merit, inequality) %>%
-  shapiro_test(security_spending)
+  shapiro_test(security_spent)
 
 # qqplot by group
 qq_g_merit <- ggqqplot(ineq_merit_data,
-                           "security_spending", ggtheme = theme_bw()) +
+                           "security_spent", ggtheme = theme_bw()) +
   facet_grid(inequality ~ merit)
 
 # Due to large samples, no alternative method 
 #will be used in the case of nonnormality
 
-levene_merit <- ineq_merit_data %>% levene_test(security_spending ~ 
+levene_merit <- ineq_merit_data %>% levene_test(security_spent ~ 
     as.factor(inequality)*as.factor(merit))
 
 # Due to large samples, no alternative method will 
@@ -455,148 +386,116 @@ levene_merit <- ineq_merit_data %>% levene_test(security_spending ~
 # see above for 95%ci for eta squared
 ```
 
-```{r merit-anova-lm, echo = FALSE}
-# Method 1: stats::lm & car::Anova 
-#fit model
-lm_merit <- lm(security_spending ~ inequality*merit, data = ineq_merit_data)
+### Hypothesis 2 {.unnumbered}
 
-#analyze model
-car_lm_merit <- Anova(lm_merit)
+**H2)**: `r h2`. Or more precisely, **H2.1)**: `r h2.1`
 
-#Summarize model
-car_lm_sum <- anova_summary(car_lm_merit) 
-```
+```{r merit-anova-afex}
+anova_merit <-  aov_ez(id='pnum',
+                            dv='security_spent',
+                            data=ineq_merit_data,
+                            between = c('inequality',"merit"))
 
+anova_merit_cohensf <- effectsize::cohens_f(anova_merit, 
+ alternative="two.sided",verbose = FALSE,generalized = FALSE)
 
-```{r merit-anova-aov}
-# Method 2: stats::aov  Best one to use 
-#because the aov object goes on to mesh with tukey_hsd()
-# fit model 
-aov_merit <- aov(security_spending ~ inequality*merit, 
-               data = ineq_merit_data)
-#analyze model
-car_aov_merit <- Anova(aov_merit)
-
-#Summarize model
-car_aov_sum <- anova_summary(car_aov_merit)
-```
-
-```{r merit-anova-anovatest, echo=FALSE}
-# Method 3: rstatix::anova_test
-anova_merit <- ineq_merit_data %>% anova_test(security_spending ~ 
-                                                inequality*merit
-# ,type = 3
-)
+afex_plot(anova_merit,  ~ inequality,  ~ merit)
 ```
 
 **H2.2)**: `r h2.2`
 
-```{r merit-pairwise}
-#planned comparisons, using method 2
-# tkmerit <- stats::TukeyHSD(aov_merit)
-tukey_merit <- aov_merit  %>% tukey_hsd()
+```{r merit-anova-pc}
+merit_emm <- emmeans(anova_merit, specs = pairwise ~ inequality*merit)
 
+merit_pc <- merit_emm$contrasts %>%
+    summary(infer = TRUE)%>%
+    as.data.frame()
 
-#provides main effects at different levels (simple main effects)
-merit_mod <- ineq_merit_data %>%
-  group_by(merit) %>%
-  rstatix::emmeans_test(security_spending ~ inequality, 
-                        p.adjust.method = "bonferroni")
-
-```
-
-```{r merit-plot, echo=FALSE}
-#doesn't do multiple factors
-# get_comparisons(res.aov)
-
-merit_mod <- merit_mod %>% add_xy_position(x = "merit")
-
-bxp <- ggboxplot(
-  ineq_merit_data, x = "merit", y = "security_spending",
-  color = "inequality", palette = "jco"
-  )
-
-#ggsignif?
-
-    # only works using rstatix::anova_test method
-bxp +
-  stat_pvalue_manual(merit_mod) +
-  labs(
-    subtitle = get_test_label(anova_merit, detailed = TRUE),     
-    caption = get_pwc_label(merit_mod)
-    )
+merit_pc
 ```
 
 ## Study 1e, Analysis Plan {.unnumbered}
 
-### Hypothesis 3 {.unnumbered}
+```{r group-make-data, echo = F}
+ineq_group_data <- ineq_merit_data
 
+ineq_group_data$agentic <- 
+  as.factor(
+  sample(c(0,1), replace=TRUE, size=N)
+  )
 
-**H3):** `r h3`. Or more precisely, **H3.1):** `r h3.1`
+ineq_group_data$agentic <- as.factor(ifelse(ineq_group_data$agentic == 1,
+                                "agent", "random"))
 
-```{r group-assumptions}
-outliers_merit <- ineq_group_data %>%
-  group_by(outgroup, inequality) %>%
-  identify_outliers(security_spending)
+ineq_group_data$outgroup <- as.factor(sample(c(0,1), replace=TRUE, size=N))
+
+ineq_group_data$outgroup <- as.factor(ifelse(ineq_group_data$outgroup == 1,
+                                "outgroup", "ingroup"))
+```
+
+```{r group-assumptions, echo = F}
+outliers_group <- ineq_group_data %>%
+  group_by(outgroup, agentic) %>%
+  identify_outliers(security_spent)
 
 # If outliers present, winzorize
 
 # Build the linear model
-lm_group  <- lm(security_spending ~ 
-                  as.factor(inequality)*as.factor(outgroup),
+lm_group  <- lm(security_spent ~ 
+                  as.factor(agentic)*as.factor(outgroup),
              data = ineq_group_data)
 
 # Create a QQ plot of residuals
-qq_group <- ggqqplot(residuals(lm_group))
+qq_grouped_group <- ggqqplot(residuals(lm_group))
 
 #shapiro normality
-shap_merit <- shapiro_test(residuals(lm_merit))
+shap_group <- shapiro_test(residuals(lm_group))
 
 #normality by groups
-shap_g_merit <- ineq_group_data %>%
-  group_by(outgroup, inequality) %>%
-  shapiro_test(security_spending)
+shap_g_group <- ineq_group_data %>%
+  group_by(outgroup, agentic) %>%
+  shapiro_test(security_spent)
 
 # qqplot by group
 qq_g_group <- ggqqplot(ineq_group_data,
-                           "security_spending", ggtheme = theme_bw()) +
-  facet_grid(inequality ~ outgroup)
+                           "security_spent", ggtheme = theme_bw()) +
+  facet_grid(agentic ~ outgroup)
 
 # Due to large samples, no alternative method will 
 #be used in the case of nonnormality
 
-levene_group <- ineq_group_data %>% levene_test(security_spending ~ 
-    as.factor(inequality)*as.factor(outgroup))
+levene_group <- ineq_group_data %>% levene_test(security_spent ~ 
+    as.factor(agentic)*as.factor(outgroup))
 
 # Due to large samples, no alternative method will be 
 #used in the case of heterogeneity of variance
 ```
 
+### Hypothesis 3 {.unnumbered}
 
-```{r group-aov}
-aov_group <- aov(security_spending ~ as.factor(agentic)*as.factor(outgroup), 
-               data = ineq_group_data, type="III")
+**H3):** `r h3`. Or more precisely, **H3.1):** `r h3.1`
 
-#analyze model
-car_aov_group <- Anova(aov_group)
+```{r group-anova-afex}
+anova_group <-  aov_ez(id='pnum',
+                            dv='security_spent',
+                            data=ineq_group_data,
+                            between = c('agentic',"outgroup"))
 
-#Summarize model
-car_aov_group_sum <- anova_summary(car_aov_group)
+anova_group_cohensf <- effectsize::cohens_f(anova_group, 
+    alternative="two.sided",verbose = FALSE,generalized = FALSE)
+
+afex_plot(anova_group,  ~ agentic,  ~ outgroup)
 ```
 
 **H3.2):** `r h3.2`
 
-```{r group-tukey}
-tukey_group <- stats::TukeyHSD(aov_group)
+```{r group-anova-pc}
+group_emm <- emmeans(anova_group, specs = pairwise ~ agentic*outgroup)
 
-#provides main effects at different levels
-library(emmeans)
-group_mod <- ineq_group_data %>%
-  group_by(merit) %>%
-  emmeans_test(security_spending ~ inequality, 
-               p.adjust.method = "bonferroni")
+group_pc <- group_emm$contrasts %>%
+    summary(infer = TRUE)%>%
+    as.data.frame()
 ```
-
 
 ## Study 2 data screening {.unnumbered}
 
@@ -608,7 +507,5 @@ Notably, the number of participants and countries dropped from analyses can be h
 
 Dropping all three of these variables yields k = `r sum(summary(iv_2005$country)>0)` countries, and n = `r format(nrow(iv_2005), big.mark = ",", scientific = FALSE)` participants. By comparison, including these three variables yields a sample of `r sum(summary(iv_2005_mod$country)>0)` countries and a total `r format(nrow(iv_2005_mod), big.mark = ",", scientific = FALSE)` participants. The reported analyses will focus on the former, larger sample specification to avoid restricting the observed range of values. For instance, Peru has the highest reported rates of victimization in this sample, and the second-highest gini value.
 
-## Study  2 Analysis
-Main analyses will be conducted with the following model specification using the r package `ordinal`:
-
-`r sec_mord_min`
+## Study  2 Analysis  {.unnumbered}
+Main analyses will be conducted using the r package `ordinal`, with the following model specification: ``r paste(as.character(sec_mord_min)[2],as.character(sec_mord_min)[1],as.character(sec_mord_min)[3],sep=" ")``
