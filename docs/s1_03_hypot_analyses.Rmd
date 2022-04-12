@@ -15,7 +15,7 @@ library(rstatix)  # t_test; identify_outliers
 # library(stats)  #aov function
 library(ggpubr)  #ggqqplot
   library(afex) #aov_ez
-library(TOSTER)
+# library(TOSTER)
 library(mediation)
 mediate <- mediation::mediate
 
@@ -53,7 +53,7 @@ stake_diff <- ss_histak - ss_lostak
 ineq_data <- data.frame(pnum,inequality,envy_lostak,envy_histak,ss_lostak,ss_histak,stake_diff,security_spent,envy_lik)
 ```
 
-## Study 1a/1b/1c, Analysis Plan {.unnumbered}
+## Study 1a/1b, Analysis Plan {.unnumbered}
 
 ```{r envy-measure, eval = F}
 lostak_envy_items <- c("partner_envy_lostak", "partner_jealous_lostak", 
@@ -103,6 +103,8 @@ ineq_data_long %>%
 ineq_data_long %>%
   group_by(stake_cond, inequality) %>%
   identify_outliers(security_spending)
+
+# If outliers present, winzorize
 
 # Shapiro normality test
 ineq_data_long %>%
@@ -160,7 +162,7 @@ box_m(ineq_data_long[, "likely_envy", drop = FALSE],
 
 ### Hypothesis 1  {.unnumbered}
 
-**H1:** `r hypotheses[1]`, or in terms of the model: **H1:** `r h1.1`
+**H1):** `r hypotheses[1]`, or in terms of the model: **H1):** `r h1.1`
 
 ```{r study1a-anova}
 # Automatically applies Greenhouse-Geisser when violating sphericity.
@@ -221,7 +223,7 @@ lostak_diff_sd <- as.numeric(sqrt(grouped_lostak[2,5]^2 +
                                     grouped_lostak[1,5]^2))
 ```
 
-```{r grouping-histak}
+```{r grouping-histak, echo = F}
 #this use of N looks right- for each between-subjects factor
 grouped_histak <- ineq_data %>%
   group_by(inequality) %>%
@@ -239,7 +241,7 @@ histak_diff_sd <- as.numeric(sqrt(grouped_histak[2,5]^2 +
                                     grouped_histak[1,5]^2))
 ```
 
-```{r overall-equiv-computation}
+```{r overall-equiv-computation, echo = F}
 #this use of N may be wrong - uses the overall 
 #sample size instead of some specification from between groups 
 diff_diff <- histak_dif - lostak_dif
@@ -252,9 +254,10 @@ pooled <- sqrt(((N-1)*histak_diff_sd^2 +
 diff_sd <- diff_se*sqrt(N)
 ```
 
-An equivalence test will be used to determine whether the effect of inequality significantly smaller than a minimally large effect size.
 
-```{r t-tost}
+```{r t-tost, echo = F}
+#An equivalence test COULD be used to determine whether the effect of inequality significantly smaller than a minimally large effect size.
+
 ineq_mixed_tost <- tsum_TOST(
 m1 = histak_dif,
 sd1 = histak_diff_sd,
@@ -276,13 +279,15 @@ rm_correction = FALSE
 )
 ```
 
-**H1a)**: `r h1a`, or in terms of the model, **H1a)**: `r h1am`
+### Hypothesis 2  {.unnumbered}
 
-**H1a.1)**, mediation step 1: `r h1a.1`
+**H2)**: `r h1a`, or in terms of the model, **H2)**: `r h1am`.
 
-**H1a.2)**, mediation step 2: `r h1a.2`
+**H2.1)**, mediation step 1: `r h1a.1`
 
-**H1a.3)**, mediation step 3: `r h1a.3`
+**H2.2)**, mediation step 2: `r h1a.2`
+
+**H2.3)**, mediation step 3: `r h1a.3`.
 
 ```{r study 1a-med-mixed}
 m_mixed_med1 <- lmer(likely_envy ~ inequality  + (1| pnum) + 
@@ -305,7 +310,7 @@ plot(m_mixed_med_full)
 summary(m_mixed_med_full)
 ```
 
-## Study 1d, Analysis Plan {.unnumbered}
+## Study 1c, Analysis Plan {.unnumbered}
 
 ```{r merit-items, eval=FALSE, echo = F}
 ineq_data$envy_lik <- rowSums(ineq_data[,c("partner_envy", 
@@ -350,8 +355,6 @@ outliers_merit <- ineq_merit_data %>%
   group_by(merit, inequality) %>%
   identify_outliers(security_spent)
 
-# If outliers present, winzorize
-
 # Build the linear model
 lm_merit  <- lm(security_spent ~ as.factor(inequality)*as.factor(merit),
              data = ineq_merit_data)
@@ -386,9 +389,9 @@ levene_merit <- ineq_merit_data %>% levene_test(security_spent ~
 # see above for 95%ci for eta squared
 ```
 
-### Hypothesis 2 {.unnumbered}
+### Hypothesis 3 {.unnumbered}
 
-**H2)**: `r h2`. Or more precisely, **H2.1)**: `r h2.1`
+**H3)**: `r h3`. Or more precisely, **H3.1)**: `r h3.1`
 
 ```{r merit-anova-afex}
 anova_merit <-  aov_ez(id='pnum',
@@ -402,7 +405,7 @@ anova_merit_cohensf <- effectsize::cohens_f(anova_merit,
 afex_plot(anova_merit,  ~ inequality,  ~ merit)
 ```
 
-**H2.2)**: `r h2.2`
+**H3.2)**: `r h3.2`
 
 ```{r merit-anova-pc}
 merit_emm <- emmeans(anova_merit, specs = pairwise ~ inequality*merit)
@@ -414,7 +417,7 @@ merit_pc <- merit_emm$contrasts %>%
 merit_pc
 ```
 
-## Study 1e, Analysis Plan {.unnumbered}
+## Study 1d, Analysis Plan {.unnumbered}
 
 ```{r group-make-data, echo = F}
 ineq_group_data <- ineq_merit_data
@@ -471,9 +474,9 @@ levene_group <- ineq_group_data %>% levene_test(security_spent ~
 #used in the case of heterogeneity of variance
 ```
 
-### Hypothesis 3 {.unnumbered}
+### Hypothesis 4 {.unnumbered}
 
-**H3):** `r h3`. Or more precisely, **H3.1):** `r h3.1`
+**H4):** `r h3`. Or more precisely, **H4.1):** `r h3.1`
 
 ```{r group-anova-afex}
 anova_group <-  aov_ez(id='pnum',
@@ -487,7 +490,7 @@ anova_group_cohensf <- effectsize::cohens_f(anova_group,
 afex_plot(anova_group,  ~ agentic,  ~ outgroup)
 ```
 
-**H3.2):** `r h3.2`
+**H4.2):** `r h3.2`
 
 ```{r group-anova-pc}
 group_emm <- emmeans(anova_group, specs = pairwise ~ agentic*outgroup)
@@ -496,16 +499,3 @@ group_pc <- group_emm$contrasts %>%
     summary(infer = TRUE)%>%
     as.data.frame()
 ```
-
-## Study 2 data screening {.unnumbered}
-
-Although the ICVS, PWT, and SWIID extend across multiple years, the current analysis will be limited to observations across 2004-2006. These observations were collected across two distinct sweeps in the ICVS, with one being specific to the European Union. Imposing this restriction yields a sufficient initial number of cases (`r format(sweep5_nrow, big.mark = ",", scientific = FALSE)`) and countries (`r sweep5_countries`) before screening, combined with relative recency of data. By contrast, all data collected by the ICVS between 2010 and 2015 only totals only twelve countries, before screening.
-
-Observations were excluded for participants that refused response on any analysis-relevant measures. Likewise, observations were dropped that had country-wide missing responses on any predictor and outcome measures. Such countries being dropped from analyses include Switzerland (missing security items) and Hong Kong (missing age).
-
-Notably, the number of participants and countries dropped from analyses can be heavily impacted by the selection of variables targeted for analyses. For instance, including perceived police effectiveness in any analyses would require dropping the countries of Japan, Peru, and Iceland. Likewise, including participants' experiences of assault would require removing Peru. Lastly, analyzing participants' income quartiles requires removing Japan.
-
-Dropping all three of these variables yields k = `r sum(summary(iv_2005$country)>0)` countries, and n = `r format(nrow(iv_2005), big.mark = ",", scientific = FALSE)` participants. By comparison, including these three variables yields a sample of `r sum(summary(iv_2005_mod$country)>0)` countries and a total `r format(nrow(iv_2005_mod), big.mark = ",", scientific = FALSE)` participants. The reported analyses will focus on the former, larger sample specification to avoid restricting the observed range of values. For instance, Peru has the highest reported rates of victimization in this sample, and the second-highest gini value.
-
-## Study  2 Analysis  {.unnumbered}
-Main analyses will be conducted using the r package `ordinal`, with the following model specification: ``r paste(as.character(sec_mord_min)[2],as.character(sec_mord_min)[1],as.character(sec_mord_min)[3],sep=" ")``
