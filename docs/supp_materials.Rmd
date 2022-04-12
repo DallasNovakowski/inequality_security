@@ -9,38 +9,35 @@ output:
 toc: false
 ---
 
-```{r, eval = T}
-load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/icvs_solo_datafiles.RData")  # loads indidividual dataframes for different icvs configurations
-```
-
-
 ```{r, child=c('s1_03_hypot_analyses.Rmd')}
 
 ```
 
 \clearpage
 
+The pretest used a relaxed comprehension check, where two instead one items are considered  valid selections, as only `r round(screened_n_min/pretest_initial_n*100,0)`% of participants correctly answered the comprehension check when a single item was considered a valid response.
+
 # Supp. Figures {.unnumbered}
 
-(ref:pretest-splitplot) Means (95% CI) and distributions for Study 1 pretest. n=`r screened_n`, within-subjects, *p*s \> `r plyr::round_any(sort(pretest_anova[,"Pr(>F)"],FALSE)[1], 0.01, f = floor)`. See Table \@ref(tab:pretest-anova).
+(ref:pretest-splitplot) Means (95% CI) and jittered data points for Study 1 pretest. n=`r screened_n`, within-subjects, ANOVA *p*s \> `r plyr::round_any(sort(pretest_anova[,"Pr(>F)"],FALSE)[1], 0.01, f = floor)`. See Table \@ref(tab:pretest-anova).
 
-```{r pretest-splitplot,eval = TRUE, include=TRUE, echo=FALSE, out.width='100%', fig.cap="(ref:pretest-splitplot)"}
+```{r pretest-splitplot,eval = TRUE, include=TRUE, echo=FALSE, out.width='100%', fig.cap="(ref:pretest-splitplot)",warning=F}
 knitr::include_graphics(here::here("figures", "spending_pretest_splitplot.png"))
 ```
 
-(ref:mixed-design) Study design for a priori power analysis for 2b\*2w mixed ANOVA experiments (Study 1a & b). Note: Max possible value is \$1.00; bars indicate +/-1 *SD*
+(ref:mixed-design) Study design for a priori power analysis for 2b\*2w ANOVA (Study 1a & b). Note: Max possible value is \$1.00; bars indicate +/-1 *SD*
 
-```{r mixed-design,eval = TRUE,include=TRUE, echo=FALSE, out.width='100%', fig.cap="(ref:mixed-design)"}
+```{r mixed-design,eval = TRUE,include=TRUE, echo=FALSE, out.width='100%', fig.cap="(ref:mixed-design)",warnings=F}
 knitr::include_graphics(here::here("figures", "security_design_2b2w_f1156_5.png"))
 ```
 
-(ref:powerplot2) Per-condition sample size thresholds for 95% power in main effect of inequality for 2b\*2w mixed ANOVA experiments (Study 1a & b).
+(ref:powerplot2) Per-condition sample size thresholds for 95% power in main effect of inequality for 2b\*2w ANOVA (Study 1a & b).
 
 ```{r powerplot2,eval = TRUE, include=TRUE, echo=FALSE, out.width='100%', fig.cap='(ref:powerplot2)'}
 knitr::include_graphics(here::here("figures", "security_powerplot_2b2w_f1156_5.png"))
 ```
 
-(ref:2b2b-design) Study design for a priori power analysis for 2b\*2b factorial ANOVA experiments (Study 1c & d). Note: Max possible value is \$1.00; bars indicate +/-1 *SD*
+(ref:2b2b-design) Study design for a priori power analysis for 2b\*2b ANOVA (Study 1c & d). Note: Max possible value is \$1.00; bars indicate +/-1 *SD*
 
 ```{r 2b2b-design,eval = TRUE, include=TRUE, echo=FALSE, out.width='100%', fig.cap="(ref:2b2b-design)"}
 knitr::include_graphics(here::here("figures", "security_design_2b2b_f01.png"))
@@ -54,43 +51,16 @@ knitr::include_graphics(here::here("figures", "security_design_2b2b_f01.png"))
 knitr::include_graphics(here::here("figures", "security_powerplot_2b2b_f01.png"))
 ```
 
-(ref:icvs-security-hist) Histogram for number of security measures (max = `r length(prevention_min2)`). Dotted Line indicates mean (*M* =`r round(mean(iv_2005$total_security),2)`)
-
-```{r icvs-security-hist,eval = TRUE, include=TRUE, echo=FALSE, out.width='100%', fig.cap="(ref:icvs-security-hist)"}
-knitr::include_graphics(here::here("figures", "security_hist_iv.png.png"))
-```
-
-(ref:icvs-victim-hist) Histogram for number of victimization experiences (max = `r length(vic_var_drop)`). Dotted Line indicates mean (*M* =`r round(mean(iv_2005_mod$num_victim_5yr),2)`).
-
-```{r icvs-victim-hist,eval = TRUE, include=TRUE, echo=FALSE, out.width='100%', fig.cap="(ref:icvs-victim-hist)"}
-knitr::include_graphics(here::here("figures", "victim_hist_iv.png"))
-```
-
-
-(ref:icvs-victim-dotwhisk-iv) Dot-whisker plot for victimization experiences, using largest dataset. See Table \@ref(tab:s2-victim-table-iv) for more detailed results
-
-```{r icvs-victim-dotwhisk-iv,eval = TRUE, include=TRUE, echo=FALSE, out.width='100%', fig.cap="(ref:icvs-victim-dotwhisk-iv)"}
-knitr::include_graphics(here::here("figures", "iv_ordinal_dotwhisker.png"))
-```
-
-(ref:icvs-victim-dotwhisk-min) Dot-whisker plot for victimization experiences, using minimal variable set. See Table \@ref(tab:s2-victim-table-min) for more detailed results
-
-```{r icvs-victim-dotwhisk-min,eval = TRUE, include=TRUE, echo=FALSE, out.width='100%', fig.cap="(ref:icvs-victim-dotwhisk-min)"}
-knitr::include_graphics(here::here("figures", "min_ordinal_dotwhisker.png"))
-```
-
-(ref:icvs-victim-dotwhisk) Dot-whisker plot for (pilot) ordinal regression coefficients predicting victimization experiences, using smaller dataset with more variables. See Table \@ref(tab:s2-victim-table) for more detailed results
-
-```{r icvs-victim-dotwhisk,eval = TRUE, include=TRUE, echo=FALSE, out.width='100%', fig.cap="(ref:icvs-victim-dotwhisk)"}
-knitr::include_graphics(here::here("figures", "ordinal_dotwhisker.png"))
-```
-
-
 \clearpage
+
+<!-- \FloatBarrier -->
+
+\FloatBarrier
 
 # Supp. Tables {.unnumbered}
 
-\clearpage
+
+<!-- \clearpage -->
 
 ```{r pretest-anova, eval = TRUE, echo=FALSE}
 pretest_anova1 <- round(data.frame(pretest_anova),3)
@@ -98,8 +68,6 @@ pretest_anova1 <- round(data.frame(pretest_anova),3)
 pretest_anova1$ci95 <- as.character(paste("[", pretest_anova1$ci95_lo, ", ", pretest_anova1$ci95_hi,"]",  sep=""))
 
 # pretest_anova1$df <- paste("[", pretest_anova1$NumDF, ", ", pretest_anova1$ci95_hi,"]",  sep=""))
-
-
 
 pretest_anova1$df <- as.character(paste(round(pretest_anova1$NumDF,2), ", ", round(pretest_anova1$DenDF,2),  sep=""))
   
@@ -127,9 +95,11 @@ knitr::kable(pretest_anova1,
              align = "ccccccc",
              caption = '2w*3w ANOVA results for Study 1 pretest',
              booktabs = TRUE,
-             
+             linesep = ""
+             # ,format.args=list(floating=TRUE)
              # escape = FALSE
-             )
+             ) %>%
+kable_styling(latex_options = c("striped", "hold_position"))
 ```
 
 
@@ -180,7 +150,8 @@ tidy_pretest_model1 <- tidy_pretest_model1 %>%
 
 knitr::kable(tidy_pretest_model1,
              align = "lcccccc",
-             caption = 'Mixed model results for Study 1 pretest', booktabs = TRUE)
+             caption = 'Mixed ANOVA results for Study 1 pretest', booktabs = TRUE,linesep = "")%>%
+kable_styling(latex_options = c("striped", "hold_position"))
 ```
 
 
@@ -188,7 +159,9 @@ knitr::kable(tidy_pretest_model1,
 security_exact2b2w_f1156_5$main_results$power <- round(security_exact2b2w_f1156_5$main_results$power,2)
 
 security_exact2b2w_f1156_5$main_results$non_centrality <- round(security_exact2b2w_f1156_5$main_results$non_centrality,2)
-knitr::kable(round(security_exact2b2w_f1156_5$main_results,4), caption = 'Power of main and interaction effects for 2b*2w factorial designs (Studies 1a, b)', booktabs = TRUE)
+knitr::kable(round(security_exact2b2w_f1156_5$main_results,4), caption = 'Power of main and interaction effects for 2b*2w ANOVA (Studies 1a, b)', booktabs = TRUE,linesep = "")%>%
+kable_styling(latex_options = c("striped", "hold_position"))
+
 ```
 
 
@@ -206,15 +179,18 @@ row.names(security_exact2b2w_f1156_5$pc_results) <- gsub(x = row.names(security_
 
 row.names(security_exact2b2w_f1156_5$pc_results) <- gsub(x = row.names(security_exact2b2w_f1156_5$pc_results), pattern = "((?:[^_]+_){3}[^_]+)_", replacement = "\\1_*VS*_")
 
-knitr::kable(round(security_exact2b2w_f1156_5$pc_results,2), caption = 'Power of pairwise comparisons for 2b*2w factorial designs (Studies 1a, b)', booktabs = TRUE)
-```
+knitr::kable(round(security_exact2b2w_f1156_5$pc_results,2), caption = 'Power of pairwise comparisons for 2b*2w ANOVA (Studies 1a, b)', booktabs = TRUE,linesep = "")%>%
+kable_styling(latex_options = c("striped", "hold_position"))
 
+```
 
 
 ```{r 2b2b-anova-power,echo=FALSE,  eval = TRUE, include=TRUE}
 security_2b2b_f01_exact$main_results$power <- round(security_2b2b_f01_exact$main_results$power,2)
 security_2b2b_f01_exact$main_results$non_centrality <- round(security_2b2b_f01_exact$main_results$non_centrality,2)
-knitr::kable(round(security_2b2b_f01_exact$main_results,4), caption = 'Power of main and interaction effects for 2b*2b factorial designs (Studies 1c, d)', booktabs = TRUE)
+knitr::kable(round(security_2b2b_f01_exact$main_results,4), caption = 'Power of main and interaction effects for 2b*2b ANOVA (Studies 1c, d)', booktabs = TRUE,linesep = "")%>%
+kable_styling(latex_options = c("striped", "hold_position"))
+
 ```
 
 ```{r 2b2b-pairwise-power,echo=FALSE, eval = TRUE,  include=TRUE}
@@ -227,13 +203,62 @@ row.names(security_2b2b_f01_exact$pc_results) <- gsub(x = row.names(security_2b2
 row.names(security_2b2b_f01_exact$pc_results) <- gsub(x = row.names(security_2b2b_f01_exact$pc_results), pattern = "((?:[^_]+_){3}[^_]+)_", replacement = "\\1_*VS*_")
 
 
-knitr::kable(round(security_2b2b_f01_exact$pc_results,2), caption = 'Power of pairwise comparisons for 2b*2b factorial designs (t-test; Studies 1c,d)', booktabs = TRUE)
+knitr::kable(round(security_2b2b_f01_exact$pc_results,2), caption = 'Power of pairwise comparisons for 2b*2b ANOVA (t-test; Studies 1c,d)', booktabs = TRUE,linesep = "") %>%
+kable_styling(latex_options = c("striped", "hold_position"))
+
+```
+
+```{r log-01,eval = TRUE, include=TRUE, echo = F}
+m100_log_01_tidy_iv <- subset(m100_log_01_tidy_iv, select = -obs_lvl)
+
+m100_log_01_tidy_iv$term <- recode(m100_log_01_tidy_iv$term,  gini_2004_6_cent = "Inequality(Gini)",gdppc_2004_6_scale  = "GDP(per-capita)", age_cent="Age",employed1="Employed",male1="Male",police_effective="P.police effectiveness",income_quartile= "Income quartile")
+
+m100_log_01_tidy_iv %>%
+  dplyr::rename(
+    b = estimate,
+    SE = std.error,
+    "95% CI" = CI95,
+    z = z_score,
+    p = p_value
+    ) %>%
+  kbl(booktabs = T,
+      linesep = "",
+      align = "lcccccc",
+      caption = "Results for (pilot)  multilevel logistic regression, predicting 0 vs. 1 victimization") %>%
+  kable_styling(latex_options = c("striped", "hold_position")) %>%
+  footnote(general="Coefficients represent logged odds. Intercept starts at logit[P(Y $\\\\le$ 0)]; log of odds no victimization experiences versus one.",
+         footnote_as_chunk = TRUE,
+           threeparttable = TRUE,
+         escape=FALSE)
+```
+
+```{r log-12,eval = TRUE, include=TRUE, echo = F}
+m100_log_12_tidy_iv <- subset(m100_log_12_tidy_iv, select = -obs_lvl)
+
+m100_log_12_tidy_iv$term <- recode(m100_log_01_tidy_iv$term,  gini_2004_6_cent = "Inequality(Gini)",gdppc_2004_6_scale  = "GDP(per-capita)", age_cent="Age",employed1="Employed",male1="Male",police_effective="P.police effectiveness",income_quartile= "Income quartile")
+
+m100_log_12_tidy_iv %>%
+  dplyr::rename(
+    b = estimate,
+    SE = std.error,
+    "95% CI" = CI95,
+    z = z_score,
+    p = p_value
+    ) %>%
+  kbl(booktabs = T,
+      linesep = "",
+      align = "lcccccc",
+      caption = "Results for (pilot)  multilevel logistic regression, predicting 1 vs. 2 victimizations") %>%
+  kable_styling(latex_options = c("striped", "hold_position")) %>%
+  footnote(general="Coefficients represent logged odds. Intercept starts at logit[P(Y $\\\\le$ 0)]; log of odds 1 victimization experience versus two.",
+         footnote_as_chunk = TRUE,
+           threeparttable = TRUE,
+         escape=FALSE)
 ```
 
 
-
 ```{r s2-victim-table-iv,echo=FALSE,  eval = TRUE, include=TRUE}
-iv_tidy_ci$term <- recode(iv_tidy_ci$term,  gini_2004_6_cent = "Inequality(Gini)",gdppc_2004_6_scale  = "GDP", age_cent="Age",employed1="Employed",male1="Male",police_effective="P.police effectiveness",income_quartile= "Income quartile")
+iv_tidy_ci$term <- recode(iv_tidy_ci$term,  gini_2004_6_cent = "Inequality(Gini)",gdppc_2004_6_scale  = "GDP(per-capita)", age_cent="Age",employed1="Employed",male1="Male",police_effective="P.police effectiveness",income_quartile= "Income quartile")
 
 
 iv_tidy_ci %>%
@@ -246,13 +271,19 @@ iv_tidy_ci %>%
     ) %>%
   
   kbl(booktabs = T,
+      linesep = "",
       align = "lcccccc",
-      caption = paste("Results for (pilot)  multilevel analysis, predicting victimization, larger targeted sample, n = ",
-                     format(nrow(iv_2005),big.mark = ",", scientific = FALSE),"k = ",length((summary(as.factor(iv_2005$country))[0!= summary(as.factor(iv_2005$country))])))) 
+      caption = paste("Results for (pilot)  multilevel ordinal regression, predicting victimization, larger targeted sample, n = ",
+                     format(nrow(iv_2005),big.mark = ",", scientific = FALSE),"k = ",length((summary(as.factor(iv_2005$country))[0!= summary(as.factor(iv_2005$country))])))) %>%
+  kable_styling(latex_options = c("striped", "hold_position")) %>%
+  footnote(general="Coefficients represent logged odds. Intercept starts at logit[P(Y $\\\\le$ 0)]; log of odds no victimization experiences versus one or two.",
+         footnote_as_chunk = TRUE,
+           threeparttable = TRUE,
+         escape=FALSE)
 ```
 
 ```{r s2-victim-table-min,echo=FALSE,  eval = TRUE, include=TRUE}
-min_tidy_ci$term <- recode(min_tidy_ci$term, gini_2004_6_cent = "Inequality(Gini)",gdppc_2004_6_scale  = "GDP", age_cent="Age",employed1="Employed",male1="Male",police_effective="P.police effectiveness",income_quartile= "Income quartile")
+min_tidy_ci$term <- recode(min_tidy_ci$term, gini_2004_6_cent = "Inequality(Gini)",gdppc_2004_6_scale  = "GDP(per-capita)", age_cent="Age",employed1="Employed",male1="Male",police_effective="P.police effectiveness",income_quartile= "Income quartile")
 
 
 min_tidy_ci %>%
@@ -264,16 +295,18 @@ min_tidy_ci %>%
     p = p_value
     ) %>%
   kbl(booktabs = T,
+      linesep = "",
       align = "lcccccc",
       caption = paste(
-    "Results for (pilot) multilevel analysis, minimized variables, predicting victimization, n = ",
+    "Results for (pilot) multilevel ordinal regression, minimized variables, predicting victimization, n = ",
                      format(nrow(iv_2005_mod),big.mark = ",", scientific = FALSE),
-    "k = ",length((summary(as.factor(iv_2005_mod$country))[0!= summary(as.factor(iv_2005_mod$country))]))))
+    "k = ",length((summary(as.factor(iv_2005_mod$country))[0!= summary(as.factor(iv_2005_mod$country))]))))%>%
+  kable_styling(latex_options = "striped")
 ```
 
 ```{r s2-victim-table,echo=FALSE,  eval = TRUE, include=TRUE}
 
-tidy_ci$term <- recode(tidy_ci$term,  gini_2004_6_cent = "Inequality(Gini)", gdppc_2004_6_scale  = "GDP", age_cent="Age",employed1="Employed",male1="Male",police_effective="P.police effectiveness",income_quartile= "Income quartile")
+tidy_ci$term <- recode(tidy_ci$term,  gini_2004_6_cent = "Inequality(Gini)", gdppc_2004_6_scale  = "GDP(per-capita)", age_cent="Age",employed1="Employed",male1="Male",police_effective="P.police effectiveness",income_quartile= "Income quartile")
 
 tidy_ci %>%
   dplyr::rename(
@@ -284,11 +317,13 @@ tidy_ci %>%
     p = p_value
     ) %>%
   kbl(booktabs = T,
+      linesep = "",
       align = "lcccccc",
       caption = paste(
-    "Results for (pilot) multilevel analysis, predicting victimization with max. variables, n = ",
+    "Results for (pilot) multilevel ordinal regression, predicting victimization with max. variables, n = ",
                      format(nrow(iv_2005_mod),big.mark = ",", scientific = FALSE),
-    "k = ",length((summary(as.factor(iv_2005_mod$country))[0!= summary(as.factor(iv_2005_mod$country))])))) 
+    "k = ",length((summary(as.factor(iv_2005_mod$country))[0!= summary(as.factor(iv_2005_mod$country))])))) %>%
+  kable_styling(latex_options = "striped")
 ```
 
 
