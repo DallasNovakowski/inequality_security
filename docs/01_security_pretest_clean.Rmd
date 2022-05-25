@@ -27,6 +27,7 @@ library(MBESS)
 library("emmeans")
 library(afex) #aov_ez
 
+ggplot2::theme_set(ggpubr::theme_pubr())
 
 #for raincloud plots
 source("https://gist.githubusercontent.com/benmarwick/2a1bb0133ff568cbe28d/raw/fb53bd97121f7f9ce947837ef1a4c65a73bffb3f/geom_flat_violin.R")
@@ -292,6 +293,17 @@ post_comp_n <-  data %>%
 
 ```{r actual screening}
 # actual screening, attention checks and moderate comprehension criteria
+data_min <-  data %>%
+  filter(!is.na(age) & !is.na(gender)) %>%
+  filter(
+      comp_check == "Deciding whether to purchase a security product") %>%
+  filter(atn_other2 == "yes" | atn_other2 == "Yes") %>%
+  filter(atn_other == "yes" | atn_other == "Yes")
+
+screened_n_min <- nrow(data_min)
+
+
+
 data <-  data %>%
   filter(!is.na(age) & !is.na(gender)) %>%
   filter(
@@ -301,6 +313,9 @@ data <-  data %>%
   filter(atn_other2 == "yes" | atn_other2 == "Yes") %>%
   filter(atn_other == "yes" | atn_other == "Yes")
 
+
+
+summary(as.factor(data_min$gender))
 summary(as.factor(data$gender))
 ```
 
@@ -515,6 +530,7 @@ cgwtools::resave(
   skew_groups,
   pretest_initial_n,
   screened_n,
+  screened_n_min,
   kurt_groups,
   sd_groups,
   mean_groups,
@@ -531,17 +547,11 @@ cgwtools::resave(
 Note: for x_04 conditions, 25 constitutes the maximum possible value for consumption.
 
 ```{r page clean}
-
-
-
 # increase legibility of page variable
 data_long$page <- data_long$page %>%
   sub("_0", "%_", .)
 
 data_long$page <- paste(data_long$page, "¢", sep = "", collapse = NULL)
-
-
-
 ```
 
 
@@ -718,6 +728,8 @@ geom_split_violin <- function (mapping = NULL,
 ```{r spending}
 # split violin - adapted from https://debruine.github.io/post/plot-comparison/
 
+data_long$cost <- as.factor(data_long$cost)
+
 spending_summary_data <- data_long %>%
   group_by(prob, cost) %>%
   dplyr::summarise(
@@ -770,54 +782,108 @@ spending_summary_data <- data_long %>%
 # 
 # spending_pretest_splitplot 
 
-
 spending_pretest_splitplot <- spending_summary_data %>%
     ggplot(aes(
         y = mean,
-        x = as.factor(prob),
-        fill = as.factor(cost)
+        x = as.factor(prob)
+        ,group = cost
+        # ,fill = as.factor(cost)
+        # ,shape = as.factor(cost)
+        # ,color = as.factor(cost)
     ))  +
-    geom_split_violin(data = data_long,aes(
-        y = security_spending,
-        x = as.factor(prob),
-        fill = as.factor(cost)
-    ),
-    color = "black",
-    trim = TRUE,
-    alpha = 0.5,
-    width = 1,
-    ) + geom_pointrange(
-        aes(as.factor(prob), mean, ymin = min, ymax = max),
-        color = "black",
-        alpha = 0.5,
+  #   geom_split_violin(data = data_long,aes(
+  #       y = security_spending,
+  #       x = as.factor(prob),
+  #       fill = as.factor(cost)
+  #   ),
+  #   color = "black",
+  #   trim = TRUE,
+  #   alpha = 0.1,
+  #   width = 1,
+  #   )+
+  # scale_fill_grey(start = 0.9, end = 0.3)  +
+  raincloud_theme +
+  ggbeeswarm::geom_quasirandom(data = data_long,aes(y = security_spending, shape = cost, color = cost
+                                                    # ,x = as.factor(prob), fill = as.factor(cost), shape = as.factor(cost), color = as.factor(cost)
+                                                    ),
+                               bandwidth = .2,
+                               show.legend = T,
+                               ## draw bigger points
+                               size = 3,
+                               ## add some transparency
+                               alpha = .2,
+                               ## control range of the beeswarm
+                               width = .15,
+                               dodge.width = .7)+
+  scale_colour_manual(
+    values = cbPalette,
+    aesthetics = c(
+      "colour"
+      # ,"fill"
+      # ,name = "Manual Title"
+      )) +
+  # scale_color_discrete(
+  #   # values = cbPalette,
+  #   aesthetics = c(
+  #     "colour",
+  #     # ,"fill"
+  #     ,name = "Manual Title"
+  #     )) +
+  geom_pointrange(
+        aes(as.factor(prob), mean, ymin = min
+            # ,color = cost
+            , ymax = max),
+        fatten = 4,
+        alpha = .7,
+        size = 1,
         shape = 20,
         # 95,
-        position = position_dodge(width = 0.6),
-        show.legend = FALSE
-    ) + 
-  
-  # geom_label_repel(aes(label = paste(round(mean,2)), group =as.factor(cost)), fill="white", position = position_dodge(width = 0.7))+
-    geom_label(
-    #   # label.size = .1,
-    #   # label.padding = unit(0.25, "lines"),
-    #   # size=2.5,
-      aes(label = paste(round(mean,2)), group =as.factor(cost),vjust=-1.25), fill="white", position = position_dodge(width = 0.7))+
-  scale_fill_grey(start = 0.9, end = 0.3)  +
-  theme_bw() +
-  raincloud_theme +
+        position = position_dodge(width = .7)
+        ,show.legend = FALSE
+    ) +
   ylab("$ spent on security") +
   xlab("Starting probability of successful thefts") +
-  labs(fill = "Security price (¢)") +
+  # labs(color = "Security price (¢)") +
   ylim(0, 1) +
-  scale_x_discrete(labels = c("50" = "50%", "60" = "60%",
-                              "75" = "75%"))
-spending_pretest_splitplot
+  scale_x_discrete(labels = c("50" = "50%", "60" = "60%", "75" = "75%")) +
+  # scale_fill_manual(values = cbPalette) +
+  # scale_colour_manual(values = cbPalette) +   
+    geom_label(
+      color = "black",
+      aes(label = paste(round(mean,2)), group =cost,vjust=-1), fill="white", position = position_dodge(width = .7)
+      # , alpha = 1
+      ) + guides(
+        color = 
+                   guide_legend(
+        # title = "ay",  #duplicates and mucks color/shape
+        override.aes = list(size=5, alpha = 1))) 
+# + scale_color_*discrete*(name="Gear Type",labels=c("Automatic", "Manual"))
+# + scale_color_discrete(name = "Manual Title")
 
+
+# labs(shape='Legend Title')    # duplicates and mucks color/shape
+
+spending_pretest_splitplot
 
 ggsave(here::here("figures", "spending_pretest_splitplot.png"),
        height = 3)
-
 ```
+
+
+```{r decouple density, echo =F}
+a <- density(data_long$security_spending)
+
+a$y <- a$y + 2
+
+b <- data.frame(a$x, a$y)
+ggplot(b, aes(x=a.x, y=a.y)) + geom_line()
+```
+
+
+```{r afex-plot}
+# afex_plot(ineq_anova_mixed,  ~ inequality,  ~ stake_cond, error = "within")
+```
+
 
 ```{r, eval = F}
 # data_long$spent2 <- paste0(data_long$security_spending, "2") # create a second almost identical variable
@@ -850,6 +916,30 @@ ggsave(here::here("figures", "spending_pretest_splitplot.png"),
 # spent_rain
 
 ```
+
+```{r}
+consumed_data <- data[, consumed_vars] %>%
+   na.omit()
+
+boxplot(consumed_data)
+
+
+outliers_pretest <- data_long %>%
+  group_by(prob, cost) %>%
+  rstatix::identify_outliers(security_spending)
+outliers_pretest
+
+
+ggboxplot(
+  data_long, x = "prob", y = "security_spending", 
+  color = "cost", palette = "jco", add = "jitter", shape = "cost", ylim = c(0,1)
+  )
+
+ggboxplot(
+  data_long,y = "security_spending", palette = "jco", add = "jitter", ylim = c(0,1)
+  )
+```
+
 
 For this project, we will be using values from the 50_02 condition, which corresponds to a baseline 50% chance of successful thefts, and each unit of security costing $0.02. This condition seems to produce the least skewed data, at `r round(skew_groups["50_02"],2)`
 
@@ -920,8 +1010,23 @@ pretest_anova_cohensf <- effectsize::cohens_f(pretest_anova, alternative="two.si
 
 
 
-afex_plot(pretest_anova,  ~ prob,  ~ cost, error = "within")
+p <- afex_plot(pretest_anova,  ~ prob,  ~ cost, error = "within"
+          ,dodge = .7
+          ,mapping = c("shape", "color")
+          ,data_geom = ggbeeswarm::geom_quasirandom
+          ,data_arg = list(
+            dodge.width = 0.7,  ## needs to be same as dodge
+            cex = .7
+            )
+          , error_arg = list(width = 0.00, size = .8)
+          ,line_arg = list(linetype = 0)
+          ) 
 
+# p + geom_split_violin(data = data_long,aes(
+#         y = security_spending,
+#         x = prob,
+#         fill = cost
+#     ))
 ```
 
 
