@@ -1,0 +1,367 @@
+---
+title: "ICVS 1999 Prep - Screening and Cleaning"
+author: "Dallas Novakowski"
+date: "19/05/2022"
+output: 
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(reshape)
+
+load(file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/data_1999.RData")
+
+source(here::here("scripts", "s2_01_icvs_scripts.r"), local = knitr::knit_global())
+
+load(file = here::here("output","icvs_helper.RData"))
+
+potential_ivs <- gsub(x = potential_ivs, pattern = "_5_years", replacement = "_5yrs")  
+
+```
+
+```{r ncols and nrow, warning=F, message=FALSE, include = TRUE}
+sweep4_nrow <- nrow(data_1999)
+sweep4_nrow
+
+ncol(data_1999)
+
+summary(data_1999$country)[summary(data_1999$country)>0]
+
+
+sweep4_countries <- sum(summary(data_1999$country)>0)
+sweep4_countries
+
+summary(data_1999[,reduced_var[[1]]])
+```
+
+```{r questionnaires, warning=F, message=FALSE}
+kable_summary(data_1999$questionnaire_used)
+```
+
+
+```{r responders}
+responders_1999 <- filter(data_1999, is.na(prev_refusal) & (prev_do_not_know == 0 | is.na(prev_do_not_know)))
+nrow(responders_1999)
+sum(summary(responders_1999$country)>0)
+```
+
+
+```{r questionnaires-after-exclusions}
+kable_summary(responders_1999$questionnaire_used)
+kable_summary(responders_1999$questionnaire_based_on)
+```
+
+
+```{r questionnaire-missingness}
+questionnaire_screen <- responders_1999 %>% group_by(questionnaire_used) %>% 
+  dplyr::count(country)
+
+# view number of responses for each country*sweep
+questionnaire_screen_c <- cast(questionnaire_screen,country~questionnaire_used)
+
+# compute total number of participants
+questionnaire_screen_c$total <- rowSums(questionnaire_screen_c[,2:ncol(questionnaire_screen_c)], na.rm=TRUE)
+
+questionnaire_screen_c$total[questionnaire_screen_c$total == 0] <- NA
+
+questionnaire_screen_c
+```
+
+
+```{r missing country}
+na_tally(responders_1999,country,reduced_var[[4]]) %>%
+    dplyr::bind_rows(dplyr::summarise(.,
+                      across(where(is.numeric), sum),
+                      across(where(is.logical), sum),
+                      across(where(is.character), ~"Total")))
+```
+
+```{r ultra min prevention variables}
+responders_1999 <- filter(responders_1999, country != "Switzerland")
+
+#caretaker missing 7 (after removing switzerland)
+# insurance missing 16
+# arrangment missing 9
+# lights on missing 45
+
+# fence missing 2 (swaziland; lesotho)
+# watch scheme missing 2 (mozambique, Japan)
+# Gun ownership missing 1 (Estonia)
+
+prevention_min_1999 <- c("prev_burglar_alarm", "prev_special_door_locks", "prev_special_grills", "prev_a_watch_dog", "prev_high_fence", "prev_watch_scheme","gun_ownership")
+```
+
+
+```{r rowsums security, warning=FALSE, message = F}
+responders_1999[ , prevention_min_1999] <- sapply(responders_1999[ , prevention_min_1999],
+                                             function(x) as.numeric(as.character(x)))
+
+# create total security variable
+responders_1999$total_security <- rowSums(responders_1999[ , prevention_min_1999], na.rm = TRUE) * NA ^ (rowSums(!is.na(responders_1999[ , prevention_min_1999])) == 0)
+
+# any NA values are coded as 0
+responders_1999$total_security[is.na(responders_1999$total_security)] <- 0
+
+summary(responders_1999[ , prevention_min_1999])
+
+summary(responders_1999$total_security)
+
+hist_plot(responders_1999,total_security) + xlab("Reported security measures, Sweep 4")
+
+```
+
+```{r after exclusions}
+summary(responders_1999$country)[0!= summary(responders_1999$country)]
+```
+
+Mozambique only has 3 responses
+
+```{r ivna}
+responders_1999 <- filter(responders_1999, country != "Mozambique")
+
+colnames(responders_1999) <- gsub(x = colnames(responders_1999), pattern = "_5_years", replacement = "_5yrs")  
+
+
+# count nonmissing
+nrow(responders_1999) - colSums(is.na(responders_1999[,potential_ivs]))
+
+
+
+# potential_ivs <- gsub(x = potential_ivs, pattern = "_5_years", replacement = "_5yrs")  
+
+# array of variables with more than 40,000 responses
+var_40k <- (nrow(responders_1999) - colSums(is.na(responders_1999[,potential_ivs])))[(nrow(responders_1999) - colSums(is.na(responders_1999[,potential_ivs]))) > 40000]
+ 
+responders_1999[,names(var_40k)] %>%     
+ summary()
+```
+
+```{r victimization-variables, warning=F, message=F}
+# create small dataset with victimization items recoded
+# colnames(victim_1999) <- gsub(x = colnames(victim_1999), pattern = "_5_years", replacement = "_5yrs")  
+# 
+# 
+victim_1999 <- responders_1999[,names(var_40k)] %>%
+ dplyr::select(ends_with("_5yrs")) %>%
+  mutate_all(funs(dplyr::recode(., "no owner" = 0, "yes" = 1, "no" = 0, "do not know" = NA_real_, `-1`=0, `1`=1, `2` = 0, `0` = 0,  .default = NA_real_)))
+
+vic_var_drop <- names(select(victim_1999,-c("assault_5yrs","sexoff_5yrs"
+                                            ,"motortheft_5yrs"
+                                            )))
+
+responders_1999[,vic_var_drop] <- responders_1999[,vic_var_drop] %>%
+  mutate_all(funs(dplyr::recode(., "no owner" = 0, "yes" = 1, "no" = 0, "do not know" = NA_real_, `-1`=0, `1`=1, `2` = 0, `0` = 0,  .default = NA_real_)))
+
+# 
+# #change victimization column names
+# 
+# 
+# #replace victimization variables with updated ones
+# responders_1999[,colnames(victim_1999)] <- victim_1999
+# 
+# # missingness tally
+# na_tally(responders_1999,country,names(victim_1999)) %>%
+#       bind_rows(dplyr::summarise(.,
+#                       across(where(is.numeric), sum),
+#                       across(where(is.logical), sum),
+#                       across(where(is.character), ~"Total")))
+
+```
+
+```{r sum victim, echo=F, message=F}
+
+
+vic_var_assault <- names(select(victim_1999,-c("sexoff_5yrs"
+                                               ,"motortheft_5yrs"
+                                               )))
+
+# currently keeping
+summary(victim_1999[,vic_var_drop])
+
+
+
+# filtering to remove missing variables for summing
+responders_1999 <-
+  filter(responders_1999,
+         (
+           !is.na(cartheft_5yrs) &
+             !is.na(bicyctheft_5yrs) &
+             !is.na(burglar_5yrs) &
+             !is.na(attempt_5yrs) &
+             !is.na(robbery_5yrs) &
+             !is.na(pers_theft_5yrs)
+         ))
+
+summary(responders_1999[,vic_var_drop])
+nrow(responders_1999)
+
+responders_1999$num_victim_5yr <- rowSums(responders_1999[,vic_var_drop])
+
+
+summary(responders_1999$num_victim_5yr)
+
+
+hist_plot(responders_1999,num_victim_5yr) + xlab("Reported victimizations, Sweep 4")
+
+moments::skewness(responders_1999$num_victim_5yr)
+```
+
+
+
+```{r transform more predictor variables}
+names(var_40k[-which(names(var_40k) %in% names(victim_1999))])
+
+#make analysis variables
+responders_1999 <- responders_1999 %>%
+  dplyr::mutate(male = ifelse(gender=="male", 1, 0),
+        age_num = dplyr::recode(as.numeric(age),`1` = 19, `2`=	24, `3` =	29,			
+                        `4` =	34, `5` = 	39,`6` =	44,`7` =	49,`8` =	54,
+                        `9` =	59,`10` =	64, `11` =	69, `12` = 75, `13` = NA_real_), 
+            immigrant = ifelse(immigrant_status=="yes, self", 1, 0),
+            household_size_num = dplyr::recode(as.numeric(household_size), `11` = NA_real_),
+        
+        
+#housing - apartment as reference?
+        apartment = ifelse(type_of_house == "flat appartment", 1, ifelse(type_of_house =="(semi)detached" | type_of_house =="terrace/row house", 0, ifelse(type_of_house == "institution" | type_of_house == "boat caravan other", 0, ifelse(type_of_house == "shanties", 0, NA)))),
+        house = ifelse(type_of_house =="(semi)detached" | type_of_house =="terrace/row house", 1, ifelse(type_of_house == "flat appartment", 0, ifelse(type_of_house == "institution" | type_of_house == "boat caravan other", 0, ifelse(type_of_house == "shanties", 0, NA)))),         
+        institution = ifelse(type_of_house =="(semi)detached" | type_of_house =="terrace/row house"| type_of_house == "boat caravan other", 0, ifelse(type_of_house == "institution", 1, ifelse(type_of_house == "flat appartment", 0, ifelse(type_of_house == "shanties", 0, NA)))),
+        shanty = ifelse(type_of_house =="(semi)detached" | type_of_house =="terrace/row house"| type_of_house == "boat caravan other", 0, ifelse(type_of_house == "flat appartment", 0, ifelse(type_of_house == "institution", 0, ifelse(type_of_house == "shanties", 1, NA)))),
+        other_house = ifelse(type_of_house == "boat caravan other", 1, ifelse(type_of_house == "flat appartment" | type_of_house =="(semi)detached" | type_of_house =="terrace/row house", 0, ifelse(type_of_house == "institution", 0, ifelse(type_of_house == "shanties", 0, NA)))),
+      
+        employed = ifelse(occupation == "looking for work" | occupation == "keeping home" | occupation == "retired, disabled" | occupation == "still at school" | occupation == "other", 0, ifelse(occupation == "working" | occupation == "army", 1, NA)),
+
+        income_quartile = ifelse(income == "upper 25%", 4, ifelse(income == "50-75%", 3, ifelse(income == "25-50%", 2, ifelse(income == "lower 25%", 1,NA)))),
+        income_tophalf  = ifelse(income == "upper 25%" | income == "50-75%" | income == "upper 50% (unknown)", 1, ifelse(income == "lower 50% (unknown)" | income == "lower 25%" | income == "25%-50%",0,NA)),
+
+
+        years_edu = as.numeric(as.character(years_of_education)),
+
+        city_size_k = as.numeric(ifelse(town_size == "-10,000", 0, ifelse(town_size == "10,000-50,000", 10,ifelse(town_size == "50,000-100,000",50, ifelse(town_size == "100,000-500,000",100,ifelse(town_size == "500,000-1,000,000",500,ifelse(town_size == "1,000,000+",1000,NA))))))),
+
+        partnered = ifelse(marital_status == "married" | marital_status == "living together", 1, ifelse(marital_status == "single" | marital_status == "divorced" | marital_status == "widowed", 0, NA)),
+
+        police_effective = ifelse(police_good_job_4_cat == "a very poor job",1,ifelse(police_good_job_4_cat == "a fairly poor job",2, ifelse(police_good_job_4_cat == "a fairly good job",3, ifelse(police_good_job_4_cat == "a very good job",4, NA)))),
+
+        feel_safe_dark = ifelse(feel_safe_after_dark == "very unsafe",1,ifelse(feel_safe_after_dark == "bit unsafe",2, ifelse(feel_safe_after_dark == "fairly safe",3, ifelse(feel_safe_after_dark == "very safe",4, NA)))),
+
+        break_in_threat = ifelse(break_in_chances == "not very likely",1,ifelse(break_in_chances == "likely",2, ifelse(break_in_chances == "very likely",3, NA))),
+
+        outing_freq = ifelse(going_out == "never",1,ifelse(going_out == "less",2, ifelse(going_out == "once a month",3,ifelse(going_out == "once a week",4, ifelse(going_out == "almost every day",5, NA))))))
+
+responders_1999$age_num <- responders_1999$age_num -2.5
+responders_1999 <- filter(responders_1999, institution != 1 | institution == 0 | is.na(institution))
+```
+
+```{r demo-filter}
+responders_1999 <- filter(responders_1999, !is.na(age_num) & !is.na(male) & !is.na(num_victim_5yr))
+
+nrow(responders_1999)
+sum(summary(responders_1999$country)>0)
+
+responders_1999$male <- factor(responders_1999$male)
+responders_1999$employed <- factor(responders_1999$employed)
+responders_1999$partnered <- factor(responders_1999$partnered)
+```
+
+
+```{r}
+new_iv <- names(responders_1999[,ncol(responders_1999):sum(ncol(responders_1999),-18)])
+
+na_tally(responders_1999,country,all_of(new_iv)) %>%
+    bind_rows(dplyr::summarise(.,
+                      across(where(is.numeric), sum),
+                      across(where(is.logical), sum),
+                      across(where(is.character), ~"Total")))
+```
+
+Hungary missing housing items
+Slovenia missing employed and education
+Japan missing household size
+
+Mozambique missing education
+south africa, botswana, lesotho, and swaziland missing income 
+
+
+
+```{r drop-hungary}
+responders_1999 <- filter(responders_1999, country != "Hungary" & !is.na(house) & !is.na(partnered))
+
+responders_1999[,c("age_num", "male", "employed", "partnered", "police_effective","years_edu","other_house","shanty","house","apartment","household_size_num", "income_quartile", "income_tophalf")] %>%
+ summary()
+```
+
+```{r}
+responders_1999[,names(var_40k)] %>%     
+ summary()
+```
+
+minimal: 
+
+moderate missingness (~1000): going out, break in chances, feeling safe after dark
+
+greater missingness (1000-5000):  persons over 16
+
+substantial missingness (5,000 10,000): years of education, occupation
+
+```{r}
+winz_function <- function(df) {
+  df$age_cent <- df$age_num - mean(df$age_num)
+  
+  df$security_winz <- DescTools::Winsorize(df$total_security)
+  df$security_0_1 <- as.factor(dplyr::recode(df$security_winz, `0` = 0L,
+                           `1` = 1L,.default = NA_integer_))
+  df$security_1_2 <- as.factor(dplyr::recode(df$security_winz, `1` = 0L,
+                           `2` = 1L,.default = NA_integer_))
+  df$security_2_3 <- as.factor(dplyr::recode(df$security_winz, `2` = 0L,
+                           `3` = 1L,.default = NA_integer_))
+
+  df$num_victim_5yr_winz <- DescTools::Winsorize(df$num_victim_5yr)
+  
+  df$num_victim_5yr_0_1 <- as.factor(dplyr::recode(df$num_victim_5yr_winz, `0` = 0L,
+                           `1` = 1L,.default = NA_integer_))
+  df$num_victim_5yr_1_2 <- as.factor(dplyr::recode(df$num_victim_5yr_winz, `1` = 0L,
+                           `2` = 1L,.default = NA_integer_))
+  
+  df$police_eff_cent <- df$police_effective - mean(df$police_effective, na.rm = T)
+  df$income_cent <- df$income_quartile - mean(df$income_quartile, na.rm = T)
+  df$safe_dark_cent <- df$feel_safe_dark - mean(df$feel_safe_dark, na.rm = T)
+  df$break_in_threat_cent <- df$break_in_threat - mean(df$break_in_threat, na.rm = T)
+  df
+}
+
+responders_1999<- winz_function(responders_1999)
+
+# create dataframe averaging victimization within each country
+cdata <- plyr::ddply(responders_1999, c("country"), summarise,
+               victim_nation_mean = mean(num_victim_5yr),
+               percent_house = mean(house))
+
+cdata$victim_nation_winz <- DescTools::Winsorize(cdata$victim_nation_mean)
+cdata$victim_nation_cent <- cdata$victim_nation_mean - mean(cdata$victim_nation_mean)
+cdata$victim_nation_wc <- cdata$victim_nation_winz - mean(cdata$victim_nation_winz)
+
+
+
+# append full dataset with country-level means of victimizatoin
+responders_1999 <- cdata %>%
+  left_join(responders_1999, by = c("country"))
+```
+
+`ordered(security_total) ~ gini_1999_03 + gdppc_1999_03 + nation_victim_5yr + num_victim_5yr + male + age_num + house + other_house + shanty + partnered + (1|country)`
+
+housing no good as a national variable; not randomly sampled (e.g., some taken from just one, heavily urbanized city; unless you believe that the country of georgia has 95% of people living in apartments)
+
+```{r save-data}
+responders_1999_countries <- names(summary(responders_1999$country)[summary(responders_1999$country)>0])
+responders_1999_n <- nrow(responders_1999)
+
+responders_1999_countries
+responders_1999_n
+
+cgwtools::resave(responders_1999,responders_1999_countries,responders_1999_n,file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/data_1999.RData")
+```
+
