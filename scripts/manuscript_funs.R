@@ -43,7 +43,6 @@ anova_extract <- function(model,coef_name){
 }
 
 
-
 percent <- function(x, digits = 0, format = "f", ...) {      # Create user-defined function
   paste0(formatC(x * 100, format = format, digits = digits, ...), "%")
 }
@@ -77,4 +76,45 @@ tidy_extract <- function(data,varname){
   paste("*z*", "(", df, ")", "=", round(test_stat,2),
         ", *p* ", pval,", *b* = ", round(estimate,3), 
         ", CI(95%) = ",this_var$CI95,  sep="")
+}
+
+##DF for level-1 predictors is M-r-1, where M is number of level-1 units and r is the total number of explanatory variables
+#DF for  level-2 predictors is N-q-1, where N is the number of clusters and q is the number of level-2 predictors
+
+
+make_df <- function(tidy_df,m_sum){
+  tidy_df$df <- NA
+  
+  tidy_df[tidy_df$obs_lvl %in% 1,"df"] <- format(as.numeric(m_sum$devcomp$dims["n"]) - 
+                                                   as.numeric(m_sum$devcomp$dims["p"]) - 1,big.mark = ",", scientific = FALSE)
+  
+  tidy_df[tidy_df$obs_lvl %in% 2,"df"] <- format(as.numeric(m_sum$devcomp$dims["q"]) - sum(tidy_df$obs_lvl==2) - 1,
+                                                 big.mark = ",", scientific = FALSE)
+  
+  tidy_df <- tidy_df %>% relocate(df, .before = estimate)
+  tidy_df <- tidy_df %>% relocate(obs_lvl, .before = df)
+  
+  tidy_df
+}
+
+make_ci <- function(tidied){
+  tidied$ci95_lo <- tidied$estimate - 1.96*tidied$std.error 
+  tidied$ci95_hi <- tidied$estimate + 1.96*tidied$std.error 
+  
+  tidied$z_score <- tidied$estimate/tidied$std.error #Wald tests
+  tidied$p_value <-  as.numeric(format(2*pnorm(abs(tidied$z_score), lower.tail=FALSE), 
+                                       scientific = FALSE))
+  
+  tidied$p_value <-  ifelse(tidied$p_value < .001,
+                            "< .001",
+                            paste(tidied$p_value %>% round(3)))
+  
+  tidied$CI95 <- paste("[", round(tidied$ci95_lo,3), ", ", 
+                       round(tidied$ci95_hi,3),"]",  sep="")
+  
+  tidied <- round_df(tidied, 3)
+  
+  tidied <- subset(tidied, select = -c(ci95_lo,ci95_hi))
+  
+  tidied <- tidied %>% relocate(CI95, .before = z_score)
 }

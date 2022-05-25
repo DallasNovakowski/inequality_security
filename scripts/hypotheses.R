@@ -31,6 +31,7 @@ hyp1 <- c(h1,h1_min,h1.1,h1a,h1am,h1a.1,h1a.2,h1a.3)
 
 
 
+
 #Hypothesis 2 ____________________________________
 
 h2 <- "The effect of inequality on security consumption will be lower when incomes appear to be earned"
@@ -68,7 +69,7 @@ h3_min <- "Positive outgroup partner*agentic interaction"
 
 h3.1 <- "(lm/anova) In the 2b*2b model `anova_group`, the interaction between group membership and agentic wealth distribution will be significant."
 
-h3.2 <- "(Planned pairwise comparisons) In the model `group_pc`, the agentic wealth distribution/outgroup condition will have higher rates of security consumption than all other conditions (i.e., **a)** agentic/ingroup, **b)** random/outgroup, & **c)** random/ingroup."
+h3.2 <- "(Planned pairwise comparisons) In the model `group_pc`, the agentic wealth distribution/outgroup condition will have higher rates of security consumption than all other conditions (i.e., **.a)** agentic/ingroup, **.b)** random/outgroup, & **.c)** random/ingroup."
 
 h3.2m <- "Pairwise: agentic/outgroup condition > all other conditions."
 
@@ -98,6 +99,18 @@ h4_min <- "Positive main effect of nation gini on security consumption"
 
 
 
+#Just for table___________________
+hyp2_min1 <- "The indirect effect (ACME) will be sig. dif. from 0"
+
+# hyp2_min[1]
+
+h2_min1 <- "Negative ineq *merit interaction"
+
+h2.2m1 <- "Pairwise: Hi-ineq /random > other conds."
+
+h3.2m1 <- "Pairwise: agentic/ outgroup > other conds."
+
+
 
 # Hypothesis lists _________________________________
 
@@ -109,4 +122,4 @@ hypoth2 <- c(h1a,h2a,h3a)
 
 hyp2_min <- c(h1am,h2am,h3am)
 
-cgwtools::resave(hyp1,hyp2,hyp3,hypotheses,hyp_min, hypoth2,hyp2_min, file = here::here("output", "manuscript_objects.RData"))
+cgwtools::resave(hyp1,hyp2,hyp3,hypotheses,hyp_min, hypoth2,hyp2_min, file = "C:/Users/dalla/Google Drive/project_files/inequality_security/output/manuscript_objects.RData")

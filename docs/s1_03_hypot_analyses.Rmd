@@ -6,8 +6,8 @@ output: html_document
 ---
 
 ```{r hypot-setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE, message = F, warning = F)
 library(tidyverse)
 library(kableExtra)
 library(lme4)
@@ -23,6 +23,7 @@ library(emmeans)
 
 source(here::here("scripts","hypotheses.R"), local = knitr::knit_global())
 source(here::here("scripts","measures.R"), local = knitr::knit_global())
+
 ```
 
 ```{r testdata,echo=FALSE}
@@ -53,7 +54,7 @@ stake_diff <- ss_histak - ss_lostak
 ineq_data <- data.frame(pnum,inequality,envy_lostak,envy_histak,ss_lostak,ss_histak,stake_diff,security_spent,envy_lik)
 ```
 
-## Study 1a/1b, Analysis Plan {.unnumbered}
+## Study 1a/1b, Analysis Plan {.unlisted .unnumbered}
 
 ```{r envy-measure, eval = F}
 lostak_envy_items <- c("partner_envy_lostak", "partner_jealous_lostak", 
@@ -160,7 +161,7 @@ box_m(ineq_data_long[, "likely_envy", drop = FALSE],
       ineq_data_long$inequality)
 ```
 
-### Hypothesis 1  {.unnumbered}
+### Hypothesis 1  {.unlisted .unnumbered}
 
 **H1):** `r hypotheses[1]`, or in terms of the model: **H1):** `r h1.1`
 
@@ -279,7 +280,7 @@ rm_correction = FALSE
 )
 ```
 
-### Hypothesis 2  {.unnumbered}
+### Hypothesis 2  {.unlisted .unnumbered}
 
 **H2)**: `r h1a`, or in terms of the model, **H2)**: `r h1am`.
 
@@ -310,7 +311,7 @@ plot(m_mixed_med_full)
 summary(m_mixed_med_full)
 ```
 
-## Study 1c, Analysis Plan {.unnumbered}
+## Study 1c, Analysis Plan {.unlisted .unnumbered}
 
 ```{r merit-items, eval=FALSE, echo = F}
 ineq_data$envy_lik <- rowSums(ineq_data[,c("partner_envy", 
@@ -389,9 +390,9 @@ levene_merit <- ineq_merit_data %>% levene_test(security_spent ~
 # see above for 95%ci for eta squared
 ```
 
-### Hypothesis 3 {.unnumbered}
+### Hypothesis 3 {.unlisted .unnumbered}
 
-**H3)**: `r h3`. Or more precisely, **H3.1)**: `r h3.1`
+**H3)**: `r h2`. Or more precisely, **H3)**: `r h2.1`
 
 ```{r merit-anova-afex}
 anova_merit <-  aov_ez(id='pnum',
@@ -405,7 +406,7 @@ anova_merit_cohensf <- effectsize::cohens_f(anova_merit,
 afex_plot(anova_merit,  ~ inequality,  ~ merit)
 ```
 
-**H3.2)**: `r h3.2`
+**H3.1)**: `r h2.2`
 
 ```{r merit-anova-pc}
 merit_emm <- emmeans(anova_merit, specs = pairwise ~ inequality*merit)
@@ -417,7 +418,7 @@ merit_pc <- merit_emm$contrasts %>%
 merit_pc
 ```
 
-## Study 1d, Analysis Plan {.unnumbered}
+## Study 1d, Analysis Plan {.unlisted .unnumbered}
 
 ```{r group-make-data, echo = F}
 ineq_group_data <- ineq_merit_data
@@ -474,9 +475,9 @@ levene_group <- ineq_group_data %>% levene_test(security_spent ~
 #used in the case of heterogeneity of variance
 ```
 
-### Hypothesis 4 {.unnumbered}
+### Hypothesis 4 {.unlisted .unnumbered}
 
-**H4):** `r h3`. Or more precisely, **H4.1):** `r h3.1`
+**H4):** `r h3`. Or more precisely, **H4):** `r h3.1`
 
 ```{r group-anova-afex}
 anova_group <-  aov_ez(id='pnum',
@@ -490,7 +491,7 @@ anova_group_cohensf <- effectsize::cohens_f(anova_group,
 afex_plot(anova_group,  ~ agentic,  ~ outgroup)
 ```
 
-**H4.2):** `r h3.2`
+**H4.1):** `r h3.2`
 
 ```{r group-anova-pc}
 group_emm <- emmeans(anova_group, specs = pairwise ~ agentic*outgroup)

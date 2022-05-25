@@ -1,6 +1,7 @@
 ---
 title: "ICVS exploration"
 date: "`r Sys.Date()`"
+author: "Dallas Novakowski"
 output: 
   html_document:
     number_sections: true
@@ -20,19 +21,22 @@ library(survey)
 
 load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/iv_2005.RData")
 
-load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/icvs_joined_samples.RData")
+# load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/icvs_joined_samples.RData")
 
 load(file = here::here("output","icvs_output.RData"))
 
 source(here::here("scripts", "s2_01_icvs_scripts.r"), local = knitr::knit_global())
+source(here::here("scripts", "s2_02_icvs_nation_merging.r"), local = knitr::knit_global())
 # source(here::here("scripts", "s2_03_icvs_sample_models.r"), local = knitr::knit_global())
+load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/icvs_joined_samples.RData")
+
 ```
 
 # Analysis procedure
 
 The following describes two survey sweeps of the International Crime Victimization Survey conducted across 2004-6. At first, this data had `r sweep5_nrow` respondents and `r sweep5_countries` countries. Analyzing archival data, the so-called "garden of forking paths [\@gelman2014] allows a researcher to pick and choose those data and analyses that best suit their preferred story [\@simmons2011]. As such, transparently showcasing the different analysis paths is an important measure to help reduce the encroachment of model selection bias.
 
-As mentioned in the manuscript, including certain variables (e.g., perceived police effectiveness) requires dropping certain countries of Japan, Peru, and Iceland (`mod_joined1`: k = `r sum(summary(as.factor(mod_joined1$country))>0)`, and n = `r format(nrow(mod_joined1), big.mark = ",", scientific = FALSE)`.
+As mentioned in the manuscript, including certain variables (e.g., perceived police effectiveness) requires dropping certain countries of Japan, Peru, and Iceland (`mod_joined1`: k = `r sum(summary(as.factor(mod_joined1$country))>0)`, and n = `r format(nrow(mod_joined1), big.mark = ",", scientific = FALSE)`).
 
 By comparison, excluding these three variables yields a sample of k = `r sum(summary(as.factor(iv_joined1$country))>0)` countries and a total n = `r format(nrow(iv_joined1), big.mark = ",", scientific = FALSE)` participants. The reported analyses will focus on the latter, larger sample specification, but this descriptives section (and supplementary analyses) examine whether a reduced model (i.e., excluding assaults, income quartile, and perceived police effectiveness) change between these sample subsets.
 
@@ -53,9 +57,9 @@ summary(iv_joined1$total_security)
 normality_stats(iv_joined1$total_security)
 ```
 
-## Larger (focal) dataset
+## Larger (focal) dataset (k = `r sum(summary(as.factor(iv_joined1$country))>0)`)
 
-To give a clearer picture of the data being included, data exploration will first be presented for the more complete dataset, then presented with the smaller subset.
+To give a clearer picture of the data being included, data exploration will first be presented for the more complete dataset (fewer variables), then presented with the smaller subset (allowing for more variables.
 
 ### Influential observations
 
@@ -217,24 +221,24 @@ Dramatic changes to the max values, less-so for the mean values (with the except
 gridExtra::grid.arrange(
 
 
-hist_plot(iv_joined1,num_victim_5yr,"Regular number of victimizations"),
-hist_plot(iv_joined1,num_victim_5yr_winz,"Winzorized number of victimizations"),
+hist_plot(iv_joined1,num_victim_5yr),
+hist_plot(iv_joined1,num_victim_5yr_winz),
 
-hist_plot(iv_joined1,total_security,"Regular security consumption"),
-hist_plot(iv_joined1,security_winz,"Winzorized security consumption"),
+hist_plot(iv_joined1,total_security),
+hist_plot(iv_joined1,security_winz),
 
 
-hist_plot(gd,gdppc_2004_6,"Regular GDP"),
-hist_plot(gd,gdppc_2004_6_winz,"Winzorized GDP"),
+hist_plot(gd,gdppc_2004_6),
+hist_plot(gd,gdppc_2004_6_winz),
 
-hist_plot(gd,gini_2004_6,"Regular Gini"),
-hist_plot(gd,gini_2004_6_winz,"Winzorized Gini"),
+hist_plot(gd,gini_2004_6),
+hist_plot(gd,gini_2004_6_winz),
 
 nrow = 4, ncol=2)
 
 ```
 
-```{r winz-plot-iv}
+```{r winz-plot-iv, warning=F, message=FALSE, echo = F}
 victim_gini_full <- gd %>% 
   mutate(cooks = cooks.distance(lm(num_victim_5yr ~ gini_2004_6_winz)),
          outlier_country = ifelse(cooks > 4*mean(cooks), country, NA)) %>%
@@ -256,7 +260,7 @@ performance::check_collinearity(lme1)
 #car::vif(lme1) # display VIF values
 ```
 
-## Smaller dataset
+## Smaller dataset, k = `r sum(summary(as.factor(mod_joined1$country))>0)`
 
 ```{r descriptives, echo = F}
 # Fixed effect variables in model
@@ -264,8 +268,6 @@ summary(mod_joined1[,c("num_victim_5yr", "age_cent", "employed", "male")])
 ```
 
 ```{r mod-descriptives, echo=F}
-summary(mod_joined1[,c("num_victim_5yr", "age_cent", "employed", "male")])
-
 mod_joined1[,vic_var_assault] <- lapply(mod_joined1[,vic_var_assault], factor)
 
 summary(mod_joined1[,vic_var_assault])
@@ -423,37 +425,37 @@ mod_joined1[,c("num_victim_5yr", "num_victim_5yr_winz", "gdppc_2004_6", "gdppc_2
 ```{r mod-winzorize histograms, warning=F, message=FALSE, echo=FALSE}
 gridExtra::grid.arrange(
 
-hist_plot(mod_joined1,num_victim_5yr,"Regular number of victimizations"),
-hist_plot(mod_joined1,num_victim_5yr_winz,"Winzorized number of victimizations"),
+hist_plot(mod_joined1,num_victim_5yr),
+hist_plot(mod_joined1,num_victim_5yr_winz),
 
-hist_plot(mod_joined1,total_security,"Histogram of security consumption"),
-hist_plot(mod_joined1,security_winz,"Histogam of Winzorized security consumption"),
+hist_plot(mod_joined1,total_security),
+hist_plot(mod_joined1,security_winz),
 
 
-hist_plot(gd_mod,gdppc_2004_6,"Regular GDP"),
-hist_plot(gd_mod,gdppc_2004_6_winz,"Winzorized GDP"),
+hist_plot(gd_mod,gdppc_2004_6),
+hist_plot(gd_mod,gdppc_2004_6_winz),
 
-hist_plot(gd_mod,gini_2004_6,"Regular Gini"),
-hist_plot(gd_mod,gini_2004_6_winz,"Winzorized Gini"),
+hist_plot(gd_mod,gini_2004_6),
+hist_plot(gd_mod,gini_2004_6_winz),
 
 nrow = 4, ncol=2)
 
 ```
 
 ```{r hist-info, warning=F, message=FALSE, fig.show='hide', echo = F}
-hist_plot(mod_joined1, total_security, "Histogram of Total Security")
+hist_plot(mod_joined1, total_security) + xlab("Reported security measures")
 ggsave(here::here("figures", "security_hist_mod.png"),
        height = 3)
 
-hist_plot(mod_joined1, num_victim_5yr_assault, "Histogram of victimizations over past 5 years")
+hist_plot(mod_joined1, num_victim_5yr_assault) + xlab("Reported victimizations, including assaults")
 ggsave(here::here("figures", "victim_hist_mod.png"),
        height = 3)
 
-hist_plot(iv_joined1,total_security,"Histogram of security consumption")
+hist_plot(iv_joined1,total_security) + xlab("Reported security measures")
 ggsave(here::here("figures", "security_hist_iv.png"),
        height = 3)
 
-hist_plot(iv_joined1, num_victim_5yr, "Histogram of victimizations over past 5 years")
+hist_plot(iv_joined1, num_victim_5yr) + xlab("Reported victimizations")
 ggsave(here::here("figures", "victim_hist_iv.png"),
        height = 3)
 

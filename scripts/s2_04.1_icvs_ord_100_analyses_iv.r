@@ -16,9 +16,24 @@ set.seed(1234)
 #used for dotwhisker plots
 load("C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/icvs_joined_samples.RData")
 
-
-
 m100_ord_iv <- iv_joined %>% map(~ ordinal::clmm(victim_mord_min, data = .x))
+
+# sapply(m100_ord_iv, function(i)i[["info"]])
+
+# list2 <- list(m_ord_iv1,m_ord_iv1)
+
+# -----extract-model-diagnostics---------------
+
+aic_iv <- data.frame()
+
+# colnames(aic_iv) <- colnames(m100_ord_iv[[1]][["info"]])
+
+aic_iv <- t(sapply(seq_along(m100_ord_iv), function(i) {  
+  aic_iv <- rbind(aic_iv[],m100_ord_iv[[i]][["info"]])
+  return(aic_iv)
+}))
+
+aic_iv <- data.frame(aic_iv)
 
 m100_iv_coef <- m100_ord_iv %>%
   map(. %>% coef())
@@ -50,4 +65,4 @@ m100_iv_sims <- lapply(seq_along(combined), function(i) {
 
 # save(m100_iv_sims, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/m100_iv_sims.RData")
 # cgwtools::resave(m100_iv_sims, file = here::here("output","m100_sims.RData"))
-save(m100_iv_sims, file = here::here("output","m100_iv_sims.RData"))
+save(m100_iv_sims,aic_iv, file = here::here("output","m100_iv_sims.RData"))

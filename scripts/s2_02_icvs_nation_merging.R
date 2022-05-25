@@ -134,19 +134,6 @@ rm(swiid)
 
 # swiid_2004_6[[1]][["gini_2004_6_cent"]] <-  swiid_2004_6[[1]][["gini_2004_6"]] - mean(swiid_2004_6[[1]][["gini_2004_6"]])
 
-#plot swiid
-swiid_summary %>%
-  filter(country == names(summary(iv_2005$country)[0!= summary(iv_2005$country)]) ) %>%
-  ggplot(aes(x=year, y=gini_disp, colour = country)) +
-  geom_line() +
-  geom_ribbon(aes(ymin = gini_disp-1.96*gini_disp_se,
-                  ymax = gini_disp+1.96*gini_disp_se,
-                  linetype=NA), alpha = .25) +
-  scale_x_continuous(breaks=seq(1960, 2015, 5)) +
-  theme_bw() +
-  labs(x = "Year",
-       y = "SWIID Gini Index, Disposable Income",
-       title = "Income Inequality over countries")
 
 
 rm(swiid_summary)
@@ -164,7 +151,7 @@ pwt100_gdppc <- pwt %>%
   filter(!is.na(gdppc))
 
 pwt_iv <-  pwt100_gdppc %>%
-  filter(country%in% names(summary(iv_2005$country)[0!= summary(iv_2005$country)]) ) %>% 
+  filter(country %in% names(summary(iv_2005$country)[0!= summary(iv_2005$country)]) ) %>% 
   filter(year == 2003 | year == 2004 | year == 2005 |year == 2006|year == 2007)
 
 rm(pwt100_gdppc, pwt)

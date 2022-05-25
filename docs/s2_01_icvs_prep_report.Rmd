@@ -1,8 +1,13 @@
 ---
-title: "icvs_prep_report"
+title: "ICVS prep report - cleaning and screening"
+date: "`r Sys.Date()`"
+author: "Dallas Novakowski"
 output:
   html_document:
-        df_print: paged
+      toc: true
+      toc_float: true
+      df_print: paged
+      number_sections: true
 bibliography: references.bib
 ---
 
@@ -70,11 +75,17 @@ potential_ivs <- c(c("gender", "age", "immigrant_status", "household_size", "per
 reduced_var <- c(utility_var,household_var,demo_var,prev_var,victim_var,corrupt_var,police_var,fear_var)
 
 icvs_data <- icvs_data[,reduced_var]
+
+
+reduced_var <- list(utility_var,household_var,demo_var,prev_var,victim_var,corrupt_var,police_var,fear_var)
+
+save(reduced_var,potential_ivs, file = here::here("output","icvs_helper.RData"))
+
 ```
 
 The International Crime Victims Survey (ICVS) is a great dataset. Big, easy enough to access, and it's well documented. The identifiers and labels are available in the dataset, as well as an accompanying codebook updated to the 2005 sweep of the ICVS. There is also a version of the questionnaire that participants see, which has been helpful in interpreting the items in plain language, in addition to clearing up some inconsistencies in the codebook.
 
-# **At a Glance**
+# At a Glance
 
 ```{r ncols and nrow, warning=F, message=FALSE, include = TRUE}
 nrow(icvs_data)
@@ -118,7 +129,7 @@ icvs_data <- filter(icvs_data, country != "England & Wales" & country != "Scotla
 
 # this throws an error sometimes (resolved with dplyr?)
 icvs_data$country<- dplyr::recode(icvs_data$country, "Hong Kong (SAR China)"= "Hong Kong",
-                           "USA" = "United States")
+                           "USA" = "United States", "Rumania" = "Romania", "Republic of Korea" = "Korea", "Ukrain" = "Ukraine")
 ```
 
 
@@ -132,21 +143,17 @@ icvs_data$country<- dplyr::recode(icvs_data$country, "Hong Kong (SAR China)"= "H
 ```{r adjusting countries, echo = FALSE, eval = FALSE}
 # substituting specific british isles regions with UK
 icvs_data$country[icvs_data$country %in% c("England & Wales", "Scotland", "Northern Ireland")] <- "United Kingdom"
-
-
 ```
 
 ```{r total adjusted countries}
 summary(icvs_data$country)[c("United Kingdom","England & Wales", "Northern Ireland", "Scotland", "Ireland")]
 cleaned_countries <- sum(summary(icvs_data$country)>0)
-
-
 ```
 
 Notably, Ireland is not part of the UK, so has better data coverage and
 is left separately for this study
 
-# **Data wrangling**
+# Data wrangling
 
 There are many different years and versions of the survey; not every case, sweep, or questionnaire will yield the data we're looking for.
 
@@ -270,18 +277,20 @@ The most notable weakness is that this is data from WEIRD countries. Other, less
 
 I consider this topic in need for further discussion (including recognizing even how the newest data is 15 years old)
 
+
+
 ## Comparability of sweeps and questionnaires
 
 I reached out to John van Kesteren - one of the chief researchers involved in the ICVS:
 
 > "With regards to the different versions, the used questionnaires are much alike. Each country was allowed to ad a small amount of additional questions to the basic questionnaires. If the differences are too big, I used the 'based on xxx' qualification. In that case it was up to me to decide whether specific items were comparable to the main questionnaire. If not, they were not included in the main database. It sounds a bit arrogant, but if it is in the main database, it has my personal seal of approval and the data are comparable."
 
-# **How do we measure security consumption?**
+# How do we measure security consumption?
 
 Some people refused to answer on their use of security measures, so obviously can't be used for this study.
 
 ```{r responders}
-responders_2005 = filter(data_2005, is.na(prev_refusal))
+responders_2005 = filter(data_2005, is.na(prev_refusal) & (prev_do_not_know == 0 | is.na(prev_do_not_know)))
 nrow(responders_2005)
 sum(summary(responders_2005$country)>0)
 ```
@@ -367,6 +376,19 @@ na_tally(responders_2005,country,prevention_min2) %>%
 
 Switzerland actually has all NA values for all of these security items, so needs to be gone
 
+
+```{r min-prev-missingness-questionnaire, warning=F, message=FALSE, echo=FALSE}
+# source("C:/Users/dalla/Google Drive/R Coding/inequality_security/scripts/03_icvs_explore.r", local = knitr::knit_global())
+
+na_tally(responders_2005,questionnaire_used,prevention_min2) %>%
+    dplyr::bind_rows(dplyr::summarise(.,
+                      across(where(is.numeric), sum),
+                      across(where(is.logical), sum),
+                      across(where(is.character), ~"Total")))
+```
+
+No patterns of missingness detected for questionnaires
+
 ```{r rowsums security, warning=FALSE, message = F}
 responders_2005 = filter(data_2005, country != "Switzerland")
 
@@ -383,6 +405,40 @@ responders_2005$total_security[is.na(responders_2005$total_security)] = 0
 ```{r after exclusions}
 summary(responders_2005$country)[0!= summary(responders_2005$country)]
 ```
+
+
+
+## Sweep 4 (1999-2003)
+All good and well that 2004-06 looks good, but what about older sweeps? Let's look at sweep 4, 1999-2003
+
+```{r data1999}
+data_1999 <- icvs_data %>%
+  filter(sweep_num == 4)
+
+responders_1999 <- filter(data_1999, is.na(prev_refusal) & (prev_do_not_know == 0 | is.na(prev_do_not_know)))
+
+na_tally(responders_1999,country,prevention_max) %>%
+    dplyr::bind_rows(dplyr::summarise(.,
+                      across(where(is.numeric), sum),
+                      across(where(is.logical), sum),
+                      across(where(is.character), ~"Total")))
+
+na_tally(responders_1999,questionnaire_used
+         ,prevention_max) %>%
+    dplyr::bind_rows(dplyr::summarise(.,
+                      across(where(is.numeric), sum),
+                      across(where(is.logical), sum),
+                      across(where(is.character), ~"Total")))
+
+save(data_1999, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/data_1999.RData")
+```
+
+Actually, 1999-2003 looks quite good - again, switzerland is the most missing, and limited missingness across the measures, e.g., estonia missing gun items, some others missing in japan, lesotho, mozambique, namibia, south africa, swaziland, zambia. Possibly useful as a robustness check - pending data in the SWIID and PWT?
+
+
+## Independent variables
+
+
 
 ```{r iv na}
 # count nonmissing
@@ -461,18 +517,20 @@ responders_2005$num_victim_5yr <- rowSums(responders_2005[,vic_var_drop])
 summary(responders_2005$num_victim_5yr)
 
 # combined hist and dens(smoothed)
-ggplot(responders_2005, aes(x = num_victim_5yr))  +  geom_histogram(
-  binwidth = 1,
-  alpha = .7,
-  fill = "#40B0A6",
-  colour = 'grey') +
-# + geom_density(adjust = 6, aes(y = ..count..)) + theme_minimal() 
- geom_vline(
-  aes(xintercept = mean(num_victim_5yr)),
-  color = "#B03F49",
-  linetype = "dashed",
-  size = 1
-) + ggtitle("Number of victimizations over 5 years")
+# ggplot(responders_2005, aes(x = num_victim_5yr))  +  geom_histogram(
+#   binwidth = 1,
+#   alpha = .7,
+#   fill = "#40B0A6",
+#   colour = 'grey') +
+# # + geom_density(adjust = 6, aes(y = ..count..)) + theme_minimal() 
+#  geom_vline(
+#   aes(xintercept = mean(num_victim_5yr)),
+#   color = "#B03F49",
+#   linetype = "dashed",
+#   size = 1
+# ) + ggtitle("Number of victimizations over 5 years")
+
+hist_plot(responders_2005,num_victim_5yr) + xlab("Reported victimizations")
 
 skewness(responders_2005$num_victim_5yr)
 
@@ -489,9 +547,7 @@ na_tally(responders_2005,country,names(victim_2005)) %>%
 
 ```
 
-We've sorted out some victimization variables, but there are still some
-basic demographics and crime-related variables that we need to assess
-missingness and recode
+We've sorted out some victimization variables, but there are still some basic demographics and crime-related variables that we need to assess missingness and recode
 
 ```{r transform more predictor variables}
 names(var_40k[-which(names(var_40k) %in% names(victim_2005))])
@@ -508,7 +564,7 @@ responders_2005 <- responders_2005 %>%
         
 #housing - apartment as reference?
         house = ifelse(type_of_house =="(semi)detached" | type_of_house =="terrace/row house", 1, ifelse(type_of_house == "flat appartment", 0, ifelse(type_of_house == "institution" | type_of_house == "boat caravan other", 0, ifelse(type_of_house == "shanties", 0, NA)))),         
-        institution = ifelse(type_of_house =="(semi)detached" | type_of_house =="terrace/row house"| type_of_house == "boat caravan other", 0, ifelse(type_of_house == "flat appartment", 1, ifelse(type_of_house == "institution", 0, ifelse(type_of_house == "shanties", 0, NA)))),
+        institution = ifelse(type_of_house =="(semi)detached" | type_of_house =="terrace/row house"| type_of_house == "boat caravan other", 0, ifelse(type_of_house == "institution", 1, ifelse(type_of_house == "flat appartment", 0, ifelse(type_of_house == "shanties", 0, NA)))),
         shanty = ifelse(type_of_house =="(semi)detached" | type_of_house =="terrace/row house"| type_of_house == "boat caravan other", 0, ifelse(type_of_house == "flat appartment", 0, ifelse(type_of_house == "institution", 0, ifelse(type_of_house == "shanties", 1, NA)))),
         other_house = ifelse(type_of_house =="(semi)detached" | type_of_house =="terrace/row house" | type_of_house == "boat caravan other", 1, ifelse(type_of_house == "flat appartment", 0, ifelse(type_of_house == "institution", 0, ifelse(type_of_house == "shanties", 0, NA)))),
       
@@ -531,6 +587,7 @@ responders_2005 <- responders_2005 %>%
         outing_freq = ifelse(going_out == "never",1,ifelse(going_out == "less",2, ifelse(going_out == "once a month",3,ifelse(going_out == "once a week",4, ifelse(going_out == "almost every day",5, NA))))))
 
 responders_2005$age_num <- responders_2005$age_num -2.5
+responders_2005 <- filter(responders_2005, institution != 1 | institution == 0 | is.na(institution))
 ```
 
 ```{r new independent variables and missingness, message=F}
@@ -617,7 +674,7 @@ My initial impression would be to drop japan and hong kong for any analysis - no
 
 At minimum need to drop hong kong to keep age
 
-# **Nation-level variables**
+# Nation-level variables
 
 Our final spread of participants after screening for security items
 refusers and NAs for IVs (maximizing number of participants over \# IVs)
@@ -631,9 +688,6 @@ summary(iv_2005$country)[summary(iv_2005$country)!= 0]
 length(summary(iv_2005$country)[summary(iv_2005$country)!= 0])
 
 responders_2005_countries <- names(summary(responders_2005$country)[0!= summary(responders_2005$country)])
-
-
-
 
 iv_2005$male <- factor(iv_2005$male)
 iv_2005$employed <- factor(iv_2005$employed)
@@ -649,6 +703,8 @@ iv_2005[,c("age_num", "male", "employed", "partnered", "police_effective", "inco
 summary(iv_2005$country)[summary(iv_2005$country)!= 0]
 
 iv_2005_countries <- names(summary(iv_2005$country)[0!= summary(iv_2005$country)])
+
+iv_2005_nper_country <- mean(summary(iv_2005$country)[0!= summary(iv_2005$country)])
 
 setdiff(responders_2005_countries, iv_2005_countries)
 
@@ -740,10 +796,6 @@ First, the one we will use in the manuscript. A moderate inclusion of variables 
 ```{r iv liberal inclusion data sets}
 iv_2005 <- iv_2005 %>% 
         filter(!is.na(total_security))
-
-
-
-
 
 # Base, maximizing cluster number
 # iv_2005[,c("age_cent")] <- iv_2005[,c("age_num")] - mean(iv_2005[,c("age_num")]) 
@@ -859,14 +911,30 @@ datasets <- list(iv_2005,iv_2005_mod,iv_2005_lib,iv_2005_lib1)
 
 winz_function <- function(df) {
   df$age_cent <- df$age_num - mean(df$age_num)
+  
   df$security_winz <- DescTools::Winsorize(df$total_security)
+  df$security_0_1 <- as.factor(dplyr::recode(df$security_winz, `0` = 0L,
+                           `1` = 1L,.default = NA_integer_))
+  df$security_1_2 <- as.factor(dplyr::recode(df$security_winz, `1` = 0L,
+                           `2` = 1L,.default = NA_integer_))
+  df$security_2_3 <- as.factor(dplyr::recode(df$security_winz, `2` = 0L,
+                           `3` = 1L,.default = NA_integer_))
+
   df$num_victim_5yr_winz <- DescTools::Winsorize(df$num_victim_5yr)
+  
+  df$num_victim_5yr_0_1 <- as.factor(dplyr::recode(df$num_victim_5yr_winz, `0` = 0L,
+                           `1` = 1L,.default = NA_integer_))
+  df$num_victim_5yr_1_2 <- as.factor(dplyr::recode(df$num_victim_5yr_winz, `1` = 0L,
+                           `2` = 1L,.default = NA_integer_))
+  
   df$police_eff_cent <- df$police_effective - mean(df$police_effective, na.rm = T)
   df$income_cent <- df$income_quartile - mean(df$income_quartile, na.rm = T)
   df$safe_dark_cent <- df$feel_safe_dark - mean(df$feel_safe_dark, na.rm = T)
   df$break_in_threat_cent <- df$break_in_threat - mean(df$break_in_threat, na.rm = T)
   df
 }
+
+
 
 datasets <- lapply(datasets,winz_function)
 
@@ -881,6 +949,8 @@ cdata <- plyr::ddply(iv_2005, c("country"), summarise,
                victim_nation_mean = mean(num_victim_5yr))
 
 cdata$victim_nation_winz <- DescTools::Winsorize(cdata$victim_nation_mean)
+cdata$victim_nation_cent <- cdata$victim_nation_mean - mean(cdata$victim_nation_mean)
+cdata$victim_nation_wc <- cdata$victim_nation_winz - mean(cdata$victim_nation_winz)
 
 # append full dataset with country-level means of victimizatoin
 iv_2005 <- cdata %>%
@@ -958,14 +1028,13 @@ We can see a breakdown of GDP per capita here:
 ```{r merging and saving}
 rm(datasets, data_2005, victim_2005,responders_2005, icvs_data)
 
-save(sweep5_nrow, sweep5_countries, vic_var_assault, vic_var_drop, prevention_min2,  pre_weightscreen_n, pre_weightscreen_k, post_weightscreen_n, post_weightscreen_k, responders_2005_countries, iv_2005_countries, iv_2005_mod_countries, iv_2005_lib_countries, iv_2005_lib1_countries, cleaned_countries, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/iv_2005.RData")
+cgwtools::resave(sweep5_nrow, sweep5_countries, vic_var_assault, vic_var_drop, prevention_min2,  pre_weightscreen_n, pre_weightscreen_k, post_weightscreen_n, post_weightscreen_k, responders_2005_countries, iv_2005_countries, iv_2005_nper_country, iv_2005_mod_countries, iv_2005_lib_countries, iv_2005_lib1_countries, cleaned_countries, file = "C:/Users/dalla/Google Drive/offline_data_files/icvs_pwt_swiid/data/iv_2005.RData")
 
 # rm(list = ls())
 ```
 
 
-
-# **Summary**
+# Summary
 
 Overall, I think this is a very encouraging first pass. The ICVS is retrievable and interpretable, and above all else, it does indeed measure security behaviours. We also appear to have a reasonable number of countries and participants after some pretty conservative exclusions.
 

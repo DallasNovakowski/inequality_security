@@ -1,5 +1,6 @@
 library(kableExtra)
 library(na.tools) # for all_na function
+library(cowplot)
 
 ## ---- data-cleaning  --------
 
@@ -44,12 +45,25 @@ var_na <- function(data,selection){
 # Data exploration
 
 ## ---- plots --------
+# The palette with grey:
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
 library(rlang)
-hist_plot <- function(mydf, myycol, mytitle) {
-  ggplot2::ggplot(data= mydf,aes({{myycol}})) + geom_histogram(fill="#00C0AFAA", colour='grey') + 
-    geom_vline(aes(xintercept=mean({{myycol}})),color="#B03F49", linetype="dashed", size=1 ) +
-    ggtitle(mytitle) + theme_minimal()
+library(scales)
+hist_plot <- function(mydf, myycol
+                      # , mytitle
+                      ) {
+  ggplot2::ggplot(data= mydf,aes({{myycol}})) + geom_histogram(fill=cbPalette[[1]]) + 
+    geom_vline(aes(xintercept=mean({{myycol}})),color=cbPalette[[7]], linetype="dashed", size=1.5 ) +
+    theme_half_open() +
+    scale_y_continuous(
+      # don't expand y scale at the lower end
+      expand = expansion(mult = c(0, 0.05)), labels=comma_format(accuracy=1)
+    ) + ylab("Count")
+  # + ggtitle(mytitle) 
 }
+#  + theme_minimal()
+
 
 ## ---- descriptive-stats --------
 normality_stats <- function(data){
