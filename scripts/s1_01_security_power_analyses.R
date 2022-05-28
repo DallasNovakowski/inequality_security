@@ -88,7 +88,7 @@ gplot_inequality_d2 <- ggplotify::as.ggplot(gt[c(0:7,12:16),]) # extract desired
 # # Export
 
 gplot_inequality_d2
-ggsave(filename=here::here("figures","security_powerplot_2b2w_f1156_5.png"), plot=gplot_inequality_d2, height = 3)
+ggsave(filename=here::here("figures","security_powerplot_2b2w_f1156_5.png"), plot=gplot_inequality_d2,width = 4, height = 3)
 
 
 # f = 0.1156; smaller than .25 correlation, and more importantly - doesn't equate to d = .2
@@ -134,7 +134,7 @@ gplot_inequality_2b2b
 
 
 # Export
-ggsave(filename=here::here("figures","security_powerplot_2b2b_f01.png"), plot=gplot_inequality_2b2b, height = 3)
+ggsave(filename=here::here("figures","security_powerplot_2b2b_f01.png"), plot=gplot_inequality_2b2b,width = 4, height = 3)
 
 security_2b2b_f01_exact <- ANOVA_exact(security_2b2b_f01_design, 
                                  alpha = 0.05)

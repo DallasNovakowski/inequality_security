@@ -38,8 +38,7 @@ h2 <- "The effect of inequality on security consumption will be lower when incom
 
 h2_min <- "Negative inequality*merit interaction"
 
-h2.1 <- "(linear/anova): In the 2b*2b model `anova_merit`, 
-the inequality-merit interaction will have a significantly negative effect on security spending."
+h2.1 <- "In a 2b*2b ANOVA, the inequality-merit interaction will have a significantly negative effect on security spending."
 
 h2.2 <- "(Planned pairwise comparisons), in the model `merit_pc`, the hi-inequality/random income condition will have significantly higher rates of security consumption than all other conditions 
 (i.e., **.a)** hi-inequality/merit income, **.b)** no-inequality/random income, & **.c)** no-inequality/merit income)."

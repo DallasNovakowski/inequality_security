@@ -228,11 +228,11 @@ hist_plot(iv_joined1,total_security),
 hist_plot(iv_joined1,security_winz),
 
 
-hist_plot(gd,gdppc_2004_6),
-hist_plot(gd,gdppc_2004_6_winz),
+big_hist_plot(gd,gdppc_2004_6),
+big_hist_plot(gd,gdppc_2004_6_winz),
 
-hist_plot(gd,gini_2004_6),
-hist_plot(gd,gini_2004_6_winz),
+big_hist_plot(gd,gini_2004_6),
+big_hist_plot(gd,gini_2004_6_winz),
 
 nrow = 4, ncol=2)
 
@@ -432,11 +432,11 @@ hist_plot(mod_joined1,total_security),
 hist_plot(mod_joined1,security_winz),
 
 
-hist_plot(gd_mod,gdppc_2004_6),
-hist_plot(gd_mod,gdppc_2004_6_winz),
+big_hist_plot(gd_mod,gdppc_2004_6),
+big_hist_plot(gd_mod,gdppc_2004_6_winz),
 
-hist_plot(gd_mod,gini_2004_6),
-hist_plot(gd_mod,gini_2004_6_winz),
+big_hist_plot(gd_mod,gini_2004_6),
+big_hist_plot(gd_mod,gini_2004_6_winz),
 
 nrow = 4, ncol=2)
 
@@ -458,8 +458,6 @@ ggsave(here::here("figures", "security_hist_iv.png"),
 hist_plot(iv_joined1, num_victim_5yr) + xlab("Reported victimizations")
 ggsave(here::here("figures", "victim_hist_iv.png"),
        height = 3)
-
-
 ```
 
 ### Multicolinnearity

@@ -171,7 +171,7 @@ box_m(ineq_data_long[, "likely_envy", drop = FALSE],
 afex_options(es_aov         = 'pes',
              correction_aov = 'GG',
              emmeans_model  = 'univariate'
-             # ,include_aov = TRUE
+             ,include_aov = TRUE
              )
 
 ineq_anova_mixed <-  aov_ez(id='pnum',
@@ -258,26 +258,26 @@ diff_sd <- diff_se*sqrt(N)
 
 ```{r t-tost, echo = F}
 #An equivalence test COULD be used to determine whether the effect of inequality significantly smaller than a minimally large effect size.
-
-ineq_mixed_tost <- tsum_TOST(
-m1 = histak_dif,
-sd1 = histak_diff_sd,
-n1 = N,
-m2 = lostak_dif,
-sd2 = lostak_diff_sd,
-n2 = N,
-r12 = .5,
-hypothesis = "EQU",
-paired = TRUE,
-var.equal = FALSE,
-low_eqbound = -pooled*.2,
-high_eqbound = pooled*.2,
-mu = 0,
-eqbound_type = "raw",
-alpha = 0.05,
-bias_correction = TRUE,
-rm_correction = FALSE
-)
+# 
+# ineq_mixed_tost <- tsum_TOST(
+# m1 = histak_dif,
+# sd1 = histak_diff_sd,
+# n1 = N,
+# m2 = lostak_dif,
+# sd2 = lostak_diff_sd,
+# n2 = N,
+# r12 = .5,
+# hypothesis = "EQU",
+# paired = TRUE,
+# var.equal = FALSE,
+# low_eqbound = -pooled*.2,
+# high_eqbound = pooled*.2,
+# mu = 0,
+# eqbound_type = "raw",
+# alpha = 0.05,
+# bias_correction = TRUE,
+# rm_correction = FALSE
+# )
 ```
 
 ### Hypothesis 2  {.unlisted .unnumbered}
@@ -409,6 +409,19 @@ afex_plot(anova_merit,  ~ inequality,  ~ merit)
 **H3.1)**: `r h2.2`
 
 ```{r merit-anova-pc}
+#approach 1: planned comparisons 
+merit_planned <- emmeans(anova_merit, specs = trt.vs.ctrlk ~ inequality:merit, ref = 4, reverse = T) 
+
+# Approach 2: interaction contrast
+ayy <- emmeans(anova_merit, specs = pairwise ~ inequality|merit)
+
+contrast(ayy[[1]], interaction = c("poly", "consec"), by = NULL) %>% summary(infer = TRUE)
+
+# approach 3: significance of the contrasts at different levels of the moderator. However, this doesnt actually address the hypothesized change of slope.
+
+emmeans(anova_merit, specs = pairwise ~ inequality|merit, reverse=F) %>% summary(infer = TRUE)
+
+#approach 4: all pairwise comparisons
 merit_emm <- emmeans(anova_merit, specs = pairwise ~ inequality*merit)
 
 merit_pc <- merit_emm$contrasts %>%
@@ -416,6 +429,7 @@ merit_pc <- merit_emm$contrasts %>%
     as.data.frame()
 
 merit_pc
+
 ```
 
 ## Study 1d, Analysis Plan {.unlisted .unnumbered}
@@ -495,6 +509,12 @@ afex_plot(anova_group,  ~ agentic,  ~ outgroup)
 
 ```{r group-anova-pc}
 group_emm <- emmeans(anova_group, specs = pairwise ~ agentic*outgroup)
+
+group_planned <- emmeans(anova_group, specs = trt.vs.ctrlk ~ agentic:outgroup, ref = 3, reverse = T)
+
+group_planned$contrasts %>%
+    summary(infer = TRUE)%>%
+    as.data.frame()
 
 group_pc <- group_emm$contrasts %>%
     summary(infer = TRUE)%>%

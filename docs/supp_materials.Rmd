@@ -1,13 +1,34 @@
 ---
-title: "Supplementary Materials"
-author: "Dallas Novakowski"
-date: "28/01/2022"
+title: "Inequality, Distrust, and Security Consumption - Supplementary Materials"
+author: "Dallas Novakowski, Mehdi Mourali"
+date: "`r Sys.Date()`"
 fontsize: 12pt
 output:   
   # bookdown::gitbook   # not displaying images (likely due to lack of index?)
   bookdown::pdf_document2
 toc: false
+
+linestretch: 1.5
+
+header-includes:
+- \usepackage{placeins}
+-  \newcommand{\beginsupplement}{
+    \setcounter{table}{0}  
+    \renewcommand{\thetable}{S\arabic{table}} 
+    \setcounter{figure}{0} 
+    \renewcommand{\thefigure}{S\arabic{figure}}
+  }
 ---
+
+```{r, prep-solo, echo = F, warning=F, message = F}
+knitr::opts_chunk$set(cache.extra = knitr::rand_seed, echo = FALSE, warning=F, message = F)
+library(tidyverse)
+library(kableExtra)
+load(here::here("output", "pretest_output.RData"))    # Experiment power analyses and pretest output 
+load(here::here("output", "manuscript_objects.RData"))  # design tables and hypotheses
+set.seed(1234)
+```
+
 
 ```{r, child=c('s1_03_hypot_analyses.Rmd')}
 
@@ -17,7 +38,9 @@ toc: false
 
 The pretest used a relaxed comprehension check, where two instead one items are considered  valid selections, as only `r round(screened_n_min/pretest_initial_n*100,0)`% of participants correctly answered the comprehension check when a single item was considered a valid response.
 
-# Supp. Figures {.unnumbered}
+\beginsupplement
+
+# Supp. Figures {.unlisted .unnumbered}
 
 (ref:pretest-splitplot) Means (95% CI) and jittered data points for Study 1 pretest. n=`r screened_n`, within-subjects, ANOVA *p*s \> `r plyr::round_any(sort(pretest_anova[,"Pr(>F)"],FALSE)[1], 0.01, f = floor)`. See Table \@ref(tab:pretest-anova).
 
@@ -57,7 +80,7 @@ knitr::include_graphics(here::here("figures", "security_powerplot_2b2b_f01.png")
 
 \FloatBarrier
 
-# Supp. Tables {.unnumbered}
+# Supp. Tables {.unlisted .unnumbered}
 
 
 <!-- \clearpage -->

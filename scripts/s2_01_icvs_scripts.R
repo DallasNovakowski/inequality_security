@@ -53,16 +53,26 @@ library(scales)
 hist_plot <- function(mydf, myycol
                       # , mytitle
                       ) {
-  ggplot2::ggplot(data= mydf,aes({{myycol}})) + geom_histogram(fill=cbPalette[[1]]) + 
+  ggplot2::ggplot(data= mydf,aes({{myycol}})) + geom_bar(position='dodge', width = .60, fill=cbPalette[[1]]) +
     geom_vline(aes(xintercept=mean({{myycol}})),color=cbPalette[[7]], linetype="dashed", size=1.5 ) +
     theme_half_open() +
     scale_y_continuous(
       # don't expand y scale at the lower end
       expand = expansion(mult = c(0, 0.05)), labels=comma_format(accuracy=1)
     ) + ylab("Count")
-  # + ggtitle(mytitle) 
 }
 #  + theme_minimal()
+
+big_hist_plot <- function(mydf, myycol
+                      # , mytitle
+) { ggplot2::ggplot(data= mydf,aes({{myycol}})) + geom_histogram(fill=cbPalette[[1]]) +
+    geom_vline(aes(xintercept=mean({{myycol}})), color=cbPalette[[7]], linetype="dashed", size=1.5 ) +
+    theme_half_open() +
+    scale_y_continuous(
+      # don't expand y scale at the lower end
+      expand = expansion(mult = c(0, 0.05)), labels=comma_format(accuracy=1)
+    ) + ylab("Count")
+}
 
 
 ## ---- descriptive-stats --------
