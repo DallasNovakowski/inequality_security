@@ -5,7 +5,10 @@ library(tidyr) #pivot_wider
 library(tidyverse) #select
 library(afex)
 library(cowplot)
+library(gtools)
 
+
+source(file=here::here("scripts","manuscript_funs.R"))
 
 cbPalette <-
   c(
@@ -159,7 +162,7 @@ pilot_data$inequality <- as.factor(pilot_data$inequality)
 #     values_from = seconds_on_page
 #   )
 
-pre_consent_n <- nrow(pilot_data)
+s1a_n_collected <- nrow(pilot_data)
 
 pilot_data <- pilot_data %>%
   # left_join(out_wide, by = c("participant_code")) %>%
@@ -168,11 +171,12 @@ pilot_data <- pilot_data %>%
 pilot_data <- pilot_data %>%
   janitor::clean_names()      # clean names to be all lowercase, replacing spaces with "_"
 
-s1a_initial_n <- nrow(pilot_data)
+s1a_n_consented <- nrow(pilot_data)
+
 
 # number of people not consenting
-non_consent <- pre_consent_n - s1a_initial_n
-pilot_data1 <-  pilot_data
+non_consent <- s1a_n_collected - pilot_data
+# pilot_data1 <-  pilot_data
 
 which(pilot_data$study_end_1_comments == 
         "I meant to type \"yes\" in the security check but misclicked and advanced the screen instead. Apologies!")
@@ -188,7 +192,9 @@ pilot_data <-  pilot_data %>%
   filter(atn_boost > 3)
 
 #number of participants after comprehension and attention
-nrow(pilot_data)
+s1a_n_attended <- nrow(pilot_data)
+
+
 
 consumed_vars <- colnames(pilot_data[grepl('security_consumed', colnames(pilot_data))])
 
@@ -230,8 +236,13 @@ pilot_data <- pilot_data %>%
 round_2_envy_items <- c("round_2_p_partner_jealous","round_2_p_partner_bitter","round_2_p_partner_envy")
 
 
-# ltm::cronbach.alpha(pilot_data
-#                     [,round_1_envy_items],CI=TRUE)
+
+ltm::cronbach.alpha(pilot_data
+                    [,round_1_envy_items],CI=TRUE)
+
+ltm::cronbach.alpha(pilot_data
+                    [,c(round_1_envy_items,round_2_envy_items)],CI=TRUE)
+
 
 # pilot_data <- pilot_data %>%
 #   mutate(
@@ -261,6 +272,40 @@ pilot_data$round_1_likely_envy <- rowMeans(pilot_data[, round_1_envy_vars], na.r
 
 pilot_data$round_2_likely_envy <- rowMeans(pilot_data[, round_2_envy_vars], na.rm = TRUE) * NA ^ (rowMeans(!is.na(pilot_data[, round_2_envy_vars])) == 0)
 
+pilot_data$av_likely_envy <- rowMeans(pilot_data[, c("round_2_likely_envy","round_1_likely_envy")], na.rm = TRUE) * NA ^ (rowMeans(!is.na(pilot_data[, c("round_2_likely_envy","round_1_likely_envy")])) == 0)
+
+
+s1adesc_columns <- c("Variable",	"Mean",	"SD")
+
+Variable <- c("Age","Perceived envy",
+              "Security consumed")
+
+Mean <-
+  c(round(mean(pilot_data$age),1),
+    round(mean(pilot_data$av_likely_envy),1),
+    round(mean(pilot_data$consumed_total),1)
+  )
+
+SD <-
+  c(round(sd(pilot_data$age),1),
+    round(sd(pilot_data$av_likely_envy),1),
+    round(sd(pilot_data$consumed_total),1)
+  )
+
+overall_envy_alpha <-ltm::cronbach.alpha(pilot_data
+                    [,c(round_1_envy_items,round_2_envy_items)],CI=TRUE)
+
+bt_ci95 <- paste("[", round(unname(overall_envy_alpha$ci[1]),2), ", ", 
+                 round(unname(overall_envy_alpha$ci[2]),2),"]",  sep="")
+
+# paste(round(overall_envy_alpha$alpha,2),
+alpha95 <- c("",
+           paste("[", round(unname(overall_envy_alpha$ci[1]),2), ", ", 
+                                                          round(unname(overall_envy_alpha$ci[2]),2),"]",  sep="")
+           ,
+           "")
+
+s1a_desc <- data.frame(Variable, Mean, SD,alpha95)
 
 consumed_vars <- c("round_1_security_consumed", "round_2_security_consumed")
 
@@ -366,13 +411,18 @@ data_long <- data_long %>%
       round_2_likely_envy,NA)
   ))
 
+data_long$likely_envy_cent <- data_long$likely_envy - mean(data_long$likely_envy)
 
 data_long$round_num <- as.factor(data_long$round_num)
 
 
+data_long$security_bin <- ifelse(data_long$security_consumed == 0, 0,
+                                 ifelse(data_long$security_consumed > 0 , 1,NA))
+
 # summarize major variables
 summary(data_long$likely_envy)
 summary(data_long$security_consumed)
+summary(data_long$security_bin)
 summary(data_long$inequality)
 summary(data_long$stake_cond)
 
@@ -385,15 +435,45 @@ summary(data_long$stake_cond)
 security_summary_data <- data_long %>%
   group_by(inequality, stake_cond) %>%
   dplyr::summarise(
-    mean = mean(security_consumed),
-    min = mean(security_consumed) - qnorm(0.975) * sd(security_consumed) /
+    mean = round(mean(security_consumed),1),
+    min = round(mean(security_consumed),1) - qnorm(0.975) * round(sd(security_consumed),1) /
       sqrt(n()),
-    max = mean(security_consumed) + qnorm(0.975) * sd(security_consumed) /
+    max = round(mean(security_consumed),1) + qnorm(0.975) * round(sd(security_consumed),1) /
       sqrt(n())
   )
 
+# raincloud_theme = theme(
+#   text = element_text(size = 10),
+#   axis.title.x = element_text(size = 16),
+#   axis.title.y = element_text(size = 16),
+#   axis.text = element_text(size = 14),
+#   axis.text.x = element_text(
+#     # angle = 45, 
+#     vjust = 0.5),
+#   legend.title = element_text(size = 16),
+#   legend.text = element_text(size = 16),
+#   legend.position = "right",
+#   plot.title = element_text(
+#     lineheight = .8,
+#     face = "bold",
+#     size = 16
+#   ),
+#   panel.border = element_blank(),
+#   panel.grid.minor = element_blank(),
+#   panel.grid.major = element_blank(),
+#   axis.line.x = element_line(
+#     colour = 'black',
+#     size = 0.5,
+#     linetype = 'solid'
+#   ),
+#   axis.line.y = element_line(
+#     colour = 'black',
+#     size = 0.5,
+#     linetype = 'solid'
+#   )
+# )
 
-security_1a_jittorial <- security_summary_data %>%
+security_1a_jittolin <- security_summary_data %>%
   ggplot(aes(
     y = mean,
     x = inequality
@@ -434,31 +514,33 @@ security_1a_jittorial <- security_summary_data %>%
     color = 
       guide_legend(
         # title = "ay",  #duplicates and mucks color/shape
-        override.aes = list(size=5, alpha = 1))) +
-  theme_half_open() +
-  scale_y_continuous(
-    # don't expand y scale at the lower end
-    expand = expansion(mult = c(0, 0.05)))
+        override.aes = list(size=5, alpha = 1))) + 
+  theme_half_open() + theme(axis.title = element_text(face="bold")) +
+  # scale_y_continuous(
+  #   # don't expand y scale at the lower end
+  #   expand = expansion(mult = c(0, 0.05))) + 
+  scale_x_discrete(labels=c("0" = "No", "1" = "Yes")) +
+  xlab("Inequality")
     
-security_1a_jittorial
+security_1a_jittolin
 
-ggsave(here::here("figures", "s1a_security_jittorial.png"),
+ggsave(here::here("figures", "s1a_security_jittolin.png"),
        height = 3)
 
 
 envy_summary_data <- data_long %>%
   group_by(inequality, stake_cond) %>%
   dplyr::summarise(
-    mean = mean(likely_envy),
-    min = mean(likely_envy) - qnorm(0.975) * sd(likely_envy) /
+    mean = round(mean(likely_envy),1),
+    min = round(mean(likely_envy),1) - qnorm(0.975) * round(sd(likely_envy),1) /
       sqrt(n()),
-    max = mean(likely_envy) + qnorm(0.975) * sd(likely_envy) /
+    max = round(mean(likely_envy),1) + qnorm(0.975) * round(sd(likely_envy),1) /
       sqrt(n())
   )
 
 
 
-likely_envy_1a_jittorial <- envy_summary_data %>%
+likely_envy_1a_jittolin <- envy_summary_data %>%
   ggplot(aes(
     y = mean,
     x = inequality
@@ -483,7 +565,7 @@ likely_envy_1a_jittorial <- envy_summary_data %>%
         # ,color = cost
         , ymax = max),
     fatten = 1.5,
-    alpha = .7,
+    # alpha = .7,
     size = 1,
     shape = 20,
     # 95,
@@ -499,30 +581,32 @@ likely_envy_1a_jittorial <- envy_summary_data %>%
       guide_legend(
         # title = "ay",  #duplicates and mucks color/shape
         override.aes = list(size=5, alpha = 1))) +
-  theme_half_open() +
-  scale_y_continuous(
-    # don't expand y scale at the lower end
-    expand = expansion(mult = c(0, 0.05)))
+  theme_half_open() + theme(axis.title = element_text(face="bold")) +
+  # scale_y_continuous(
+  #   # don't expand y scale at the lower end
+  #   expand = expansion(mult = c(0, 0.05))) + 
+  scale_x_discrete(labels=c("0" = "No", "1" = "Yes")) +
+  xlab("Inequality")
 
-likely_envy_1a_jittorial
+likely_envy_1a_jittolin
 
 
-ggsave(here::here("figures", "s1a_envy_jittorial.png"),
+ggsave(here::here("figures", "s1a_envy_jittolin.png"),
        height = 3)
 
 
 likelihood_summary_data <- data_long %>%
   group_by(inequality, stake_cond) %>%
   dplyr::summarise(
-    mean = mean(p_partner_attempt),
-    min = mean(p_partner_attempt) - qnorm(0.975) * sd(p_partner_attempt) /
+    mean = round(mean(p_partner_attempt),1),
+    min = round(mean(p_partner_attempt),1) - qnorm(0.975) * round(sd(p_partner_attempt),1) /
       sqrt(n()),
-    max = mean(p_partner_attempt) + qnorm(0.975) * sd(p_partner_attempt) /
+    max = round(mean(p_partner_attempt),1) + qnorm(0.975) * round(sd(p_partner_attempt),1) /
       sqrt(n())
   )
 
 
-likelihood_1a_jittorial <- likelihood_summary_data %>%
+likelihood_1a_jittolin <- likelihood_summary_data %>%
   ggplot(aes(
     y = mean,
     x = inequality
@@ -547,7 +631,7 @@ likelihood_1a_jittorial <- likelihood_summary_data %>%
         # ,color = cost
         , ymax = max),
     fatten = 1.5,
-    alpha = .7,
+    # alpha = .7,
     size = 1,
     shape = 20,
     # 95,
@@ -557,22 +641,23 @@ likelihood_1a_jittorial <- likelihood_summary_data %>%
   ylab("Perceived attack likelihood") +  geom_label(
     color = "black",
     aes(label = paste(round(mean,2)), group =stake_cond,vjust=-1), fill="white", position = position_dodge(width = .7)
-    , alpha = .7
+    # , alpha = .7
   ) + guides(
     color = 
       guide_legend(
         # title = "ay",  #duplicates and mucks color/shape
         override.aes = list(size=5, alpha = 1))) +
-  theme_half_open() +
-  scale_y_continuous(
-    # don't expand y scale at the lower end
-    expand = expansion(mult = c(0, 0.05))) 
+  theme_half_open() + theme(axis.title = element_text(face="bold")) +
+  # scale_y_continuous(
+  #   # don't expand y scale at the lower end
+  #   expand = expansion(mult = c(0, 0.05))) + 
+  scale_x_discrete(labels=c("0" = "No", "1" = "Yes")) +
+  xlab("Inequality")
 
-likelihood_1a_jittorial
+likelihood_1a_jittolin
 
-ggsave(here::here("figures", "s1a_likelihood_jittorial.png"),
+ggsave(here::here("figures", "s1a_likelihood_jittolin.png"),
        height = 3)
-
 
 
 
@@ -586,19 +671,22 @@ ineq_anova_mixed <- aov_ez(id='participant_code',
                            within = c('stake_cond'),
                            between = c('inequality'))  
 
+ineq_anova_mixed_cohensf <- effectsize::cohens_f(ineq_anova_mixed, alternative="two.sided",verbose = FALSE,generalized = FALSE)
+
 ineq_anova_mixed <- ineq_anova_mixed$anova_table
 ineq_anova_mixed$cohens_f <- round(ineq_anova_mixed_cohensf$Cohens_f_partial,3)
 ineq_anova_mixed$ci95_lo <- round(ineq_anova_mixed_cohensf$CI_low,3)
 ineq_anova_mixed$ci95_hi <- round(ineq_anova_mixed_cohensf$CI_high,3)
 ineq_anova_mixed <- rename(ineq_anova_mixed, DenDF = "den Df"
                            , NumDF = "num Df")
-ineq_anova_mixed
 
 ineq_anova_mixed_envy <- aov_ez(id='participant_code',
                                 dv='likely_envy',
                                 data=data_long,
                                 within = c('stake_cond'),
                                 between = c('inequality'))
+
+ineq_anova_mixed_envy_cohensf <- effectsize::cohens_f(ineq_anova_mixed_envy, alternative="two.sided",verbose = FALSE,generalized = FALSE)
 
 ineq_anova_mixed_envy <- ineq_anova_mixed_envy$anova_table
 ineq_anova_mixed_envy$cohens_f <- round(ineq_anova_mixed_envy_cohensf$Cohens_f_partial,3)
@@ -608,11 +696,15 @@ ineq_anova_mixed_envy <- rename(ineq_anova_mixed_envy, DenDF = "den Df"
                            , NumDF = "num Df")
 ineq_anova_mixed_envy
 
+
 ineq_anova_mixed_likelihood <- aov_ez(id='participant_code',
                                       dv='p_partner_attempt',
                                       data=data_long,
                                       within = c('stake_cond'),
                                       between = c('inequality'))  
+
+ineq_anova_mixed_likelihood_cohensf <- effectsize::cohens_f(ineq_anova_mixed_likelihood, alternative="two.sided",verbose = FALSE,generalized = FALSE)
+
 
 ineq_anova_mixed_likelihood <- ineq_anova_mixed_likelihood$anova_table
 ineq_anova_mixed_likelihood$cohens_f <- round(ineq_anova_mixed_likelihood_cohensf$Cohens_f_partial,3)
@@ -621,10 +713,6 @@ ineq_anova_mixed_likelihood$ci95_hi <- round(ineq_anova_mixed_likelihood_cohensf
 ineq_anova_mixed_likelihood <- rename(ineq_anova_mixed_likelihood, DenDF = "den Df"
                            , NumDF = "num Df")
 ineq_anova_mixed_likelihood
-
-
-save(ineq_anova_mixed,ineq_anova_mixed_envy,ineq_anova_mixed_likelihood, 
-     file = here::here("output", "security_s1a_output.RData"))
 
 
 
@@ -640,40 +728,203 @@ save(ineq_anova_mixed,ineq_anova_mixed_envy,ineq_anova_mixed_likelihood,
 # )
 # bxp_env
 
+
+
+
+data_long$hi_stake <- ifelse(data_long$stake_cond == "hi",
+                             1,
+                             0)
+
+
+
+m_mixed_binary <- lme4::glmer(data = data_long, security_bin ~ as.factor(inequality) +
+                                as.factor(hi_stake) + (1| participant_code),  
+                              family = binomial, control = glmerControl(optimizer = "bobyqa"),
+                              nAGQ = 10)
+
+
+
+
 # H2) mixed mediation conducted using r packages lme4 and mediate
-# m_mixed_med1 <- lme4::lmer(likely_envy ~ inequality + (1| participant_code) +
-#                              stake_cond, data = data_long)
-# 
-# m_mixed_med2 <- lmer(security_consumed ~ likely_envy + inequality +
-#                        (1| participant_code) + stake_cond, data = data_long)
-# 
-# m_mixed_total <- lmer(security_consumed~ inequality + (1| participant_code) +
-#                         stake_cond, data = data_long)
-# 
-# m_mixed_med_full <- mediation::mediate(m_mixed_med1, m_mixed_med2,sims = 5000,
-#                                      treat="inequality",mediator="likely_envy")
 
-
-ggplot(data_long, aes(x = likely_envy, y = security_consumed)) +
-  geom_point(alpha = .2, position = "jitter", color = "#40B0A6") + geom_smooth(method = "lm", alpha = .25) + 
-  theme_minimal()
-
-ggplot(data_long, aes(x = as.numeric(inequality), y = security_consumed)) +
-  geom_point(alpha = .2, position = "jitter", color = "#40B0A6") + geom_smooth(method = "lm", alpha = .25) + 
-  theme_minimal()
-
+# m_mixed_med_new1 <- lme4::lmer(security_consumed ~ inequality + (1| participant_code), data = data_long)
 # 
+# m_mixed_med_new2 <- lme4::lmer(likely_envy ~ inequality  + 
+#                              (1| participant_code), data = data_long)
+# 
+# m_mixed_med_new_total <- lme4::lmer(security_consumed ~ inequality + likely_envy + (1| participant_code), data = data_long)
+# 
+# m_mixed_med_new_full <- mediation::mediate(m_mixed_med_new1, m_mixed_med_new2,sims = 5000,
+#                                        treat="inequality",mediator="likely_envy")
+
 # m_mixed_med1 <- lme4::lmer(likely_envy ~ inequality + (1| participant_code), data = data_long)
 # 
-# m_mixed_med2 <- lme4::lmer(security_consumed ~ likely_envy + inequality +
-#                        (1| participant_code), data = data_long)
+# m_mixed_med2 <- lme4::lmer(security_consumed ~ inequality + likely_envy + 
+#                              (1| participant_code), data = data_long)
 # 
-# m_mixed_total <- lme4::lmer(security_consumed~ inequality + (1| participant_code), data = data_long)
+# m_mixed_total <- lme4::lmer(security_consumed ~ inequality + (1| participant_code), data = data_long)
 # 
 # m_mixed_med_full <- mediation::mediate(m_mixed_med1, m_mixed_med2,sims = 5000,
 #                                        treat="inequality",mediator="likely_envy")
-# 
+
+
 # summary(m_mixed_med_full)
 
+# 
+# m_mixed_med_large1 <- lme4::lmer(likely_envy ~ inequality + (1| participant_code) +
+#                              hi_stake, data = data_long)
+# 
+# m_mixed_med_large2 <- lmer(security_consumed ~ inequality + hi_stake + likely_envy +
+#                        (1| participant_code), data = data_long)
+# 
+# m_mixed_large_total <- lmer(security_consumed ~ inequality +
+#                         hi_stake + (1| participant_code) , data = data_long)
+# 
+# m_mixed_med_large_full <- mediation::mediate(m_mixed_med1, m_mixed_med2,sims = 5000,
+#                                      treat="inequality",mediator="likely_envy")
+# 
+# 
+# m_mixed_med_large_new1 <- lme4::lmer(security_consumed ~ inequality +
+#                                        hi_stake + (1| participant_code), data = data_long)
+# 
+# m_mixed_med_large_new2 <- lme4::lmer(likely_envy ~ inequality + hi_stake  + 
+#                                  (1| participant_code), data = data_long)
+# 
+# m_mixed_med_large_new_total <- lme4::lmer(security_consumed ~ inequality + hi_stake + likely_envy + 
+#                                             (1| participant_code), data = data_long)
+# 
+# m_mixed_med_large_new_full <- mediation::mediate(m_mixed_med_large_new1, m_mixed_med_large_new2,sims = 5000,
+#                                            treat="inequality",mediator="likely_envy")
+# 
+
+
+m_mixed_med_large_newnew1 <- lme4::lmer(security_consumed ~ inequality +
+                                       hi_stake + (1| participant_code), data = data_long)
+# predicting mediator with treatment and covariates
+m_mixed_med_large_newnew2 <- lme4::lmer(likely_envy_cent ~ inequality + hi_stake  + 
+                                       (1| participant_code), data = data_long)
+# predicting outcome with treatment, mediator, and covariates
+m_mixed_med_large_newnew_total <- lme4::lmer(security_consumed ~ inequality + hi_stake + likely_envy_cent + 
+                                            (1| participant_code), data = data_long)
+
+m_mixed_med_large_newnew_full <- mediation::mediate(m_mixed_med_large_newnew2, m_mixed_med_large_newnew_total,sims = 5000,
+                                                 treat="inequality",mediator="likely_envy_cent")
+
+
+
+s1a_med_1 <- summary(m_mixed_med_large_newnew1)
+# Inequality 
+s1a_med_2 <- summary(m_mixed_med_large_newnew2)
+s1a_med_total <- summary(m_mixed_med_large_newnew_total)
+s1a_med_full <- summary(m_mixed_med_large_newnew_full)
+
+broom::tidy(s1a_med_full, conf.int = TRUE, conf.level = 0.95)
+
+s1a_med_1_tidy <- tidy_lmer(s1a_med_1)
+  s1a_med_1_tidy$df <- NA
+  s1a_med_1_tidy$df[c(1,2)] <- format(s1a_med_1$ngrps - nrow(s1a_med_1_tidy) - 1,big.mark = ",", scientific = FALSE)
+  s1a_med_1_tidy[3,"df"] <- format(s1a_med_1$devcomp$dims[["n"]] - 1 - 1,
+                                   big.mark = ",", scientific = FALSE)
+  
+  s1a_med_1_tidy <- s1a_med_1_tidy %>% relocate(df, .before = estimate)
+  
+  # s1a_med_1$logLik
+  
+s1a_med_2_tidy <- tidy_lmer(s1a_med_2)
+  s1a_med_2_tidy$df <- NA
+  s1a_med_2_tidy$df[c(1,2)] <- format(s1a_med_2$ngrps - nrow(s1a_med_2_tidy) - 1,big.mark = ",", scientific = FALSE)
+  s1a_med_2_tidy[3,"df"] <- format(s1a_med_2$devcomp$dims[["n"]] - 1 - 1,
+                                   big.mark = ",", scientific = FALSE)
+  s1a_med_2_tidy <- s1a_med_2_tidy %>% relocate(df, .before = estimate)
+
+s1a_med_total_tidy <- tidy_lmer(s1a_med_total)
+  s1a_med_total_tidy$df <- NA
+  s1a_med_total_tidy$df[c(1,2)] <- format(s1a_med_2$ngrps - nrow(s1a_med_total_tidy) - 1,big.mark = ",", scientific = FALSE)
+  s1a_med_total_tidy[c(3,4),"df"] <- format(s1a_med_total$devcomp$dims[["n"]] - 1 - 1,
+                                   big.mark = ",", scientific = FALSE)
+  s1a_med_total_tidy <- s1a_med_total_tidy %>% relocate(df, .before = estimate)
+
+  
+  tidied_med_int_total<- m_mixed_med_large_newint_total %>% broom.mixed::tidy()  
+
+#format(m_ord_mod1$dims$df.residual,big.mark = ",", scientific = FALSE)
+
+  
+  bt_effect <- c("Indirect Effect (ACME)", "Direct Effect (ADE)", "Total Effect", 
+                 "Prop. Mediated")
+  bt_est <- c(s1a_med_full$d1, s1a_med_full$z1, s1a_med_full$tau.coef, s1a_med_full$n1)
+  bt_cilo <- unname(c(s1a_med_full$d1.ci[1], s1a_med_full$z1.ci[1], s1a_med_full$tau.ci[1], s1a_med_full$n1.ci[1]))
+  bt_cihi <- unname(c(s1a_med_full$d1.ci[2], s1a_med_full$z1.ci[2], s1a_med_full$tau.ci[2], s1a_med_full$n1.ci[2]))
+  
+  bt_ci95 <- paste("[", round(bt_cilo,2), ", ", 
+                       round(bt_cihi,2),"]",  sep="")
+  
+  #bt_p <- format.pval(c(s1a_med_full$d1.p, s1a_med_full$z1.p, s1a_med_full$tau.p, s1a_med_full$n1.p))
+  bt_p <- c(s1a_med_full$d1.p, s1a_med_full$z1.p, s1a_med_full$tau.p, s1a_med_full$n1.p)
+  bt_stars <- c(stars.pval(s1a_med_full$d1.p), stars.pval(s1a_med_full$z1.p),
+                stars.pval(s1a_med_full$tau.p), stars.pval(s1a_med_full$n1.p))
+  
+  bt_p <- ifelse(bt_p < .001,
+                 "<.001",
+                 bt_p %>% round(3))
+  
+  bt_p <- paste(bt_p,bt_stars)
+  
+  
+  bt_DF <- data.frame(row.names = bt_effect, format(bt_est, digits = 2),bt_ci95,
+                      format(bt_p, nsmall = 3)
+                      # , bt_stars
+                      )
+  colnames(bt_DF) <- c("Coefficient", "95% CI", "p-value"
+                       # , ""
+                       )
+  
+s1a_med_full_tidy <-  bt_DF
+
+# H2.1), mediation step 1: In the model m_mixed_med1, the coefficient for income inequality
+# will have a significant positive effect on participants’ belief that their partner is envious.
+# H2.2), mediation step 2: In the model m_mixed_med2, participants’ belief that their
+# partner is envious will have a significantly positive effect on security spending.
+# H2.3), mediation step 3: In the model m_mixed_med_full, the indirect effect/ACME
+# (Average Causal Mediation Effect [total effect - direct effect]) will be significantly different
+# from 0.
+
+
+
+m_mixed_med_large_newint1 <- lme4::lmer(security_consumed ~ inequality*hi_stake +
+                                          (1| participant_code), data = data_long)
+# predicting mediator with treatment and covariates
+m_mixed_med_large_newint2 <- lme4::lmer(likely_envy_cent ~ inequality*hi_stake  + 
+                                          (1| participant_code), data = data_long)
+# predicting outcome with treatment, mediator, and covariates
+m_mixed_med_large_newint_total <- lme4::lmer(security_consumed ~ inequality*hi_stake + likely_envy_cent + 
+                                               (1| participant_code), data = data_long)
+
+m_mixed_med_large_newint_full <- mediation::mediate(m_mixed_med_large_newint2, m_mixed_med_large_newint_total,sims = 5000,
+                                                    treat="inequality",mediator="likely_envy_cent")
+
+
+s1a_med_int_1 <- summary(m_mixed_med_large_newint1)
+s1a_med_int_2 <- summary(m_mixed_med_large_newint2)
+s1a_med_int_total <- summary(m_mixed_med_large_newint_total)
+s1a_med_int_full <- summary(m_mixed_med_large_newint_full)
+
+
+tidied_med_int_total<- m_mixed_med_large_newint_total %>% broom.mixed::tidy()
+
+save(s1a_n_collected,s1a_n_consented,s1a_n_attended,s1a_desc,
+     ineq_anova_mixed,ineq_anova_mixed_envy,ineq_anova_mixed_likelihood, 
+     s1a_med_1,s1a_med_2,s1a_med_total,s1a_med_full,
+     s1a_med_1_tidy,s1a_med_2_tidy,s1a_med_total_tidy, s1a_med_full_tidy,
+     file = here::here("output", "security_s1a_output.RData"))
+
+
+# ggplot(data_long, aes(x = likely_envy, y = security_consumed)) +
+#   geom_point(alpha = .2, position = "jitter", color = "#40B0A6") + geom_smooth(method = "lm", alpha = .25) + 
+#   theme_minimal()
+
+# ggplot(data_long, aes(x = as.numeric(inequality), y = security_consumed)) +
+#   geom_point(alpha = .2, position = "jitter", color = "#40B0A6") + geom_smooth(method = "lm", alpha = .25) + 
+#   theme_minimal()
 
 

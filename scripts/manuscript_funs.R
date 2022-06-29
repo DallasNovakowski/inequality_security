@@ -15,7 +15,7 @@ inline_extract <- function(model,coef_name){
   
   paste("*t*","(",round(df,0),")"," = ", round(test_stat,2), ", *p* ", 
         pval, ", *b* = ", round(estimate,3),  
-        ", CI(95%) = [", round(ci_lo,3), ", ", round(ci_hi,3),"]",  sep="")
+        ", CI(95%) = [", round(ci_lo,2), ", ", round(ci_hi,2),"]",  sep="")
 }
 
 
@@ -24,8 +24,8 @@ anova_extract <- function(model,coef_name){
   df <- paste(round(model[coef_name,"NumDF"],2), round(model[coef_name,"DenDF"],2),sep = ", ")
   
   pval <- ifelse(model[coef_name,"Pr(>F)"] < .001,
-                 "< .001",
-                 paste("=", model[coef_name,"Pr(>F)"] %>% round(3)))
+                 "< .001",ifelse(model[coef_name,"Pr(>F)"] >= .01,
+                 paste("=", round(model[coef_name,"Pr(>F)"],2)), paste("=", round(model[coef_name,"Pr(>F)"],3))))
   
   estimate <- model[coef_name,"cohens_f"]
   # se <- model[coef_name,"Std. Error"]
@@ -38,8 +38,8 @@ anova_extract <- function(model,coef_name){
         pval,
         # ", *$\\eta^{2}_p$* = ", 
         ", Cohen's f = ",
-        round(estimate,3),  
-        ", CI(95%) = [", round(ci_lo,3), ", ", round(ci_hi,3),"]",  sep="")
+        round(estimate,2),  
+        ", CI(95%) = [", round(ci_lo,2), ", ", round(ci_hi,2),"]",  sep="")
 }
 
 
@@ -63,8 +63,12 @@ tidy_extract <- function(data,varname){
   df <- this_var$df 
   
   pval <- ifelse(grepl("<",this_var$p_value, fixed = TRUE),
-                 this_var$p_value,
-                 paste("=", as.numeric(this_var$p_value) %>% round(3)))
+                 this_var$p_value, ifelse(as.numeric(this_var$p_value) >=.01,
+                                          paste("=",round(as.numeric(this_var$p_value),2),
+                                                paste("=", round(as.numeric(this_var$p_value),3)))
+                                          )
+                 )
+                 
   
   estimate <- this_var$estimate
   se <- this_var$std.error
@@ -74,7 +78,7 @@ tidy_extract <- function(data,varname){
   # print(c(test_stat, df, pval, estimate, se))
   
   paste("*z*", "(", df, ")", "=", round(test_stat,2),
-        ", *p* ", pval,", *b* = ", round(estimate,3), 
+        ", *p* ", pval,", *b* = ", ifelse(estimate >= .01, round(estimate,2),round(estimate,3)), 
         ", CI(95%) = ",this_var$CI95,  sep="")
 }
 
@@ -105,16 +109,53 @@ make_ci <- function(tidied){
   tidied$p_value <-  as.numeric(format(2*pnorm(abs(tidied$z_score), lower.tail=FALSE), 
                                        scientific = FALSE))
   
-  tidied$p_value <-  ifelse(tidied$p_value < .001,
-                            "< .001",
-                            paste(tidied$p_value %>% round(3)))
+  tidied$p_value <- ifelse(tidied$p_value < .001,
+         "< .001",ifelse(tidied$p_value >= .01,
+                         round(tidied$p_value,2), round(tidied$p_value,3)))
   
-  tidied$CI95 <- paste("[", round(tidied$ci95_lo,3), ", ", 
-                       round(tidied$ci95_hi,3),"]",  sep="")
+  tidied$CI95 <- paste("[", round(tidied$ci95_lo,2), ", ", 
+                       round(tidied$ci95_hi,2),"]",  sep="")
   
-  tidied <- round_df(tidied, 3)
+  tidied <- round_df(tidied, 2)
   
   tidied <- subset(tidied, select = -c(ci95_lo,ci95_hi))
   
   tidied <- tidied %>% relocate(CI95, .before = z_score)
+}
+
+
+tidy_lmer <- function(sum_data){
+  w_data <- data.frame(sum_data$coefficients)
+  w_data <- rename(w_data, estimate = "Estimate"
+                   , SE  = "Std..Error")
+  w_data$ci95_hi <- w_data$estimate + 1.96*w_data$SE # = 0.4539815 
+  
+  # w_data$z_score <- w_data$estimate/w_data$SE #Wald tests
+  
+  w_data$ci95_lo <- w_data$estimate - 1.96*w_data[,"SE"] # = 0.4539815
+  
+  w_data$estimate <- round(w_data$estimate,2)
+  w_data$t.value <- round(w_data$t.value,2)
+  
+  w_data$p_value <-  as.numeric(format(2*pnorm(abs(w_data$t.value), lower.tail=FALSE), 
+                                       scientific = FALSE))
+  
+  w_data$p_value <-  ifelse(w_data$p_value < .01,
+                            paste(w_data$p_value %>% round(3)), ifelse(w_data$p_value >= .01,round(w_data$p_value,2),
+                            ))
+  
+  w_data$CI95 <- paste("[", round(w_data$ci95_lo,2), ", ", 
+                       round(w_data$ci95_hi,2),"]",  sep="")
+  w_data <- round_df(w_data, 3)
+  w_data <- subset(w_data, select = -c(ci95_lo,ci95_hi))
+  w_data <- w_data %>% relocate(CI95, .before = t.value)
+  w_data <- w_data %>%
+    select(-contains(c("Pr...t..")))
+  
+  return(w_data)
+}
+
+firstup <- function(x) {
+  substr(x, 1, 1) <- toupper(substr(x, 1, 1))
+  x
 }
