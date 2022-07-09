@@ -30,6 +30,17 @@ cgwtools::resave(nsims, base_mean,base_sd, file = here::here("output", "pretest_
 power_ttest_security_d2 <- pwr.t.test(d=.2,power=.95,sig.level=.05,
                                     type="two.sample",alternative="greater")
 
+power_ttest_security_d2_paired <- pwr.t.test(d=.2,power=.95,sig.level=.05,
+                                      type="paired",alternative="greater")
+
+power_ttest_security_d4_paired <- pwr.t.test(d=.4,power=.95,sig.level=.05,
+                                             type="paired",alternative="greater")
+
+power_ttest_security_d1_paired <- pwr.t.test(d=.1,power=.95,sig.level=.05,
+                                             type="paired",alternative="greater")
+
+
+
 # Basic f = .1 2-level ANOVA, n = 650.6, more power needed than t-test ______________________________________________________
 power_anova_security_f1 <- pwr.anova.test(
   power=.95,

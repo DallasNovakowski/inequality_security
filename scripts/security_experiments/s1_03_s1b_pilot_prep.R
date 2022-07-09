@@ -6,9 +6,14 @@ library(tidyverse) #select
 library(afex)
 library(cowplot)
 library(gtools)
+library(ggtext) #for markdown subtitles
+# library(latex2exp) # for annotating with latex
 
 source(file=here::here("scripts","manuscript_funs.R"))
 source(file=here::here("scripts","tidy_ttest.R"))
+source(file=here::here("scripts","tidy_mixed_med.R"))
+
+set.seed(1234)
 
 cbPalette <-
   c(
@@ -207,6 +212,9 @@ data$av_likely_envy <- rowMeans(data[, c("round_2_likely_envy","round_1_likely_e
 data$av_p_likelihood <- rowMeans(data[, c("ineq_2_pre_partner_attempt","ineq_1_pre_partner_attempt")], na.rm = TRUE) * NA ^ (rowMeans(!is.na(data[, c("ineq_1_pre_partner_attempt","ineq_2_pre_partner_attempt")])) == 0)
 
 
+s1bp_female <- sum(data$gender == "Female")/nrow(data)
+
+
 s1b_pilot_desc_columns <- c("Variable",	"Mean",	"SD")
 
 Variable <- c("Age",
@@ -230,14 +238,40 @@ SD <-
     round(sd(data$consumed_total),1)
   )
 
-s1b_desc <- data.frame(Variable, Mean, SD
-                       # ,alpha95
-                       )
 
+envy_alpha_1 <- ltm::cronbach.alpha(data
+                    [,round_1_envy_vars],CI=TRUE)
+
+envy_alpha_2 <- ltm::cronbach.alpha(data
+                    [,c(round_2_envy_vars)],CI=TRUE)
+
+envy_alpha_meanci <- NA
+envy_alpha_meanci[1] <- mean(envy_alpha_1$ci[1],envy_alpha_2$ci[1])
+
+envy_alpha_meanci[2] <- mean(envy_alpha_1$ci[2],envy_alpha_2$ci[2])
+
+
+overall_envy_alpha <-ltm::cronbach.alpha(data
+                                         [,c(round_1_envy_vars,round_2_envy_vars)],CI=TRUE)
+
+bt_ci95 <- paste("[", round(envy_alpha_meanci[1],2), ", ", 
+                 round(envy_alpha_meanci[2],2),"]",  sep="")
+
+alpha95 <- c("",
+             paste("[", round(envy_alpha_meanci[1],2), ", ", 
+                   round(envy_alpha_meanci[2],2),"]",  sep="")
+             ,"",
+             "")
+
+
+s1bp_desc <- data.frame(Variable, Mean, SD
+                       ,alpha95
+)
 
 # ---- s1bp-make-long-data ----
 data_long <- data %>% pivot_longer(consumed_vars, names_to = "round_num", values_to = "security_consumed")
 
+data_long$security_spending <- data_long$security_consumed*2
 
 data_long$round_num <- data_long$round_num %>%
   # sub("round_", "", .) %>%
@@ -263,22 +297,22 @@ data_long$page <- data_long$page %>%
 
 
 data_long <- data_long %>%
-  dplyr::mutate(inequality = ifelse(
-    page == "ineq",
-    "unequal",
-    ifelse(
-      page == "eq",
-      "equal", NA)
-  )
-  )
-
-data_long <- data_long %>%
   dplyr::mutate(ineq = ifelse(
     page == "ineq",
     "1",
     ifelse(
       page == "eq",
       "0", NA)
+  )
+  )
+
+data_long <- data_long %>%
+  dplyr::mutate(inequality = ifelse(
+    page == "ineq",
+    "1.yes",
+    ifelse(
+      page == "eq",
+      "2.no", NA)
   )
   )
 
@@ -351,13 +385,13 @@ data_long <- data_long %>%
 
 data_long %>% 
   # group_by(stake_cond) %>%
-  filter(inequality=="unequal") %>%
+  filter(inequality=="1.yes") %>%
   select(envy_vars) %>%
   psych::alpha()
 
 data_long %>% 
   # group_by(stake_cond) %>%
-  filter(inequality=="equal") %>%
+  filter(inequality=="2.no") %>%
   select(envy_vars) %>%
   psych::alpha()
 
@@ -387,6 +421,21 @@ summary(data_long$security_bin)
 summary(data_long$inequality)
 
 
+
+#t-tests ----
+
+
+s1bp_pineq_t_tidy <- tidy_ttest(data_long, iv = "inequality", dv = "p_inequality", paired = TRUE)
+
+s1bp_envy_t_tidy <- tidy_ttest(data_long, iv = "inequality", dv = "likely_envy", paired = TRUE)
+
+s1bp_likelihood_t_tidy <- tidy_ttest(data_long, iv = "inequality", dv = "p_partner_attempt", paired = TRUE)
+
+s1bp_sec_t_tidy <- tidy_ttest(data_long, iv = "inequality", dv = "security_consumed", paired = TRUE)
+
+s1bp_spend_t_tidy <- tidy_ttest(data_long, iv = "inequality", dv = "security_spending", paired = TRUE)
+
+
 # s1bp-vizualize-security ----
 
 security_summary_data <- data_long %>%
@@ -399,17 +448,18 @@ security_summary_data <- data_long %>%
       sqrt(n())
   )
 
+ineq_order <- c("2.no","1.yes")
 
 security_s1bp_jittolin <- security_summary_data %>%
   ggplot(aes(
     y = mean,
-    x = inequality
+    x = factor(inequality,level=ineq_order)
   )) + ggbeeswarm::geom_quasirandom(data = data_long,
-                                    aes(y = security_consumed),side = 1L,
+                                    aes(y = security_consumed),
                                     bandwidth = .2,  # Smaller numbers (< 1) produce a tighter density "fit"
                                     size = 3,
-                                    alpha = .05,
-                                    width = .3,  # adjusts maximum width of where points can be found
+                                    alpha = .04,
+                                    width = .4,  # adjusts maximum width of where points can be found
                                     dodge.width = 0)  +
   geom_pointrange(
     aes(inequality, mean, ymin = min
@@ -421,18 +471,68 @@ security_s1bp_jittolin <- security_summary_data %>%
   # scale_y_continuous(
   #   # don't expand y scale at the lower end
   #   expand = expansion(mult = c(0, 0.05))) + 
-  scale_x_discrete(labels=c("equal" = "No", "unequal" = "Yes")) +
+  scale_x_discrete(labels=c("2.no" = "No", "1.yes" = "Yes")) +
   ylab("Units of security consumed") +
   xlab("Inequality") +    
   geom_label( color = "black",
               aes(label = paste(round(mean,2)),vjust=-1), fill="white") + 
   theme_half_open() + 
-  theme(axis.title = element_text(face="bold"))
+  theme(axis.title = element_text(face="bold")) + 
+  theme(plot.subtitle = element_markdown()) + 
+  labs(subtitle = report_tidy_t_dci(s1bp_sec_t_tidy))
 
 security_s1bp_jittolin
 
 ggsave(here::here("figures", "s1bp_security_jittolin.png"),
-       height = 3)
+       width=4, height = 3)
+
+# ----s1bp-security-spending----
+
+spending_summary_data <- data_long %>%
+  group_by(inequality) %>%
+  dplyr::summarise(
+    mean = round(mean(security_spending),1),
+    min = round(mean(security_spending),1) - qnorm(0.975) * round(sd(security_spending),1) /
+      sqrt(n()),
+    max = round(mean(security_spending),1) + qnorm(0.975) * round(sd(security_spending),1) /
+      sqrt(n())
+  )
+
+spending_s1bp_jittolin <- spending_summary_data %>%
+  ggplot(aes(
+    y = mean,
+    x = factor(inequality,level=ineq_order)
+  )) + ggbeeswarm::geom_quasirandom(data = data_long,
+                                    aes(y = security_spending),
+                                    bandwidth = .2,  # Smaller numbers (< 1) produce a tighter density "fit"
+                                    size = 3,
+                                    alpha = .04,
+                                    width = .4,  # adjusts maximum width of where points can be found
+                                    dodge.width = 0)  +
+  geom_pointrange(
+    aes(inequality, mean, ymin = min
+        , ymax = max),
+    fatten = 3,
+    size = 1,
+    shape = 20 ) + 
+  geom_line(aes(x=inequality,y=mean,group=1)) +
+  # scale_y_continuous(
+  #   # don't expand y scale at the lower end
+  #   expand = expansion(mult = c(0, 0.05))) + 
+  scale_x_discrete(labels=c("2.no" = "No", "1.yes" = "Yes")) +
+  ylab("$ spent on security") +
+  xlab("Inequality") +    
+  geom_label( color = "black",
+              aes(label = paste(round(mean,2)),vjust=-1), fill="white") + 
+  theme_half_open() + 
+  theme(axis.title = element_text(face="bold")) + 
+  theme(plot.subtitle = element_markdown()) + 
+  labs(subtitle = report_tidy_t_dci(s1bp_spend_t_tidy))
+
+spending_s1bp_jittolin
+
+ggsave(here::here("figures", "s1bp_spending_jittolin.png"),
+       width=4, height = 3)
 
 
 # s1bp-vizualize-envy ----
@@ -450,13 +550,13 @@ envy_summary_data <- data_long %>%
 envy_1bp_jittolin <- envy_summary_data %>%
   ggplot(aes(
     y = mean,
-    x = inequality
-  )) + ggbeeswarm::geom_quasirandom(data = data_long,
+    x = factor(inequality,level=ineq_order)
+    )) + ggbeeswarm::geom_quasirandom(data = data_long,
                                     aes(y = likely_envy),
                                     bandwidth = .7,
                                     size = 3,
-                                    alpha = .05,
-                                    width = .3,
+                                    alpha = .04,
+                                    width = .4,
                                     dodge.width = .7)  +
   geom_pointrange(
     aes(inequality, mean, ymin = min
@@ -468,18 +568,20 @@ envy_1bp_jittolin <- envy_summary_data %>%
   # scale_y_continuous(
   #   # don't expand y scale at the lower end
   #   expand = expansion(mult = c(0, 0.05))) + 
-  scale_x_discrete(labels=c("equal" = "No", "unequal" = "Yes")) +
+  scale_x_discrete(labels=c("2.no" = "No", "1.yes" = "Yes")) +
   ylab("Perceived partner envy") +
   xlab("Inequality") +    
   geom_label( color = "black",
               aes(label = paste(round(mean,2)),vjust=-1), fill="white") + 
   theme_half_open() + 
-  theme(axis.title = element_text(face="bold"))
+  theme(axis.title = element_text(face="bold"))+ 
+  theme(plot.subtitle = element_markdown()) + 
+  labs(subtitle = report_tidy_t_dci(s1bp_envy_t_tidy))
 
 envy_1bp_jittolin
 
 ggsave(here::here("figures", "s1bp_envy_jittolin.png"),
-       height = 3)
+       width=4, height = 3)
 
 
 
@@ -499,13 +601,13 @@ likelihood_summary_data <- data_long %>%
 likelihood_1bp_jittolin <- likelihood_summary_data %>%
   ggplot(aes(
     y = mean,
-    x = inequality
-  )) + ggbeeswarm::geom_quasirandom(data = data_long,
+    x = factor(inequality,level=ineq_order)
+    )) + ggbeeswarm::geom_quasirandom(data = data_long,
                                     aes(y = p_partner_attempt),
                                     bandwidth = .7,
                                     size = 3,
                                     alpha = .03,
-                                    width = .3,
+                                    width = .4,
                                     dodge.width = .7)  +
   geom_pointrange(
     aes(inequality, mean, ymin = min
@@ -517,18 +619,20 @@ likelihood_1bp_jittolin <- likelihood_summary_data %>%
   # scale_y_continuous(
   #   # don't expand y scale at the lower end
   #   expand = expansion(mult = c(0, 0.05))) + 
-  scale_x_discrete(labels=c("equal" = "No", "unequal" = "Yes")) +
+  scale_x_discrete(labels=c("2.no" = "No", "1.yes" = "Yes")) +
   ylab("Perceived attack likelihood") +
   xlab("Inequality") +    
   geom_label( color = "black",
               aes(label = paste(round(mean,2)),vjust=-1), fill="white") + 
   theme_half_open() + 
-  theme(axis.title = element_text(face="bold"))
+  theme(axis.title = element_text(face="bold"))+ 
+  theme(plot.subtitle = element_markdown()) + 
+  labs(subtitle = report_tidy_t_dci(s1bp_likelihood_t_tidy))
 
 likelihood_1bp_jittolin
 
 ggsave(here::here("figures", "s1bp_likelihood_jittolin.png"),
-       height = 3)
+       width=4, height = 3)
 
 
 # security-paired-t-test----
@@ -548,45 +652,47 @@ ggsave(here::here("figures", "s1bp_likelihood_jittolin.png"),
 # s1bp_sec_t_tidy <- data.frame(cbind(s1bp_sec_ttest,s1bp_sec_d))
 
 
-
-s1bp_pineq_t_tidy <- tidy_ttest(data_long, iv = "inequality", dv = "p_inequality", paired = TRUE)
-
-s1bp_envy_t_tidy <- tidy_ttest(data_long, iv = "inequality", dv = "likely_envy", paired = TRUE)
-
-s1bp_likelihood_t_tidy <- tidy_ttest(data_long, iv = "inequality", dv = "p_partner_attempt", paired = TRUE)
-
-s1bp_sec_t_tidy <- tidy_ttest(data_long, iv = "inequality", dv = "security_consumed", paired = TRUE)
-
+s1bp_sec_m_mixed_binary <- lme4::glmer(data = data_long, security_bin ~ as.factor(ineq) + (1| participant_code),  
+                              family = binomial, control = glmerControl(optimizer = "bobyqa"),
+                              nAGQ = 10)
 
 
 # --- mediation analysis
+s1bp_m_mixed_med1 <- lme4::lmer(security_consumed~ ineq + (1| participant_code), 
+                           data = data_long)
 
-s1bp_m_mixed_med1 <- lme4::lmer(security_consumed ~ inequality +
-                                          (1| participant_code), data = data_long)
-# predicting mediator with treatment and covariates
-s1bp_m_mixed_med2 <- lme4::lmer(likely_envy_cent ~ inequality +
-                                  (1| participant_code), data = data_long)
-# predicting outcome with treatment, mediator, and covariates
-s1bp_m_mixed_med_total <- lme4::lmer(security_consumed ~ inequality + likely_envy_cent + 
-                                               (1| participant_code), data = data_long)
+s1bp_m_mixed_med2 <- lme4::lmer(likely_envy_cent ~ ineq +
+                       (1| participant_code), data = data_long)
+
+s1bp_m_mixed_med_total <- lme4::lmer(security_consumed~ ineq + likely_envy_cent  + 
+                        (1| participant_code), data = data_long)
 
 s1bp_m_mixed_med_full <- mediation::mediate(s1bp_m_mixed_med2, s1bp_m_mixed_med_total,sims = 5000,
-                                                    treat="inequality",mediator="likely_envy_cent")
+                                     treat="ineq",mediator="likely_envy_cent")
+
+
 s1bp_med_1 <- summary(s1bp_m_mixed_med1)
-# Inequality 
 s1bp_med_2 <- summary(s1bp_m_mixed_med2)
 s1bp_med_total <- summary(s1bp_m_mixed_med_total)
 s1bp_med_full <- summary(s1bp_m_mixed_med_full)
 
 
-# tidy-mediation-analyses ----
+# s1bp-tidy-mediation-analyses ----
+s1bp_med_1_tidy <- tidy_lmer(s1bp_med_1)
+
+s1bp_med_2_tidy <- tidy_lmer(s1bp_med_2)
+
+s1bp_med_total_tidy <- tidy_lmer(s1bp_med_total)
+
+s1bp_med_full_tidy <- tidy_mixed_med(s1bp_med_full)
 
 
 
 # s1bp-save-objects ----
 
 save(s1b_pilot_n_collected,s1b_pilot_n_consented,s1b_pilot_n_attended,  #number of participants collected and retained
-     s1b_desc,  # descriptive statistics
-     s1bp_sec_t_tidy,s1bp_envy_t_tidy,s1bp_likelihood_t_tidy, #t-test
-     s1bp_med_1,s1bp_med_2,s1bp_med_total,s1bp_med_full, # meditiation
+     s1bp_desc,s1bp_female,  # descriptive statistics
+     s1bp_sec_t_tidy,s1bp_envy_t_tidy,s1bp_likelihood_t_tidy,s1bp_spend_t_tidy, #t-test
+     s1bp_med_1,s1bp_med_2,s1bp_m_mixed_med_total,s1bp_med_full, # meditiation
+     s1bp_med_1_tidy,s1bp_med_2_tidy,s1bp_med_total_tidy, s1bp_med_full_tidy,
 file = here::here("output", "security_s1bp_output.RData"))

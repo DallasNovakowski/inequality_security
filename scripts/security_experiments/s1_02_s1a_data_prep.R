@@ -3,12 +3,14 @@
 library(readr) #read_csv
 library(tidyr) #pivot_wider
 library(tidyverse) #select
-library(afex)
-library(cowplot)
-library(gtools)
+library(afex) # anovas
+library(cowplot) # nice ggtheme
+library(gtools) 
 
+set.seed(1234)
 
 source(file=here::here("scripts","manuscript_funs.R"))
+source(file="scripts/tidy_mixed_med.r")
 
 cbPalette <-
   c(
@@ -194,6 +196,7 @@ pilot_data <-  pilot_data %>%
 #number of participants after comprehension and attention
 s1a_n_attended <- nrow(pilot_data)
 
+s1a_female <- sum(pilot_data$gender == "Female")/nrow(pilot_data)
 
 
 consumed_vars <- colnames(pilot_data[grepl('security_consumed', colnames(pilot_data))])
@@ -237,12 +240,6 @@ round_2_envy_items <- c("round_2_p_partner_jealous","round_2_p_partner_bitter","
 
 
 
-ltm::cronbach.alpha(pilot_data
-                    [,round_1_envy_items],CI=TRUE)
-
-ltm::cronbach.alpha(pilot_data
-                    [,c(round_1_envy_items,round_2_envy_items)],CI=TRUE)
-
 
 # pilot_data <- pilot_data %>%
 #   mutate(
@@ -274,36 +271,56 @@ pilot_data$round_2_likely_envy <- rowMeans(pilot_data[, round_2_envy_vars], na.r
 
 pilot_data$av_likely_envy <- rowMeans(pilot_data[, c("round_2_likely_envy","round_1_likely_envy")], na.rm = TRUE) * NA ^ (rowMeans(!is.na(pilot_data[, c("round_2_likely_envy","round_1_likely_envy")])) == 0)
 
+pilot_data$av_p_likelihood <- rowMeans(pilot_data[, c("round_2_pre_partner_attempt","round_1_pre_partner_attempt")], na.rm = TRUE) * NA ^ (rowMeans(!is.na(pilot_data[, c("round_2_pre_partner_attempt","round_1_pre_partner_attempt")])) == 0)
+
 
 s1adesc_columns <- c("Variable",	"Mean",	"SD")
 
-Variable <- c("Age","Perceived envy",
+Variable <- c("Age",
+              "Perceived envy",
+              "Perceived attack likelihood",
               "Security consumed")
+
 
 Mean <-
   c(round(mean(pilot_data$age),1),
     round(mean(pilot_data$av_likely_envy),1),
+    round(mean(pilot_data$av_p_likelihood),1),
     round(mean(pilot_data$consumed_total),1)
   )
 
 SD <-
   c(round(sd(pilot_data$age),1),
     round(sd(pilot_data$av_likely_envy),1),
+    round(sd(pilot_data$av_p_likelihood),1),
     round(sd(pilot_data$consumed_total),1)
   )
 
-overall_envy_alpha <-ltm::cronbach.alpha(pilot_data
-                    [,c(round_1_envy_items,round_2_envy_items)],CI=TRUE)
 
-bt_ci95 <- paste("[", round(unname(overall_envy_alpha$ci[1]),2), ", ", 
-                 round(unname(overall_envy_alpha$ci[2]),2),"]",  sep="")
+
+envy_alpha_1 <- ltm::cronbach.alpha(pilot_data
+                                    [,round_1_envy_items],CI=TRUE)
+
+envy_alpha_2 <-ltm::cronbach.alpha(pilot_data
+                                   [,c(round_2_envy_items)],CI=TRUE)
+
+envy_alpha_meanci <- NA
+
+envy_alpha_meanci[1] <- mean(envy_alpha_1$ci[1],envy_alpha_2$ci[1])
+
+envy_alpha_meanci[2] <- mean(envy_alpha_1$ci[2],envy_alpha_2$ci[2])
+
+bt_ci95 <- paste("[", round(envy_alpha_meanci[1],2), ", ", 
+                 round(envy_alpha_meanci[2],2),"]",  sep="")
+
+alpha95 <- c("",
+             paste("[", round(envy_alpha_meanci[1],2), ", ", 
+                   round(envy_alpha_meanci[2],2),"]",  sep="")
+             ,"",
+             "")
 
 # paste(round(overall_envy_alpha$alpha,2),
-alpha95 <- c("",
-           paste("[", round(unname(overall_envy_alpha$ci[1]),2), ", ", 
-                                                          round(unname(overall_envy_alpha$ci[2]),2),"]",  sep="")
-           ,
-           "")
+
 
 s1a_desc <- data.frame(Variable, Mean, SD,alpha95)
 
@@ -486,7 +503,7 @@ security_1a_jittolin <- security_summary_data %>%
   bandwidth = .2,
   show.legend = T,
   size = 3,
-  alpha = .03,
+  alpha = .02,
   width = .15,
   dodge.width = .7) + scale_colour_manual(
   values = cbPalette,
@@ -524,8 +541,7 @@ security_1a_jittolin <- security_summary_data %>%
     
 security_1a_jittolin
 
-ggsave(here::here("figures", "s1a_security_jittolin.png"),
-       height = 3)
+ggsave(here::here("figures", "s1a_security_jittolin.png"),width=5, height = 3)
 
 
 envy_summary_data <- data_long %>%
@@ -553,7 +569,7 @@ likely_envy_1a_jittolin <- envy_summary_data %>%
                                     bandwidth = .2,
                                     show.legend = T,
                                     size = 3,
-                                    alpha = .03,
+                                    alpha = .02,
                                     width = .16,
                                     dodge.width = .7) + scale_colour_manual(
                                       values = cbPalette,
@@ -592,7 +608,7 @@ likely_envy_1a_jittolin
 
 
 ggsave(here::here("figures", "s1a_envy_jittolin.png"),
-       height = 3)
+       width=5, height = 3)
 
 
 likelihood_summary_data <- data_long %>%
@@ -619,7 +635,7 @@ likelihood_1a_jittolin <- likelihood_summary_data %>%
                                     bandwidth = .2,
                                     show.legend = T,
                                     size = 3,
-                                    alpha = .02,
+                                    alpha = .01,
                                     width = .16,
                                     dodge.width = .7) + scale_colour_manual(
                                       values = cbPalette,
@@ -657,7 +673,7 @@ likelihood_1a_jittolin <- likelihood_summary_data %>%
 likelihood_1a_jittolin
 
 ggsave(here::here("figures", "s1a_likelihood_jittolin.png"),
-       height = 3)
+       width=5, height = 3)
 
 
 
@@ -850,36 +866,8 @@ s1a_med_total_tidy <- tidy_lmer(s1a_med_total)
 #format(m_ord_mod1$dims$df.residual,big.mark = ",", scientific = FALSE)
 
   
-  bt_effect <- c("Indirect Effect (ACME)", "Direct Effect (ADE)", "Total Effect", 
-                 "Prop. Mediated")
-  bt_est <- c(s1a_med_full$d1, s1a_med_full$z1, s1a_med_full$tau.coef, s1a_med_full$n1)
-  bt_cilo <- unname(c(s1a_med_full$d1.ci[1], s1a_med_full$z1.ci[1], s1a_med_full$tau.ci[1], s1a_med_full$n1.ci[1]))
-  bt_cihi <- unname(c(s1a_med_full$d1.ci[2], s1a_med_full$z1.ci[2], s1a_med_full$tau.ci[2], s1a_med_full$n1.ci[2]))
+  s1a_med_full_tidy <-  tidy_mixed_med(s1a_med_full)
   
-  bt_ci95 <- paste("[", round(bt_cilo,2), ", ", 
-                       round(bt_cihi,2),"]",  sep="")
-  
-  #bt_p <- format.pval(c(s1a_med_full$d1.p, s1a_med_full$z1.p, s1a_med_full$tau.p, s1a_med_full$n1.p))
-  bt_p <- c(s1a_med_full$d1.p, s1a_med_full$z1.p, s1a_med_full$tau.p, s1a_med_full$n1.p)
-  bt_stars <- c(stars.pval(s1a_med_full$d1.p), stars.pval(s1a_med_full$z1.p),
-                stars.pval(s1a_med_full$tau.p), stars.pval(s1a_med_full$n1.p))
-  
-  bt_p <- ifelse(bt_p < .001,
-                 "<.001",
-                 bt_p %>% round(3))
-  
-  bt_p <- paste(bt_p,bt_stars)
-  
-  
-  bt_DF <- data.frame(row.names = bt_effect, format(bt_est, digits = 2),bt_ci95,
-                      format(bt_p, nsmall = 3)
-                      # , bt_stars
-                      )
-  colnames(bt_DF) <- c("Coefficient", "95% CI", "p-value"
-                       # , ""
-                       )
-  
-s1a_med_full_tidy <-  bt_DF
 
 # H2.1), mediation step 1: In the model m_mixed_med1, the coefficient for income inequality
 # will have a significant positive effect on participants’ belief that their partner is envious.
@@ -912,19 +900,8 @@ s1a_med_int_full <- summary(m_mixed_med_large_newint_full)
 
 tidied_med_int_total<- m_mixed_med_large_newint_total %>% broom.mixed::tidy()
 
-save(s1a_n_collected,s1a_n_consented,s1a_n_attended,s1a_desc,
+save(s1a_n_collected,s1a_n_consented,s1a_n_attended,s1a_desc,s1a_female,
      ineq_anova_mixed,ineq_anova_mixed_envy,ineq_anova_mixed_likelihood, 
      s1a_med_1,s1a_med_2,s1a_med_total,s1a_med_full,
      s1a_med_1_tidy,s1a_med_2_tidy,s1a_med_total_tidy, s1a_med_full_tidy,
      file = here::here("output", "security_s1a_output.RData"))
-
-
-# ggplot(data_long, aes(x = likely_envy, y = security_consumed)) +
-#   geom_point(alpha = .2, position = "jitter", color = "#40B0A6") + geom_smooth(method = "lm", alpha = .25) + 
-#   theme_minimal()
-
-# ggplot(data_long, aes(x = as.numeric(inequality), y = security_consumed)) +
-#   geom_point(alpha = .2, position = "jitter", color = "#40B0A6") + geom_smooth(method = "lm", alpha = .25) + 
-#   theme_minimal()
-
-

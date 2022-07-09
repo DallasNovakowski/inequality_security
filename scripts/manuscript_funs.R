@@ -19,30 +19,6 @@ inline_extract <- function(model,coef_name){
 }
 
 
-anova_extract <- function(model,coef_name){
-  test_stat <- round(as.numeric(model[coef_name,"F"]),2)
-  df <- paste(round(model[coef_name,"NumDF"],2), round(model[coef_name,"DenDF"],2),sep = ", ")
-  
-  pval <- ifelse(model[coef_name,"Pr(>F)"] < .001,
-                 "< .001",ifelse(model[coef_name,"Pr(>F)"] >= .01,
-                 paste("=", round(model[coef_name,"Pr(>F)"],2)), paste("=", round(model[coef_name,"Pr(>F)"],3))))
-  
-  estimate <- model[coef_name,"cohens_f"]
-  # se <- model[coef_name,"Std. Error"]
-  ci_lo <- model[coef_name,"ci95_lo"]
-  ci_hi <- model[coef_name,"ci95_hi"]
-  
-  # print(c(test_stat, df, pval, estimate, se))
-  
-  paste("*F*","(",df,")"," = ", round(test_stat,2), ", *p* ", 
-        pval,
-        # ", *$\\eta^{2}_p$* = ", 
-        ", Cohen's f = ",
-        round(estimate,2),  
-        ", CI(95%) = [", round(ci_lo,2), ", ", round(ci_hi,2),"]",  sep="")
-}
-
-
 percent <- function(x, digits = 0, format = "f", ...) {      # Create user-defined function
   paste0(formatC(x * 100, format = format, digits = digits, ...), "%")
 }
@@ -137,12 +113,11 @@ tidy_lmer <- function(sum_data){
   w_data$estimate <- round(w_data$estimate,2)
   w_data$t.value <- round(w_data$t.value,2)
   
-  w_data$p_value <-  as.numeric(format(2*pnorm(abs(w_data$t.value), lower.tail=FALSE), 
-                                       scientific = FALSE))
+  w_data$p_value <-  as.numeric(2*pnorm(abs(w_data$t.value), lower.tail=FALSE))
   
-  w_data$p_value <-  ifelse(w_data$p_value < .01,
-                            paste(w_data$p_value %>% round(3)), ifelse(w_data$p_value >= .01,round(w_data$p_value,2),
-                            ))
+  # w_data$p_value <-  ifelse(w_data$p_value < .01,
+  #                           paste(w_data$p_value %>% round(3)), ifelse(w_data$p_value >= .01,round(w_data$p_value,2),NA
+  #                           ))
   
   w_data$CI95 <- paste("[", round(w_data$ci95_lo,2), ", ", 
                        round(w_data$ci95_hi,2),"]",  sep="")
